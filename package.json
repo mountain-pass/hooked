@@ -14,6 +14,15 @@
     "scripts": {
         "globalInstall": "npm i -g --force .",
         "globalUninstall": "npm uninstall -g --force @mountainpass/hooked",
-        "install": "npm install && cd cli && npm run build"
+        "l:bootstrap": "lerna bootstrap",
+        "l:install": "lerna exec --scope @mountainpass/* npm install",
+        "l:build": "lerna run --scope @mountainpass/* build",
+        "l:prebumxxxp": "npm install --package-lock-only --ignore-scripts --nohoist=*",
+        "l:bump": "npx lerna version patch --yes --force-publish --message '%s [skip ci]'",
+        "l:publish": "npx lerna publish from-package --yes",
+        "l:graph": "nx graph"
+    },
+    "devDependencies": {
+        "lerna": "^6.4.1"
     }
 }
