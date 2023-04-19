@@ -1,3 +1,4 @@
+/* eslint-disable no-template-curly-in-string */
 import path from 'path'
 
 export const CONFIG_PATH = path.resolve('hooked.yaml')
@@ -5,13 +6,15 @@ export const CONFIG_PATH = path.resolve('hooked.yaml')
 export const DEFAULT_CONFIG = {
   env: {
     default: {
+      username: { $env: 'USER' },
       GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD' },
       HELLO: { $cmd: 'printf "Hello"' },
       WORLD: 'world',
-      NAME: {
+      FIRSTNAME: {
         $stdin: 'What is your name?',
         $default: 'Bob'
-      }
+      },
+      NAME: { $resolve: '${FIRSTNAME} (${username})' }
     },
     spanish: {
       GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD' },

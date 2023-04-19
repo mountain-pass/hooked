@@ -1,0 +1,13 @@
+{
+    "watch": [
+        "src",
+        "test"
+    ],
+    "ext": "ts,js,json,yml,csv",
+    "ignore": [
+        "src/**/*.spec.ts",
+        "**/_snapshots*/**",
+        "**/cache*/**"
+    ],
+    "exec": "npm run test"
+}

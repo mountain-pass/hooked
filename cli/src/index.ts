@@ -7,10 +7,17 @@ import {
   parseConfig,
   resolveEnv
 } from './lib/config.js'
-import { cyan } from './lib/colour.js'
+import { cyan, red } from './lib/colour.js'
+import { type ResolvedEnv } from './lib/types.js'
 
 const configStr = loadConfig()
 const config = parseConfig(configStr)
+
+export interface Options {
+  env: string
+  stdin: string
+  printenv?: boolean
+}
 
 program
   .name('hooked')
@@ -18,18 +25,31 @@ program
   .version('1.0.0', '-v, --version')
   .option('-e, --env <env>', 'specify environment', 'default')
   .option('-in, --stdin <json>', 'specify stdin responses', '{}')
+  .option('--printenv', 'print the resolved environment')
   .argument('[scriptPath...]', 'the script path to run')
   .usage('[options]')
-  .action(async (scriptPath: string[], options) => {
-    const stdin = JSON.parse(options.stdin)
-    const [script, resolvedScriptPath] = await findScript(config, scriptPath)
-    const [env, stdinResponses, resolvedEnvName] = await resolveEnv(
-      config,
-      options.env,
-      stdin
-    )
-    console.log(cyan(`rerun: j ${resolvedScriptPath.join(' ')} -e ${resolvedEnvName} -in '${JSON.stringify(stdinResponses)}'`))
-    await executeScript(script, env)
+  .action(async (scriptPath: string[], options: Options) => {
+    try {
+      const stdin = JSON.parse(options.stdin)
+      const globalEnv = process.env as unknown as ResolvedEnv
+      const [env, stdinResponses, resolvedEnvName] = await resolveEnv(
+        config,
+        options.env,
+        stdin,
+        globalEnv
+      )
+      if (options.printenv === true) {
+        console.log(cyan(JSON.stringify(env, null, 2)))
+      } else {
+        // find script and execute
+        const [script, resolvedScriptPath] = await findScript(config, scriptPath)
+        console.log(cyan(`rerun: j ${resolvedScriptPath.join(' ')} -e ${resolvedEnvName} -in '${JSON.stringify(stdinResponses)}'`))
+        await executeScript(script, { ...globalEnv, ...env })
+      }
+    } catch (err: any) {
+      console.error(red(err.message))
+      process.exit(1)
+    }
   })
 
 program.parse(process.argv)

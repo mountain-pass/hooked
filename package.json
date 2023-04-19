@@ -14,6 +14,7 @@
     "scripts": {
         "globalInstall": "npm i -g --force .",
         "globalUninstall": "npm uninstall -g --force @mountainpass/hooked",
+        "cli": "yarn workspace @mountainpass/hooked-cli",
         "l:bootstrap": "lerna bootstrap",
         "l:install": "lerna exec --scope @mountainpass/* npm install",
         "l:build": "lerna run --scope @mountainpass/* build",

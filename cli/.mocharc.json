@@ -1,8 +1,23 @@
 {
-    "extension": ["js", "ts"],
+    "extension": [
+        "js",
+        "ts"
+    ],
     "package": "./package.json",
     "reporter": "spec",
-    "timeout": 20000,
+    "timeout": 30000,
     "ui": "bdd",
-    "watch-files": ["src/**/*.{ts,js}", "test/**/*.{ts,js}"]
+    "spec": [
+        "test/**/*.{ts,js}",
+        "test/*.{ts,js}"
+    ],
+    "watch-files": [
+        "src/**/*.{ts,js}",
+        "test/**/*.{ts,js}",
+        "test/*.{ts,js}"
+    ],
+    "bail": true,
+    "recursive": true,
+    "loader": "ts-node/esm",
+    "reporter-option": "maxDiffSize=8128"
 }
