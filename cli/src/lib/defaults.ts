@@ -7,7 +7,7 @@ export const DEFAULT_CONFIG = {
   env: {
     default: {
       username: { $env: 'USER' },
-      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD' },
+      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' },
       HELLO: { $cmd: 'printf "Hello"' },
       WORLD: 'world',
       FIRSTNAME: {
@@ -17,7 +17,7 @@ export const DEFAULT_CONFIG = {
       NAME: { $resolve: '${FIRSTNAME} (${username})' }
     },
     spanish: {
-      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD' },
+      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' },
       HELLO: 'Hola',
       WORLD: 'Mundo',
       NAME: 'Amigo'

@@ -4,16 +4,22 @@
 
 I want to be able to setup advanced build server scripts, that can be run:
 - by anyone
-- anywhere (locally & remotely)
+- anywhere (locally or remotely)
 - anytime
-- behave consistently
+
+When executing the scripts, it must be:
+- consistent
+- intuitive
+- forgiving
+- suggestive
+- simple
 
 ## alternatives
 
 |tool|cons|pros|
 |---|---|---|
 | NPM | primarily a package manager, scripting changes affects build caching, scripting has to be escaped | has access to self install cli tools|
-| Makefile | ugly, non intuitive and feels brittle | has been around forever |
+| Makefile | ugly, non intuitive, feels brittle, not bash, funny env resolution | has been around forever |
 | Javascript | very verbose, can't switch to native shell easily | cross platform|
 
 # install
@@ -24,19 +30,52 @@ npm i -g @mountainpass/hooked-cli
 
 # usage
 
-Just type `j`, and it'll help setup a sample `hooked.yaml` config file!
+```sh
+j --help
 ```
-j -h
+(the 'j' is a fishing hook!)
+
+Just type `j`, and it'll setup a sample `hooked.yaml` config file. It will then prompt you for inputs!
+```sh
+j
 ```
-(it's a fishing hook)
+
+Example output, after selecting options:
+```sh
+Using environment: default
+? What is your name? Bob
+? Please select a script say
+? Please select a script hello
+Using script: say hello
+rerun: j say hello -e default -in '{"FIRSTNAME":"Bob"}'
+Hello world, Bob (nickpersonal)!
+git commit is -> (279e8b9)
+```
+
+Note the `rerun: ...` output? You can use that, to rerun a command, with all inputs predefined:
+```sh
+j say hello --env default --stdin '{"FIRSTNAME":"Bob"}'
+```
+
+Don't worry, if you can't remember the full script path, you'll be prompted. Try this:
+```sh
+j say
+```
+
+Feeling ~~lazy~~ efficient? Try typing some characters of the script or environment. As long as it's enough to uniquely identify your script, the tool will do the rest!
+```sh
+j s hel --env sp
+```
+
+Don't forget to commit `hooked.yaml` to source control, for the next person!
 
 # configuration
 
 _coming soon_
 
 # now
-- [x] can run scripts based on yaml paths
-- [x] can run scripts based on yaml path prefixes
+- [x] can run scripts based on yaml hierarchy
+- [x] can run scripts based on yaml hierarchy (using prefixes)
 - [x] can prompt user if path not complete
 - [x] can prompt for env from stdin (allow providing defaults)
 - [x] prompt user with a "replayable" script
@@ -59,4 +98,4 @@ _coming soon_
 - [ ] opt to list all commands
 - [ ] opt to list resolved env
 - [ ] hide debug output behind an opts
-  
+- [ ] non-interactive mode?
