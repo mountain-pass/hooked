@@ -13,7 +13,7 @@
     ],
     "scripts": {
         "localInstall": "npm i -g --force .",
-        "localUninstall": "npm uninstall -g --force @mountainpass/hooked",
+        "localUninstall": "npm uninstall -g --force hooked",
         "globalInstall": "npm i -g @mountainpass/hooked-cli",
         "globalUninstall": "npm uninstall -g --force @mountainpass/hooked-cli",
         "cli": "yarn workspace @mountainpass/hooked-cli",
