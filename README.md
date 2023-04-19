@@ -26,7 +26,7 @@ npm i -g @mountainpass/hooked-cli
 
 Just type `j`, and it'll help setup a sample `hooked.yaml` config file!
 ```
-j
+j -h
 ```
 (it's a fishing hook)
 
@@ -40,14 +40,15 @@ _coming soon_
 - [x] can prompt user if path not complete
 - [x] can prompt for env from stdin (allow providing defaults)
 - [x] prompt user with a "replayable" script
-- [ ] if only one possible child path, runs it straight away
-- [ ] keep history and timestamp
-- [ ] global settings > env vars
-- [ ] env vars -> resolving env vars
-- [ ] external env var prerequisites (e.g. must have ZIPDROP_V3_BEARER_TOKEN)
-- [ ] change `-in {}` to `-in key=val key2=val2`
+- [x] external env var prerequisites (e.g. must have ZIPDROP_V3_BEARER_TOKEN)
+- [x] env vars -> resolving env vars
+- [ ] global settings under user profile > env vars
 
 # future
+- [ ] change `-in` from json to `-in key=val key2=val2`
+- [ ] global settings > username
+- [ ] if only one possible child path, runs it straight away
+- [ ] keep history and timestamp
 - identity, in history, use for ssh key gen and approval
 - permissions
 - run remotely (e.g. on build server, esp for gated access)
@@ -57,4 +58,5 @@ _coming soon_
 - run in docker container (ala docker-shell) `container: node:lts-alpine`
 - opt to list all commands
 - opt to list resolved env
+- hide debug output behind an opts
   
