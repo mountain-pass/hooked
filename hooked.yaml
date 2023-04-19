@@ -1,0 +1,41 @@
+#
+# This is the environments definition. You can define (and select) different environments (e.g. '-e default' or '-e spanish')
+#
+# You can define the following resolution strategies: 
+# - (plain string)
+# - $env
+# - $cmd
+# - $stdin
+# - $resolve
+#
+env:
+  default:
+    username:
+      $env: USER
+    GIT_COMMIT:
+      $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
+    HELLO:
+      $cmd: printf "Hello"
+    WORLD: world
+    FIRSTNAME:
+      $stdin: What is your name?
+      $default: Bob
+    NAME:
+      $resolve: ${FIRSTNAME} (${username})
+  spanish:
+    GIT_COMMIT:
+      $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
+    HELLO: Hola
+    WORLD: Mundo
+    NAME: Amigo
+
+# this is the scripts section, it uses hierarchies to guide the user    
+scripts:
+  say:
+    hello:
+      $cmd: |
+        echo "${HELLO} ${WORLD}, ${NAME}!"
+        echo "git commit is -> ($GIT_COMMIT)"
+    goodbye:
+      $cmd: echo "Goodbye ${WORLD}, ${NAME}!"
+

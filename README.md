@@ -71,7 +71,9 @@ Don't forget to commit `hooked.yaml` to source control, for the next person!
 
 # configuration
 
-_coming soon_
+Please see the [`hooked.yaml`](hooked.yaml) example.
+
+_More coming soon._
 
 # now
 - [x] can run scripts based on yaml hierarchy
