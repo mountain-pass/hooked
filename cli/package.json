@@ -1,6 +1,6 @@
 {
   "name": "@mountainpass/hooked-cli",
-  "version": "0.0.1",
+  "version": "1.0.2",
   "description": "",
   "REFER_FOR_INQUIRER": "https://github.com/SBoudrias/Inquirer.js/issues/1129#issuecomment-1499464050",
   "type": "module",
