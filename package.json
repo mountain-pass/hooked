@@ -4,12 +4,16 @@
     "description": "Configurable rest endpoints.",
     "author": "",
     "license": "ISC",
+    "private": true,
     "bin": {
         "j": "./cli/dist/index.js"
     },
+    "workspaces": [
+        "cli"
+    ],
     "scripts": {
         "globalInstall": "npm i -g --force .",
         "globalUninstall": "npm uninstall -g --force @mountainpass/hooked",
-        "install": "cd cli && npm install && npm run build"
+        "install": "npm install && cd cli && npm run build"
     }
 }
