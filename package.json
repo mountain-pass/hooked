@@ -1,0 +1,15 @@
+{
+    "name": "@mountainpass/hooked",
+    "version": "1.0.0",
+    "description": "Configurable rest endpoints.",
+    "author": "",
+    "license": "ISC",
+    "bin": {
+        "j": "./cli/dist/index.js"
+    },
+    "scripts": {
+        "globalInstall": "npm i -g --force .",
+        "globalUninstall": "npm uninstall -g --force @mountainpass/hooked",
+        "install": "cd cli && npm install && npm run build"
+    }
+}

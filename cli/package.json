@@ -1,0 +1,37 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "",
+  "REFER_FOR_INQUIRER": "https://github.com/SBoudrias/Inquirer.js/issues/1129#issuecomment-1499464050",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "j": "./dist/cli.js",
+    "hooked": "./dist/cli.js"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc --build",
+    "build:clean": "tsc --build --clean",
+    "postbuild": "chmod 755 dist/index.js",
+    "installBin": "npm link",
+    "prej": "yarn workspace cli build",
+    "j": "node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "10.0.1",
+    "inquirer": "9.1.5",
+    "yaml": "2.2.1"
+  },
+  "devDependencies": {
+    "@types/commander": "2.12.2",
+    "@types/inquirer": "9.0.3",
+    "@types/node": "18.15.11",
+    "@types/yaml": "1.9.7",
+    "ts-node": "10.9.1",
+    "typescript": "5.0.4"
+  }
+}
