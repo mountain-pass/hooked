@@ -19,7 +19,7 @@ I want to be able to setup advanced build server scripts, that can be run:
 # install
 
 ```
-npm i -g mountain-pass/hooked
+npm i -g @mountainpass/hooked-cli
 ```
 
 # usage

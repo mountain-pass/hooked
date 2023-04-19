@@ -9,6 +9,9 @@
     "j": "./dist/cli.js",
     "hooked": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc --build",
@@ -16,7 +19,8 @@
     "postbuild": "chmod 755 dist/index.js",
     "installBin": "npm link",
     "prej": "yarn workspace cli build",
-    "j": "node ./dist/index.js"
+    "j": "node ./dist/index.js",
+    "initialPublish": "npm publish --access public"
   },
   "keywords": [],
   "author": "",
