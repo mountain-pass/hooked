@@ -49,14 +49,14 @@ _coming soon_
 - [ ] global settings > username
 - [ ] if only one possible child path, runs it straight away
 - [ ] keep history and timestamp
-- identity, in history, use for ssh key gen and approval
-- permissions
-- run remotely (e.g. on build server, esp for gated access)
-- concept of `prerequisites` (e.g. must have 'node' installed, or $cmd must exit with 0)
-- add more executors (e.g. javascript?)
-- use remote includes (e.g. `extends: https://myserver/foo.yaml`)
-- run in docker container (ala docker-shell) `container: node:lts-alpine`
-- opt to list all commands
-- opt to list resolved env
-- hide debug output behind an opts
+- [ ] identity, in history, use for ssh key gen and approval
+- [ ] permissions
+- [ ] run remotely (e.g. on build server, esp for gated access)
+- [ ] concept of `prerequisites` (e.g. must have 'node' installed, or $cmd must exit with 0)
+- [ ] add more executors (e.g. javascript?)
+- [ ] use remote includes (e.g. `extends: https://myserver/foo.yaml`)
+- [ ] run in docker container (ala docker-shell) `container: node:lts-alpine`
+- [ ] opt to list all commands
+- [ ] opt to list resolved env
+- [ ] hide debug output behind an opts
   
