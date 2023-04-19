@@ -1,7 +1,26 @@
 {
   "name": "@mountainpass/hooked-cli",
   "version": "1.0.4",
-  "description": "",
+  "description": "A tool for runnable scripts",
+  "author": "Mountain Pass <info@mountain-pass.com.au>",
+  "contributors": [
+    "Nick Grealy <nickgrealy@gmail.com>",
+    "Nick Grealy <nick@mountain-pass.com.au>"
+  ],
+  "keywords": [
+    "cli",
+    "script",
+    "server-agnostic"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mountain-pass/hooked.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mountain-pass/hooked/issues"
+  },
+  "homepage": "https://github.com/mountain-pass/hooked#readme",
   "REFER_FOR_INQUIRER": "https://github.com/SBoudrias/Inquirer.js/issues/1129#issuecomment-1499464050",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,9 +41,6 @@
     "j": "node ./dist/index.js",
     "initialPublish": "npm publish --access public"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "commander": "10.0.1",
     "inquirer": "9.1.5",
