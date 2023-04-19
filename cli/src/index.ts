@@ -9,6 +9,14 @@ import {
 } from './lib/config.js'
 import { cyan, red } from './lib/colour.js'
 import { type ResolvedEnv } from './lib/types.js'
+import fs from 'fs'
+import path from 'path'
+
+// all this just to load a json file... sigh ESM
+import { fileURLToPath } from 'url'
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
+const packageJson = JSON.parse(fs.readFileSync(path.resolve(dirname, '../package.json'), 'utf-8'))
 
 const configStr = loadConfig()
 const config = parseConfig(configStr)
@@ -22,7 +30,7 @@ export interface Options {
 program
   .name('hooked')
   .description('CLI execute preconfigured scripts')
-  .version('1.0.0', '-v, --version')
+  .version(packageJson.version, '-v, --version')
   .option('-e, --env <env>', 'specify environment', 'default')
   .option('-in, --stdin <json>', 'specify stdin responses', '{}')
   .option('--printenv', 'print the resolved environment')
