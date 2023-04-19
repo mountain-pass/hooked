@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "description": "Configurable rest endpoints.",
     "author": "",
-    "license": "ISC",
     "private": true,
+    "license": "MIT",
     "bin": {
         "j": "./cli/dist/index.js"
     },
@@ -17,7 +17,6 @@
         "l:bootstrap": "lerna bootstrap",
         "l:install": "lerna exec --scope @mountainpass/* npm install",
         "l:build": "lerna run --scope @mountainpass/* build",
-        "l:prebumxxxp": "npm install --package-lock-only --ignore-scripts --nohoist=*",
         "l:bump": "npx lerna version patch --yes --force-publish --message '%s [skip ci]'",
         "l:publish": "npx lerna publish from-package --yes",
         "l:graph": "nx graph"

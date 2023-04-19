@@ -20,7 +20,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "commander": "10.0.1",
     "inquirer": "9.1.5",
@@ -33,5 +33,6 @@
     "@types/yaml": "1.9.7",
     "ts-node": "10.9.1",
     "typescript": "5.0.4"
-  }
+  },
+  "gitHead": "d948ff8c0be37c8ec01efc067bf94a30f296f951"
 }
