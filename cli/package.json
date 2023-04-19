@@ -6,8 +6,8 @@
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "j": "./dist/cli.js",
-    "hooked": "./dist/cli.js"
+    "j": "./dist/index.js",
+    "hooked": "./dist/index.js"
   },
   "files": [
     "dist"
