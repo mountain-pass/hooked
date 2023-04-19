@@ -63,3 +63,5 @@ dist/
 
 # don't include this... we might want to regenerate
 hooked.yaml
+
+yarn.lock
