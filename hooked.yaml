@@ -29,13 +29,17 @@ env:
     WORLD: Mundo
     NAME: Amigo
 
-# this is the scripts section, it uses hierarchies to guide the user    
+# This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
   say:
     hello:
       $cmd: |
         echo "${HELLO} ${WORLD}, ${NAME}!"
         echo "git commit is -> ($GIT_COMMIT)"
-    goodbye:
-      $cmd: echo "Goodbye ${WORLD}, ${NAME}!"
+    a:
+      long:
+        hello:
+          $cmd: echo "Hellloooooooooooo ${WORLD}, ${NAME}!"
+        goodbye:
+          $cmd: echo "Goooooooooooodbye ${WORLD}, ${NAME}!"
 
