@@ -1,3 +1,26 @@
 {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "eslint.workingDirectories": [
+        "cli"
+    ],
+    "[javascript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+        "html",
+    ],
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "eslint.options": {
+        "overrideConfigFile": "./.eslintrc.json",
+    },
+    "eslint.nodePath": "./node_modules",
+    "colorize.languages": [
+        "javascript", "typescript"
+    ]
 }
