@@ -15,7 +15,7 @@ When executing the scripts, it must be:
 - suggestive
 - simple
 
-## alternatives
+## existing options
 
 |tool|cons|pros|
 |---|---|---|
@@ -23,6 +23,8 @@ When executing the scripts, it must be:
 | Makefile | <ul><li>not cli discoverable</li><li>ugly</li><li>non intuitive</li><li>feels brittle</li><li>not bash</li><li>odd env resolution behaviour</li></ul> | <ul><li>familiarity amonst seasoned devs</li></ul> |
 | Javascript | <ul><li>needlessly verbose</li><li>can't switch to native shell easily</li></ul> | <ul><li>cross platform</li></ul> |
 | Shell Scripts | <ul><li>not cli discoverable</li><li>have to jump between files</li><li>not cross platform</li></ul> | <ul><li>familiarity</li></ul> |
+
+I want something simpler and more easy to use...
 
 # install
 
