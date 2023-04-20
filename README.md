@@ -4,7 +4,7 @@
 
 I want to be able to setup advanced build server scripts, that can be run:
 - by anyone
-- with no project knowledge reuqired
+- with no project knowledge
 - anywhere (locally or remotely)
 - anytime
 
@@ -110,6 +110,8 @@ _More coming soon._
 - [x] error if $cmd is missing required environment variables
 - [x] Input type > Choice (include popuplate from $cmd etc)
 - [ ] !! env vars specific to the script being run
+
+# soon
 - [ ] $javascript - e.g. Math.max(10, ${DATE})
 - [ ] $imports - extend from other yaml configs
 - [ ] $inject - inject yaml from a file
@@ -122,12 +124,11 @@ _More coming soon._
   - [ ] Child folders?
 - [ ] Pipelines
 - [ ] bug: env>default - should allow blank / missing
-
-# soon
 - [ ] Slack runner
 - [ ] Input type > Remote (e.g. rest api)
 
 # future
+- [ ] publish a yaml schema definition?
 - [ ] change `-in` from json to `-in key=val key2=val2`
 - [ ] global settings > username
 - [ ] if only one possible child path, runs it straight away
