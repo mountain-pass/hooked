@@ -32,6 +32,10 @@ scripts:
     global:
       $cmd: npm uninstall -g --force @mountainpass/hooked-cli
   lerna:
+    graph:
+      $cmd: npx nx graph
+    bootstrap:
+      $cmd: npx lerna bootstrap
     install:
       $cmd: npx lerna exec --scope @mountainpass/* npm install
     build:

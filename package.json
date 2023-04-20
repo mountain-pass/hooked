@@ -12,9 +12,7 @@
         "cli"
     ],
     "scripts": {
-        "cli": "yarn workspace @mountainpass/hooked-cli",
-        "l:bootstrap": "lerna bootstrap",
-        "l:graph": "nx graph"
+        "cli": "yarn workspace @mountainpass/hooked-cli"
     },
     "devDependencies": {
         "lerna": "^6.4.1"
