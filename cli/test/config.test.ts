@@ -2,7 +2,7 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { describe } from 'mocha'
-import { resolveEnv } from '../src/lib/config.js'
+import { executeScript, getEnvVarRefs, resolveEnv, stripProcessEnvs } from '../src/lib/config.js'
 import { type Config } from '../src/lib/types.js'
 import sinon from 'sinon'
 import inquirer from 'inquirer'
@@ -161,14 +161,76 @@ describe('config', () => {
     sinon.assert.calledOnce(inqspy)
   })
 
-  it('env should resolve $stdin from provided inputs', async () => {
-    // spy
+  it('env should resolve $stdin from defaults', async () => {
+    // stub
     const inqspy = sinon.spy(inquirer, 'prompt')
+    // test
     const config: Config = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
-    const [env, stdin, envNames] = await resolveEnv(config, ['default'], { name: 'bob' })
-    expect(env).to.eql({ name: 'bob' })
-    expect(stdin).to.eql({ name: 'bob' })
+    const [env, stdin, envNames] = await resolveEnv(config, ['default'], { name: 'fred' })
+    expect(env).to.eql({ name: 'fred' })
+    expect(stdin).to.eql({ name: 'fred' })
     expect(envNames).to.eql(['default'])
     sinon.assert.notCalled(inqspy)
+  })
+
+  it('$stdin should support $choices string array', async () => {
+    // stub
+    const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+    // test
+    const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: ['one', 'two'] } } }, scripts: { } }
+    const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
+    expect(env).to.eql({ name: 'jack' })
+    expect(stdin).to.eql({ name: 'jack' })
+    expect(envNames).to.eql(['default'])
+    sinon.assert.calledOnceWithExactly(inqspy, [{
+      type: 'list',
+      name: 'name',
+      message: 'what is your name?',
+      default: undefined,
+      choices: ['one', 'two']
+    }])
+  })
+
+  it('$stdin should support $choices $cmd', async () => {
+    // stub
+    const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+    // test
+    const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
+    const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
+    expect(env).to.eql({ name: 'jack' })
+    expect(stdin).to.eql({ name: 'jack' })
+    expect(envNames).to.eql(['default'])
+    sinon.assert.calledOnceWithExactly(inqspy, [{
+      type: 'list',
+      name: 'name',
+      message: 'what is your name?',
+      default: undefined,
+      choices: ['one', 'two', 'three']
+    }])
+  })
+
+  it('strip process envs', async () => {
+    // same key and value? remove
+    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '111' })).to.eql({ bbb: '222' })
+    // same key, diff value? keep
+    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '333' })).to.eql({ aaa: '111', bbb: '222' })
+    // diff key? keep
+    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { ccc: '333' })).to.eql({ aaa: '111', bbb: '222' })
+  })
+
+  it('get env var refs', async () => {
+    expect(getEnvVarRefs('')).to.eql([])
+    expect(getEnvVarRefs('aaa')).to.eql([])
+    expect(getEnvVarRefs('${aaa}')).to.eql(['aaa'])
+    expect(getEnvVarRefs('aaa ${bbb} ccc')).to.eql(['bbb'])
+    expect(getEnvVarRefs('aaa ${bbb} ccc ${ddd} eee')).to.eql(['bbb', 'ddd'])
+    expect(getEnvVarRefs('aaa ${bbb} ccc ${ddd} eee ${bbb} ccc ${ddd} eee')).to.eql(['bbb', 'ddd'])
+  })
+
+  it('executing a $cmd with satisfied env should succeed', async () => {
+    await expect(executeScript({ $cmd: 'echo "${HELLO}"' }, { HELLO: "Goodbye" })).to.not.be.rejectedWith(Error)
+  })
+  it('executing a script with UNsatisfied env should throw an error', async () => {
+    await expect(executeScript({ $cmd: 'echo "${HELLO}"' }, { NOTHELLO: "Goodbye" })).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
   })
 })

@@ -5,11 +5,48 @@ import inquirer from 'inquirer'
 import YAML from 'yaml'
 import { cyan } from './colour.js'
 import { executeCmd } from './scriptExecutors/$cmd.js'
-import { type EnvScript, type CmdScript, type Config, type Env, type ResolvedEnv, type Script, type StdinResponses, type StdinScript, type ResolveScript, type Dictionary } from './types.js'
+import {
+  isCmdScript,
+  isEnvScript,
+  isResolveScript,
+  isScript,
+  isStdinScript,
+  type CmdScript, type Config,
+  type Dictionary,
+  type Env,
+  type ResolveScript,
+  type ResolvedEnv, type Script, type StdinResponses
+} from './types.js'
+import { resolveScript } from './scriptExecutors/ScriptExector.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined'
 
-const isLeafNode = (script: any): boolean => isDefined(script) && (isDefined(script.$cmd) || isDefined(script.$stdin))
+/**
+ * Remove env vars that are the same as the global env.
+ * @param env
+ * @param processEnv
+ * @returns
+ */
+export const stripProcessEnvs = (env: ResolvedEnv, processEnv: ResolvedEnv = process.env as any): ResolvedEnv => {
+  const envCopy = Object.fromEntries(Object.entries(env).filter(([key, value]) => {
+    // if value is the same, delete it
+    return env[key] !== processEnv[key]
+  }))
+  return envCopy
+}
+
+/**
+ * Retrieves all ${...} references from a string.
+ * @param str e.g. 'hello ${name}'
+ * @returns e.g. ['name']
+ */
+export const getEnvVarRefs = (str: string): string[] => {
+  const regex = /\${([^}]+)}/g
+  return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
+    prev[curr[1]] = 1
+    return prev
+  }, {}))
+}
 
 /**
  * Finds a script, given a path.
@@ -39,7 +76,7 @@ export const findScript = async (
     }
     // no match... prompt
   }
-  while (!isLeafNode(script)) {
+  while (!isScript(script)) {
     if (
       typeof script === 'undefined' ||
       script === null ||
@@ -78,9 +115,14 @@ export const findScript = async (
 export const executeScript = async (
   script: Script,
   env: ResolvedEnv
-): Promise<void> => {
-  if (isDefined((script as CmdScript).$cmd)) {
-    executeCmd((script as CmdScript).$cmd, {
+): Promise<string | undefined> => {
+  if (isCmdScript(script)) {
+    const requiredKeys = getEnvVarRefs(script.$cmd)
+    const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
+    if (missingKeys.length > 0) {
+      throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+    }
+    return executeCmd(script.$cmd, {
       stdio: 'inherit',
       env
     })
@@ -141,7 +183,7 @@ export const internalFindEnv = (
 }
 
 /**
- * Resolves environment variables
+ * Resolves environment variables in order of $stdin & $env, then $cmd, then $resolve.
  * @param environment
  * @returns
  */
@@ -153,64 +195,33 @@ const internalResolveEnv = async (
   const resolvedEnv: ResolvedEnv = { ...globalEnv, ...environment }
   const stdinResponses = { ...stdin }
   // defer the resolves until the end...
+  const cmds: Dictionary<CmdScript> = {}
   const resolves: Dictionary<ResolveScript> = {}
+  // first pass, resolve $env & $stdin
   for (const [key, value] of Object.entries(environment)) {
-    // RESOLVE $cmd
-    if (isDefined(value) && isDefined(value.$cmd)) {
-      const script = value as CmdScript
-      let newValue = executeCmd(script.$cmd)
-      // remove trailing newlines
-      newValue = newValue.replace(/(\r?\n)*$/, '')
-      resolvedEnv[key] = newValue
-    } else if (isDefined(value) && isDefined(value.$resolve)) {
+    if (isCmdScript(value)) {
+      cmds[key] = value
+    } else if (isResolveScript(value)) {
       resolves[key] = value
-    } else if (isDefined(value) && isDefined(value.$env)) {
-      const script = value as EnvScript
-      const resolvedEnvValue = globalEnv[script.$env]
-      if (isDefined(resolvedEnvValue)) {
-        resolvedEnv[key] = resolvedEnvValue
-      } else {
-        throw new Error(`Global environment variable not found: ${script.$env}`)
-      }
-    } else if (isDefined(value) && isDefined(value.$stdin)) {
-      const script = value as StdinScript
-      // RESOLVE $stdin
-      // if we already have a response, use that
-      if (isDefined(stdin[key])) {
-        resolvedEnv[key] = stdin[key]
-      } else {
-        await inquirer
-          .prompt([
-            {
-              type: 'text',
-              name: key,
-              message: script.$stdin,
-              default: script.$default
-            }
-          ])
-          .then((answers) => {
-            stdinResponses[key] = answers[key]
-            resolvedEnv[key] = answers[key]
-          })
-      }
+    } else if (isEnvScript(value)) {
+      resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
+    } else if (isStdinScript(value)) {
+      resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
+      stdinResponses[key] = resolvedEnv[key]
     }
   }
-  // process resolves last of all... up to 5x times (could be optimised!)
+  // process `cmds` env vars
+  for (const [key, script] of Object.entries(cmds)) {
+    resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
+  }
+  // process `resolves` env vars last of all... up to 5x times (could be optimised!)
   let unresolved = Object.entries(resolves)
   for (let i = 0; unresolved.length > 0 && i < 5; i++) {
     const tmp: Dictionary<ResolveScript> = {}
     for (const [key, script] of unresolved) {
       // use string replacement to resolve from the resolvedEnv
-      const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => {
-        const newVal = resolvedEnv[p1]
-        if (isDefined(newVal) && typeof newVal === 'string') {
-          return newVal
-        } else {
-          return match
-        }
-      })
-      resolvedEnv[key] = newValue
-      const notFullyResolved = /\${([^}]+)}/g.test(newValue)
+      resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
+      const notFullyResolved = /\${([^}]+)}/g.test(resolvedEnv[key])
       if (notFullyResolved) {
         tmp[key] = script
       }

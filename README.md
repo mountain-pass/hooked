@@ -87,6 +87,9 @@ _More coming soon._
 - ~~[ ] have "shared" environment variables (env agnostic)~~
 - [x] Multiple environments
 - [x] keep history and timestamp
+- [x] don't include process.env in the `--printenv`
+- [x] error if $cmd is missing required environment variables
+- [x] Input type > Choice (include popuplate from $cmd etc)
 - [ ] $imports - extend from other yaml configs
 - [ ] $inject - inject yaml from a file
   - [ ] local
@@ -100,7 +103,6 @@ _More coming soon._
 
 # soon
 - [ ] Slack runner
-- [ ] Input type > Choice
 - [ ] Input type > Remote (e.g. rest api)
 
 # future

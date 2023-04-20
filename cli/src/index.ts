@@ -5,7 +5,8 @@ import {
   findScript,
   loadConfig,
   parseConfig,
-  resolveEnv
+  resolveEnv,
+  stripProcessEnvs
 } from './lib/config.js'
 import { cyan, red } from './lib/colour.js'
 import { type SuccessfulScript, type ResolvedEnv } from './lib/types.js'
@@ -55,7 +56,8 @@ program
         globalEnv
       )
       if (options.printenv === true) {
-        console.log(cyan(JSON.stringify(env, null, 2)))
+        // print environment variables
+        console.log(cyan(JSON.stringify(stripProcessEnvs(env, process.env as any), null, 2)))
       } else {
         // find script and execute
         const [script, resolvedScriptPath] = await findScript(config, scriptPath)
@@ -67,10 +69,10 @@ program
           envNames: resolvedEnvNames,
           stdin: stdinResponses
         }
-        console.log(cyan(`rerun: j ${displaySuccessfulScript(successfulScript)}`))
+        console.log(cyan(`rerun: ${displaySuccessfulScript(successfulScript)}`))
 
         // execute script
-        await executeScript(script, { ...globalEnv, ...env })
+        await executeScript(script, env)
 
         // store in history (if successful!)
         addHistory(successfulScript)
