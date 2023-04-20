@@ -98,6 +98,7 @@ _More coming soon._
 - [ ] leverage existing scripts
   - [ ] Npm
   - [ ] Makefile
+  - [ ] Child folders?
 - [ ] Pipelines
 - [ ] env vars specific to the script being run
 
