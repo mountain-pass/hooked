@@ -228,13 +228,21 @@ const internalResolveEnv = async (
  */
 export const resolveEnv = async (
   config: Config,
-  environment = 'default',
+  environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
   globalEnv: ResolvedEnv = {}
-): Promise<[ResolvedEnv, StdinResponses, string]> => {
-  const [env, envName] = internalFindEnv(config, environment)
-  const [resolvedEnv, stdinResponses] = await internalResolveEnv(env, stdin, globalEnv)
-  return [resolvedEnv, stdinResponses, envName]
+): Promise<[ResolvedEnv, StdinResponses, string[]]> => {
+  let allEnvs: ResolvedEnv = { ...globalEnv }
+  let allStdinResponses: StdinResponses = { ...stdin }
+  const allEnvNames: string[] = []
+  for (const environment of environmentNames) {
+    const [env, envName] = internalFindEnv(config, environment)
+    const [resolvedEnv, stdinResponses] = await internalResolveEnv(env, stdin, allEnvs)
+    allEnvs = { ...allEnvs, ...resolvedEnv }
+    allStdinResponses = { ...allStdinResponses, ...stdinResponses }
+    allEnvNames.push(envName)
+  }
+  return [allEnvs, allStdinResponses, allEnvNames]
 }
 
 export const loadConfig = (): string => {

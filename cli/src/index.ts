@@ -8,9 +8,10 @@ import {
   resolveEnv
 } from './lib/config.js'
 import { cyan, red } from './lib/colour.js'
-import { type ResolvedEnv } from './lib/types.js'
+import { type SuccessfulScript, type ResolvedEnv } from './lib/types.js'
 import fs from 'fs'
 import path from 'path'
+import { addHistory, displaySuccessfulScript, printHistory } from './lib/history.js'
 
 // all this just to load a json file... sigh ESM
 import { fileURLToPath } from 'url'
@@ -25,6 +26,7 @@ export interface Options {
   env: string
   stdin: string
   printenv?: boolean
+  log?: boolean
 }
 
 program
@@ -34,15 +36,21 @@ program
   .option('-e, --env <env>', 'specify environment', 'default')
   .option('-in, --stdin <json>', 'specify stdin responses', '{}')
   .option('--printenv', 'print the resolved environment')
+  .option('-l, --log', 'print the log of previous scripts')
   .argument('[scriptPath...]', 'the script path to run')
   .usage('[options]')
   .action(async (scriptPath: string[], options: Options) => {
+    if (options.log === true) {
+      printHistory()
+      return
+    }
     try {
+      const envNames = options.env.split(',')
       const stdin = JSON.parse(options.stdin)
       const globalEnv = process.env as unknown as ResolvedEnv
-      const [env, stdinResponses, resolvedEnvName] = await resolveEnv(
+      const [env, stdinResponses, resolvedEnvNames] = await resolveEnv(
         config,
-        options.env,
+        envNames,
         stdin,
         globalEnv
       )
@@ -51,8 +59,21 @@ program
       } else {
         // find script and execute
         const [script, resolvedScriptPath] = await findScript(config, scriptPath)
-        console.log(cyan(`rerun: j ${resolvedScriptPath.join(' ')} -e ${resolvedEnvName} -in '${JSON.stringify(stdinResponses)}'`))
+
+        // generate rerun command
+        const successfulScript: SuccessfulScript = {
+          ts: Date.now(),
+          scriptPath: resolvedScriptPath,
+          envNames: resolvedEnvNames,
+          stdin: stdinResponses
+        }
+        console.log(cyan(`rerun: j ${displaySuccessfulScript(successfulScript)}`))
+
+        // execute script
         await executeScript(script, { ...globalEnv, ...env })
+
+        // store in history (if successful!)
+        addHistory(successfulScript)
       }
     } catch (err: any) {
       console.error(red(err.message))

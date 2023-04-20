@@ -83,16 +83,30 @@ _More coming soon._
 - [x] prompt user with a "replayable" script
 - [x] external env var prerequisites (e.g. must have ZIPDROP_V3_BEARER_TOKEN)
 - [x] env vars -> resolving env vars
-- [ ] import / include / inherit / extend from other yaml configs
+- [x] opt to list resolved env values
+- ~~[ ] have "shared" environment variables (env agnostic)~~
+- [x] Multiple environments
+- [x] keep history and timestamp
+- [ ] $imports - extend from other yaml configs
+- [ ] $inject - inject yaml from a file
   - [ ] local
   - [ ] remote (e.g. `extends: https://myserver/foo.yaml`)
   - [ ] global settings under user profile > env vars
+- [ ] leverage existing scripts
+  - [ ] Npm
+  - [ ] Makefile
+- [ ] Pipelines
+- [ ] env vars specific to the script being run
+
+# soon
+- [ ] Slack runner
+- [ ] Input type > Choice
+- [ ] Input type > Remote (e.g. rest api)
 
 # future
 - [ ] change `-in` from json to `-in key=val key2=val2`
 - [ ] global settings > username
 - [ ] if only one possible child path, runs it straight away
-- [ ] keep history and timestamp
 - [ ] identity, in history, use for ssh key gen and approval
 - [ ] permissions
 - [ ] run remotely (e.g. on build server, esp for gated access)
@@ -100,6 +114,6 @@ _More coming soon._
 - [ ] add more executors (e.g. javascript?)
 - [ ] run in docker container (ala docker-shell) `container: node:lts-alpine`
 - [ ] opt to list all commands
-- [ ] opt to list resolved env
 - [ ] hide debug output behind an opts
 - [ ] non-interactive mode?
+- [ ] opt to select env names? (as opposed to having a default)

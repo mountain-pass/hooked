@@ -12,6 +12,13 @@ export type ResolvedEnv = Record<string, string>
 
 export type StdinResponses = Record<string, string>
 
+export interface SuccessfulScript {
+  ts: number
+  scriptPath: string[]
+  envNames: string[]
+  stdin: object
+}
+
 // script types
 
 export interface CmdScript {

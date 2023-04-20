@@ -65,3 +65,5 @@ dist/
 hooked.yaml
 
 yarn.lock
+
+NOTES.md

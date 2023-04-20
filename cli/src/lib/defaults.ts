@@ -1,13 +1,16 @@
 /* eslint-disable no-template-curly-in-string */
 import path from 'path'
 
+export const HISTORY_PATH = path.resolve('.hooked_history.log')
 export const CONFIG_PATH = path.resolve('hooked.yaml')
 
 export const DEFAULT_CONFIG = {
   env: {
     default: {
       username: { $env: 'USER' },
-      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' },
+      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' }
+    },
+    english: {
       HELLO: { $cmd: 'printf "Hello"' },
       WORLD: 'world',
       FIRSTNAME: {
@@ -17,7 +20,6 @@ export const DEFAULT_CONFIG = {
       NAME: { $resolve: '${FIRSTNAME} (${username})' }
     },
     spanish: {
-      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' },
       HELLO: 'Hola',
       WORLD: 'Mundo',
       NAME: 'Amigo'
