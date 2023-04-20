@@ -21,6 +21,7 @@
         "l:install": "lerna exec --scope @mountainpass/* npm install",
         "l:build": "lerna run --scope @mountainpass/* build",
         "l:bump": "npx lerna version patch --yes --force-publish --message '%s [skip ci]'",
+        "prel:publish": "yarn cli build",
         "l:publish": "npx lerna publish from-package --yes",
         "l:graph": "nx graph"
     },
