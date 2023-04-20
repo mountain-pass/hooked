@@ -18,9 +18,14 @@ When executing the scripts, it must be:
 
 |tool|cons|pros|
 |---|---|---|
-| NPM | primarily a package manager, scripting changes affects build caching, scripting has to be escaped | has access to self install cli tools|
-| Makefile | ugly, non intuitive, feels brittle, not bash, funny env resolution | has been around forever |
-| Javascript | very verbose, can't switch to native shell easily | cross platform|
+| NPM | <ul><li>not cli discoverable</li><li>primarily a package manager</li><li>scripting changes affects (docker) build caching</li><li>scripting has to be escaped (json)</li><li>cannot do multiline scripts</li></ul> | <ul><li>has access to self install cli tools</li></ul> |
+| Makefile | <ul><li>not cli discoverable</li><li>ugly</li><li>non intuitive</li><li>feels brittle</li><li>not bash</li><li>odd env resolution behaviour</li></ul> | <ul><li>familiarity amonst seasoned devs</li></ul> |
+| Javascript | <ul><li>needlessly verbose</li><li>can't switch to native shell easily</li></ul> | <ul><li>cross platform</li></ul> |
+| Shell Scripts | <ul><li>not cli discoverable</li><li>have to jump between files</li><li>not cross platform</li></ul> | <ul><li>familiarity</li></ul> |
+
+
+pre-scripts
+# working with scripts - have to keep jumping between files
 
 # install
 
@@ -35,12 +40,23 @@ j --help
 ```
 (the 'j' is a fishing hook!)
 
+---
+
 Just type `j`, and it'll setup a sample `hooked.yaml` config file. It will then prompt you for inputs!
 ```sh
 j
 ```
 
-Example output, after selecting options:
+---
+
+New to a project or don't know where to start? See (and copy) what others have run recently:
+```
+j --log
+```
+
+---
+
+Here is some example output, after selecting options:
 ```sh
 Using environment: default
 ? What is your name? Bob
@@ -57,17 +73,23 @@ Note the `rerun: ...` output? You can use that, to rerun a command, with all inp
 j say hello --env default --stdin '{"FIRSTNAME":"Bob"}'
 ```
 
+---
+
 Don't worry, if you can't remember the full script path, you'll be prompted. Try this:
 ```sh
 j say
 ```
+
+---
 
 Feeling ~~lazy~~ efficient? Try typing some characters of the script or environment. As long as it's enough to uniquely identify your script, the tool will do the rest!
 ```sh
 j s hel --env sp
 ```
 
-Don't forget to commit `hooked.yaml` to source control, for the next person!
+---
+
+Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source control, for the next person!
 
 # configuration
 
@@ -90,6 +112,8 @@ _More coming soon._
 - [x] don't include process.env in the `--printenv`
 - [x] error if $cmd is missing required environment variables
 - [x] Input type > Choice (include popuplate from $cmd etc)
+- [ ] !! env vars specific to the script being run
+- [ ] $javascript - e.g. Math.max(10, ${DATE})
 - [ ] $imports - extend from other yaml configs
 - [ ] $inject - inject yaml from a file
   - [ ] local
@@ -100,7 +124,7 @@ _More coming soon._
   - [ ] Makefile
   - [ ] Child folders?
 - [ ] Pipelines
-- [ ] env vars specific to the script being run
+- [ ] bug: env>default - should allow blank / missing
 
 # soon
 - [ ] Slack runner

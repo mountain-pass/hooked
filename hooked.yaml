@@ -18,6 +18,8 @@ env:
     #   $stdin: "Please choose a recently Downloaded file:"
     #   $choices:
     #     $cmd: ls -1t ~/Downloads | head -10
+    # NOW:
+    #   $cmd: date +%Y-%m-%dT%H:%M:%S%z
 
 # This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
@@ -51,3 +53,5 @@ scripts:
       npx lerna run --scope @mountainpass/* build
       npx lerna version patch --yes --force-publish --message '%s [skip ci]'
       npx lerna publish from-package --yes
+
+
