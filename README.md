@@ -106,11 +106,11 @@ _More coming soon._
 - [x] env vars -> resolving env vars
 - [x] opt to list resolved env values
 - ~~[ ] have "shared" environment variables (env agnostic)~~
-- [x] Multiple environments
-- [x] keep history and timestamp
+- [x] support specifying multiple environments (comma delimited)
+- [x] keep a history log (incl timestamp)
 - [x] don't include process.env in the `--printenv`
 - [x] error if $cmd is missing required environment variables
-- [x] Input type > Choice (include popuplate from $cmd etc)
+- [x] $stdin > $choices (include populate from $cmd etc)
 - [ ] !! env vars specific to the script being run
 
 # soon
