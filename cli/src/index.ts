@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 import { program } from 'commander'
+import fs from 'fs'
+import path from 'path'
+import { cyan, red } from './lib/colour.js'
 import {
-  executeScript,
   findScript,
   loadConfig,
   parseConfig,
   resolveEnv,
   stripProcessEnvs
 } from './lib/config.js'
-import { cyan, red } from './lib/colour.js'
-import { type SuccessfulScript, type ResolvedEnv } from './lib/types.js'
-import fs from 'fs'
-import path from 'path'
 import { addHistory, displaySuccessfulScript, printHistory } from './lib/history.js'
+import { isCmdScript, type SuccessfulScript } from './lib/types.js'
 
 // all this just to load a json file... sigh ESM
 import { fileURLToPath } from 'url'
+import { resolveCmdScript } from './lib/scriptExecutors/ScriptExector.js'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(dirname, '../package.json'), 'utf-8'))
@@ -28,6 +28,7 @@ export interface Options {
   stdin: string
   printenv?: boolean
   log?: boolean
+  debug?: boolean
 }
 
 program
@@ -38,6 +39,7 @@ program
   .option('-in, --stdin <json>', 'specify stdin responses', '{}')
   .option('--printenv', 'print the resolved environment')
   .option('-l, --log', 'print the log of previous scripts')
+  .option('-d, --debug', 'show error stacks, show debug logs')
   .argument('[scriptPath...]', 'the script path to run')
   .usage('[options]')
   .action(async (scriptPath: string[], options: Options) => {
@@ -48,7 +50,7 @@ program
     try {
       const envNames = options.env.split(',')
       const stdin = JSON.parse(options.stdin)
-      const globalEnv = process.env as unknown as ResolvedEnv
+      const globalEnv = process.env as any
       const [env, stdinResponses, resolvedEnvNames] = await resolveEnv(
         config,
         envNames,
@@ -72,13 +74,21 @@ program
         console.log(cyan(`rerun: ${displaySuccessfulScript(successfulScript)}`))
 
         // execute script
-        await executeScript(script, env)
+        if (isCmdScript(script)) {
+          resolveCmdScript(script, env, false)
+        } else {
+          throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
+        }
 
         // store in history (if successful!)
         addHistory(successfulScript)
       }
     } catch (err: any) {
-      console.error(red(err.message))
+      if (options.debug === true) {
+        console.error(err)
+      } else {
+        console.error(red(err.message))
+      }
       process.exit(1)
     }
   })

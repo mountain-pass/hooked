@@ -1,11 +1,12 @@
 /* eslint-disable no-template-curly-in-string */
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { describe } from 'mocha'
-import { executeScript, getEnvVarRefs, resolveEnv, stripProcessEnvs } from '../src/lib/config.js'
-import { type Config } from '../src/lib/types.js'
-import sinon from 'sinon'
 import inquirer from 'inquirer'
+import { describe } from 'mocha'
+import sinon from 'sinon'
+import { getEnvVarRefs, resolveEnv, stripProcessEnvs } from '../src/lib/config.js'
+import { resolveCmdScript } from '../src/lib/scriptExecutors/ScriptExector.js'
+import { type Config } from '../src/lib/types.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -109,16 +110,18 @@ describe('config', () => {
     expect(envNames).to.eql(['default'])
   })
 
-  it('env should attempt to $resolve at least 5 deep', async () => {
+  it('env should resolve variables in order', async () => {
     const config: Config = {
       env: {
         default: {
-          six: { $resolve: '${five}-6' },
-          five: { $resolve: '${four}-5' },
-          four: { $resolve: '${three}-4' },
-          three: { $resolve: '${two}-3' },
+          one: '1',
           two: { $resolve: '${one}-2' },
-          one: '1'
+          three: { $resolve: '${two}-3' },
+          four: { $resolve: '${three}-4' },
+          five: { $resolve: '${four}-5' },
+          six: { $resolve: '${five}-6' },
+          seven: { $resolve: '${eight}-7' }, // will not resolve, eight has not yet been defined
+          eight: { $resolve: '8' },
         }
       },
       scripts: {}
@@ -130,7 +133,9 @@ describe('config', () => {
       three: '1-2-3',
       four: '1-2-3-4',
       five: '1-2-3-4-5',
-      six: '1-2-3-4-5-6'
+      six: '1-2-3-4-5-6',
+      seven: '${eight}-7',
+      eight: '8',
     })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
@@ -228,9 +233,9 @@ describe('config', () => {
   })
 
   it('executing a $cmd with satisfied env should succeed', async () => {
-    await expect(executeScript({ $cmd: 'echo "${HELLO}"' }, { HELLO: "Goodbye" })).to.not.be.rejectedWith(Error)
+    expect(() => resolveCmdScript({ $cmd: 'echo "${HELLO}"' }, { HELLO: "Goodbye" })).to.not.throw(Error)
   })
   it('executing a script with UNsatisfied env should throw an error', async () => {
-    await expect(executeScript({ $cmd: 'echo "${HELLO}"' }, { NOTHELLO: "Goodbye" })).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+    expect(() => resolveCmdScript({ $cmd: 'echo "${HELLO}"' }, { NOTHELLO: "Goodbye" })).to.throw('Script is missing required environment variables: ["HELLO"]')
   })
 })

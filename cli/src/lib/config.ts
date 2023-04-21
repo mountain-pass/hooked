@@ -4,7 +4,7 @@ import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
 import { cyan } from './colour.js'
-import { executeCmd } from './scriptExecutors/$cmd.js'
+import { resolveScript } from './scriptExecutors/ScriptExector.js'
 import {
   isCmdScript,
   isEnvScript,
@@ -17,9 +17,8 @@ import {
   type ResolveScript,
   type ResolvedEnv, type Script, type StdinResponses
 } from './types.js'
-import { resolveScript } from './scriptExecutors/ScriptExector.js'
 
-const isDefined = (o: any): boolean => typeof o !== 'undefined'
+const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
 /**
  * Remove env vars that are the same as the global env.
@@ -108,28 +107,6 @@ export const findScript = async (
 }
 
 /**
- * Generic wrapper around any executable "Script" object.
- * @param script
- * @param env
- */
-export const executeScript = async (
-  script: Script,
-  env: ResolvedEnv
-): Promise<string | undefined> => {
-  if (isCmdScript(script)) {
-    const requiredKeys = getEnvVarRefs(script.$cmd)
-    const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
-    if (missingKeys.length > 0) {
-      throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
-    }
-    return executeCmd(script.$cmd, {
-      stdio: 'inherit',
-      env
-    })
-  }
-}
-
-/**
  * Gets a list of executable scripts.
  */
 export const stringifyScripts = (config: Config): string[] => {
@@ -154,32 +131,38 @@ export const parseConfig = (config: string, env?: any): Config => {
 /**
  * Resolves an environment configuration.
  * @param config
- * @param env
+ * @param envName
  * @returns
  */
 export const internalFindEnv = (
   config: Config,
-  env = 'default'
+  envName = 'default'
 ): [Env, string] => {
+  if (!isDefined(config) || !isDefined(config.env)) {
+    throw new Error('No environments found in config. Must have at least one environment.')
+  }
+
   // look for exact match
-  if (isDefined(config.env[env])) {
-    console.log(cyan(`Using environment: ${env}`))
-    return [config.env[env] as Env, env]
+  if (isDefined(config.env[envName])) {
+    console.log(cyan(`Using environment: ${envName}`))
+    const newLocal = config.env[envName] as Env
+    return [newLocal === null ? {} : newLocal, envName]
   }
 
   // if only one environment, always use that? No
 
   // search by prefix
   const envs = Object.entries(config.env)
-  const found = envs.filter(([key, value]) => key.startsWith(env))
+  const found = envs.filter(([key, value]) => key.startsWith(envName))
   if (found.length === 1) {
     const foundEnv = found[0][0]
     console.log(cyan(`Using environment: ${foundEnv}`))
-    return [found[0][1] as Env, foundEnv]
+    const newLocal = found[0][1] as Env
+    return [newLocal === null ? {} : newLocal, foundEnv]
   }
 
   const availableEnvs = envs.map(([key, value]) => `\t- ${key}`).join('\n')
-  throw new Error(`Environment not found: ${env}\nDid you mean?\n${availableEnvs}`)
+  throw new Error(`Environment not found: ${envName}\nDid you mean?\n${availableEnvs}`)
 }
 
 /**
@@ -188,46 +171,53 @@ export const internalFindEnv = (
  * @returns
  */
 const internalResolveEnv = async (
-  environment: Env,
+  environment: Env = {},
   stdin: StdinResponses = {},
   globalEnv: ResolvedEnv = {}
 ): Promise<[ResolvedEnv, StdinResponses]> => {
   const resolvedEnv: ResolvedEnv = { ...globalEnv, ...environment }
   const stdinResponses = { ...stdin }
-  // defer the resolves until the end...
-  const cmds: Dictionary<CmdScript> = {}
-  const resolves: Dictionary<ResolveScript> = {}
-  // first pass, resolve $env & $stdin
-  for (const [key, value] of Object.entries(environment)) {
-    if (isCmdScript(value)) {
-      cmds[key] = value
-    } else if (isResolveScript(value)) {
-      resolves[key] = value
-    } else if (isEnvScript(value)) {
-      resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
-    } else if (isStdinScript(value)) {
-      resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
+  // resolve environment variables **IN ORDER**
+  for (const [key, script] of Object.entries(environment)) {
+    resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
+    if (isStdinScript(script)) {
       stdinResponses[key] = resolvedEnv[key]
     }
   }
-  // process `cmds` env vars
-  for (const [key, script] of Object.entries(cmds)) {
-    resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
-  }
-  // process `resolves` env vars last of all... up to 5x times (could be optimised!)
-  let unresolved = Object.entries(resolves)
-  for (let i = 0; unresolved.length > 0 && i < 5; i++) {
-    const tmp: Dictionary<ResolveScript> = {}
-    for (const [key, script] of unresolved) {
-      // use string replacement to resolve from the resolvedEnv
-      resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
-      const notFullyResolved = /\${([^}]+)}/g.test(resolvedEnv[key])
-      if (notFullyResolved) {
-        tmp[key] = script
-      }
-    }
-    unresolved = Object.entries(tmp)
-  }
+  // defer the resolves until the end...
+  // const cmds: Dictionary<CmdScript> = {}
+  // const resolves: Dictionary<ResolveScript> = {}
+  // first pass, resolve $env & $stdin
+  // for (const [key, value] of Object.entries(environment)) {
+  //   if (isCmdScript(value)) {
+  //     cmds[key] = value
+  //   } else if (isResolveScript(value)) {
+  //     resolves[key] = value
+  //   } else if (isEnvScript(value)) {
+  //     resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
+  //   } else if (isStdinScript(value)) {
+  //     resolvedEnv[key] = await resolveScript(key, value, stdinResponses, resolvedEnv)
+  //     stdinResponses[key] = resolvedEnv[key]
+  //   }
+  // }
+  // // process `cmds` env vars
+  // for (const [key, script] of Object.entries(cmds)) {
+  //   resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
+  // }
+  // // process `resolves` env vars last of all... up to 5x times (could be optimised!)
+  // let unresolved = Object.entries(resolves)
+  // for (let i = 0; unresolved.length > 0 && i < 5; i++) {
+  //   const tmp: Dictionary<ResolveScript> = {}
+  //   for (const [key, script] of unresolved) {
+  //     // use string replacement to resolve from the resolvedEnv
+  //     resolvedEnv[key] = await resolveScript(key, script, stdinResponses, resolvedEnv)
+  //     const notFullyResolved = /\${([^}]+)}/g.test(resolvedEnv[key])
+  //     if (notFullyResolved) {
+  //       tmp[key] = script
+  //     }
+  //   }
+  //   unresolved = Object.entries(tmp)
+  // }
   return [resolvedEnv, stdinResponses]
 }
 
@@ -238,7 +228,7 @@ const internalResolveEnv = async (
  * @returns
  */
 export const resolveEnv = async (
-  config: Config,
+  config: Config = {} as any,
   environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
   globalEnv: ResolvedEnv = {}
@@ -246,12 +236,12 @@ export const resolveEnv = async (
   let allEnvs: ResolvedEnv = { ...globalEnv }
   let allStdinResponses: StdinResponses = { ...stdin }
   const allEnvNames: string[] = []
-  for (const environment of environmentNames) {
-    const [env, envName] = internalFindEnv(config, environment)
+  for (const envName of environmentNames) {
+    const [env = {}, resolvedEnvName] = internalFindEnv(config, envName)
     const [resolvedEnv, stdinResponses] = await internalResolveEnv(env, stdin, allEnvs)
     allEnvs = { ...allEnvs, ...resolvedEnv }
     allStdinResponses = { ...allStdinResponses, ...stdinResponses }
-    allEnvNames.push(envName)
+    allEnvNames.push(resolvedEnvName)
   }
   return [allEnvs, allStdinResponses, allEnvNames]
 }

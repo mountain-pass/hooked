@@ -5,8 +5,9 @@ import {
   type CmdScript, type EnvScript, type StdinScript, type ResolveScript, isScript
 } from '../types.js'
 import { executeCmd } from './$cmd.js'
+import { getEnvVarRefs } from '../config.js'
 
-const isDefined = (o: any): boolean => typeof o !== 'undefined'
+const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
 export interface ScriptExecutorResponse {
   value: string
@@ -18,6 +19,14 @@ export const isScriptExectorResponse = (o: any): o is ScriptExecutorResponse => 
 }
 
 export const resolveCmdScript = (script: CmdScript, env: ResolvedEnv, captureOutput = true): string => {
+  // check for missing environment variables
+  const requiredKeys = getEnvVarRefs(script.$cmd)
+  const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
+  if (missingKeys.length > 0) {
+    throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+  }
+
+  // execute the command, capture the output
   let newValue = executeCmd(script.$cmd, { stdio: captureOutput ? undefined : 'inherit', env })
   // remove trailing newlines
   newValue = newValue.replace(/(\r?\n)*$/, '')
@@ -65,7 +74,8 @@ export const resolveStdinScript = async (
         }
       ])
       .then((answers) => {
-        return answers[key]
+        const value = answers[key]
+        return value
       })
   }
 }
@@ -101,6 +111,8 @@ export const resolveScript = async (
   } else if (isResolveScript(script)) {
     // $resolve
     return resolveResolveScript(script, env)
+  } else if (typeof script === 'string') {
+    return script
   }
   throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
 }

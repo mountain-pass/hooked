@@ -22,6 +22,7 @@ export interface SuccessfulScript {
 // script types
 
 export interface CmdScript {
+  $env?: Dictionary<Script>
   $cmd: string
 }
 

@@ -109,13 +109,13 @@ _More coming soon._
 - [x] support specifying multiple environments (comma delimited)
 - [x] keep a history log (incl timestamp)
 - [x] don't include process.env in the `--printenv`
-- [x] error if $cmd is missing required environment variables
+- [x] throw error if $cmd is missing required environment variables
 - [x] $stdin > $choices (include populate from $cmd etc)
 - [ ] !! env vars specific to the script being run
 
 # soon
-- [ ] $javascript - e.g. Math.max(10, ${DATE})
 - [ ] $imports - extend from other yaml configs
+- [ ] $javascript - e.g. Math.max(10, ${DATE}) - (can't we just use docker and $cmd?)
 - [ ] $inject - inject yaml from a file
   - [ ] local
   - [ ] remote (e.g. `extends: https://myserver/foo.yaml`)
@@ -125,7 +125,6 @@ _More coming soon._
   - [ ] Makefile
   - [ ] Child folders?
 - [ ] Pipelines
-- [ ] bug: env>default - should allow blank / missing
 - [ ] Slack runner
 - [ ] Input type > Remote (e.g. rest api)
 
