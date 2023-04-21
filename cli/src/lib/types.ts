@@ -1,13 +1,19 @@
-
-export interface Config {
-  env: any
-  scripts: any
-}
-
 export type Dictionary<ValueType> = Record<string, ValueType>
 
-export type Env = Record<string, any>
-export type EnvScripts = Record<string, Script>
+export type EnvironmentVariables = Record<string, Script>
+
+export type TopLevelImports = string[]
+export type TopLevelEnvironments = Record<string, EnvironmentVariables>
+// because this is a circular reference... any could be Script | TopLevelScripts again...
+export type TopLevelScripts = Record<string, any>
+
+export interface Config {
+  imports?: TopLevelImports
+  env: TopLevelEnvironments
+  scripts: TopLevelScripts
+}
+
+// export type EnvScripts = Record<string, Script>
 
 export type ResolvedEnv = Record<string, string>
 
@@ -23,7 +29,7 @@ export interface SuccessfulScript {
 // script types
 
 export interface CmdScript {
-  $env?: Env
+  $env?: EnvironmentVariables
   $cmd: string
 }
 
@@ -39,7 +45,7 @@ export interface StdinScript {
   // allow multiple options
   $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
 }
-export type Script = CmdScript | StdinScript | EnvScript | ResolveScript
+export type Script = string | CmdScript | StdinScript | EnvScript | ResolveScript
 
 export const isCmdScript = (script: Script): script is CmdScript => {
   return typeof (script as any).$cmd === 'string'

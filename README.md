@@ -105,28 +105,19 @@ _More coming soon._
 - [x] external env var prerequisites (e.g. must have ZIPDROP_V3_BEARER_TOKEN)
 - [x] env vars -> resolving env vars
 - [x] opt to list resolved env values
-- ~~[ ] have "shared" environment variables (env agnostic)~~
 - [x] support specifying multiple environments (comma delimited)
 - [x] keep a history log (incl timestamp)
 - [x] don't include process.env in the `--printenv`
 - [x] throw error if $cmd is missing required environment variables
 - [x] $stdin > $choices (include populate from $cmd etc)
 - [x] env vars specific to the script being run
+- [x] $imports - extend from other yaml configs
 
 # soon
-- [ ] $imports - extend from other yaml configs
-- [ ] $javascript - e.g. Math.max(10, ${DATE}) - (can't we just use docker and $cmd?)
-- [ ] $inject - inject yaml from a file
-  - [ ] local
-  - [ ] remote (e.g. `extends: https://myserver/foo.yaml`)
-  - [ ] global settings under user profile > env vars
-- [ ] leverage existing scripts
-  - [ ] Npm
-  - [ ] Makefile
-  - [ ] Child folders with hooked.yaml?
+- [ ] $imports > extend $cmd to include a $cwd (current working directory, relative to imported script)
+- [ ] $imports > extend to support remote (http://) urls
 - [ ] Pipelines
 - [ ] Slack runner
-- [ ] Input type > Remote (e.g. rest api)
 
 # future
 - [ ] publish a yaml schema definition?
@@ -143,3 +134,16 @@ _More coming soon._
 - [ ] hide debug output behind an opts
 - [ ] non-interactive mode?
 - [ ] opt to select env names? (as opposed to having a default)
+
+# descoped
+- [ ] ~~$inject - inject yaml from a file~~ - nah, just use the $imports instead
+  - [ ] ~~local~~
+  - [ ] ~~remote (e.g. `extends: https://myserver/foo.yaml`)~~
+  - [ ] ~~global settings under user profile > env vars~~
+- [ ] ~~leverage existing scripts~~
+  - [ ] ~~Npm~~ - nah, just use hooked instead!
+  - [ ] ~~Makefile~~ - nah, just use hooked instead!
+  - [ ] ~~auto detect child folders with hooked.yaml?~~ - nah, just use the $import feature instead!
+- [ ] ~~Input type > Remote (e.g. rest api)~~ - just use $cmd to populate inputs (one line per choice)
+- [ ] ~~$javascript - e.g. Math.max(10, ${DATE})~~ - just use docker and/or $cmd
+- [ ] ~~have "shared" environment variables (env agnostic)~~ just use multi environments

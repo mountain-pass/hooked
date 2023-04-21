@@ -7,7 +7,6 @@ import {
   findScript,
   internalResolveEnv,
   loadConfig,
-  parseConfig,
   resolveEnv,
   stripProcessEnvs
 } from './lib/config.js'
@@ -16,13 +15,11 @@ import { isCmdScript, type SuccessfulScript } from './lib/types.js'
 
 // all this just to load a json file... sigh ESM
 import { fileURLToPath } from 'url'
+import { CONFIG_PATH } from './lib/defaults.js'
 import { isDefined, resolveCmdScript } from './lib/scriptExecutors/ScriptExector.js'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(dirname, '../package.json'), 'utf-8'))
-
-const configStr = loadConfig()
-const config = parseConfig(configStr)
 
 export interface Options {
   env: string
@@ -49,9 +46,11 @@ program
       return
     }
     try {
+      const config = loadConfig(CONFIG_PATH)
+
       const envNames = options.env.split(',')
       const stdin = JSON.parse(options.stdin)
-      const globalEnv = process.env as any
+      const globalEnv = { ...process.env as any }
       const [env, , resolvedEnvNames] = await resolveEnv(
         config,
         envNames,

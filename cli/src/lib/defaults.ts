@@ -1,10 +1,11 @@
 /* eslint-disable no-template-curly-in-string */
 import path from 'path'
+import { type Config } from './types.js'
 
 export const HISTORY_PATH = path.resolve('.hooked_history.log')
 export const CONFIG_PATH = path.resolve('hooked.yaml')
 
-export const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG: Config = {
   env: {
     default: {
       username: { $env: 'USER' },

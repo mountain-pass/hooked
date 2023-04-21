@@ -1,12 +1,14 @@
 /* eslint-disable no-template-curly-in-string */
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
+import fs from 'fs'
 import inquirer from 'inquirer'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import { getEnvVarRefs, resolveEnv, stripProcessEnvs } from '../src/lib/config.js'
 import { resolveCmdScript } from '../src/lib/scriptExecutors/ScriptExector.js'
 import { type Config } from '../src/lib/types.js'
+import YAML from 'yaml'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -44,7 +46,7 @@ describe('config', () => {
     await expect(resolveEnv(config, ['doesnotexist'], {})).to.be.rejectedWith('Environment not found: doesnotexist\nDid you mean?\n\t- default')
   })
 
-  it('specifying two envNamess should load both', async () => {
+  it('specifying two envNames should load both', async () => {
     const config: Config = {
       env: {
         aaa: { aaa: '111', bbb: '222' },
@@ -243,5 +245,52 @@ describe('config', () => {
   })
   it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
     await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, {})).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+  })
+
+  it('base config with only scripts is valid', async () => {
+    await expect(resolveEnv({ } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, imports: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, imports: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, imports: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, env: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, env: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, env: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(resolveEnv({ scripts: null, env: { default: null } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
+    await expect(resolveEnv({ scripts: null, env: { default: {} } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
+    await expect(resolveEnv({ scripts: null, env: { default: [] } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
+  })
+
+  it('base config with imports works', async () => {
+    // setup
+    const importedConfig: Config = { 
+      env: { default: { bbb: { $cmd: 'echo "222"' } } }, 
+      scripts: { 
+        hello: { $cmd: 'echo "Hello"' }
+      }
+    }
+    const fsspy1 = sinon.stub(fs, 'existsSync').returns(true)
+    const fsspy2 = sinon.stub(fs, 'readFileSync').returns(YAML.stringify(importedConfig))
+    // test
+    const rootConfig = { 
+      imports: ['~/hooked.yaml'],
+      env: { default: { aaa: { $cmd: 'echo "111"' } } },
+      scripts: {
+        goodbye: { $cmd: 'echo "Goodbye"' }
+      }
+    } as Config
+    await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
+      bbb: '222',
+      aaa: '111'
+    }, {}, ['default']])
+    // assert
+    expect(rootConfig.scripts).to.eql({
+      hello: { $cmd: 'echo "Hello"' },
+      goodbye: { $cmd: 'echo "Goodbye"' }
+    })
+    sinon.assert.calledOnce(fsspy1)
+    sinon.assert.calledOnce(fsspy2)
   })
 })

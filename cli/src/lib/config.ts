@@ -1,23 +1,19 @@
-import { CONFIG_PATH, DEFAULT_CONFIG } from './defaults.js'
+import { DEFAULT_CONFIG } from './defaults.js'
 
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
+import { type Options } from '../index.js'
 import { cyan } from './colour.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
 import {
-  isCmdScript,
-  isEnvScript,
-  isResolveScript,
   isScript,
-  isStdinScript,
-  type CmdScript, type Config,
-  type Dictionary,
-  type Env,
-  type ResolveScript,
-  type ResolvedEnv, type Script, type StdinResponses, type EnvScripts
+  type Config,
+  type EnvironmentVariables,
+  type ResolvedEnv, type Script, type StdinResponses,
+  type TopLevelEnvironments,
+  type TopLevelScripts
 } from './types.js'
-import { type Options } from '../index.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -126,10 +122,6 @@ export const stringifyScripts = (config: Config): string[] => {
   return scripts
 }
 
-export const parseConfig = (config: string, env?: any): Config => {
-  return YAML.parse(config)
-}
-
 /**
  * Resolves an environment configuration.
  * @param config
@@ -140,7 +132,7 @@ export const internalFindEnv = (
   config: Config,
   envName = 'default',
   options: Options
-): [Env, string] => {
+): [EnvironmentVariables, string] => {
   if (!isDefined(config) || !isDefined(config.env)) {
     throw new Error('No environments found in config. Must have at least one environment.')
   }
@@ -148,7 +140,7 @@ export const internalFindEnv = (
   // look for exact match
   if (isDefined(config.env[envName])) {
     if (options.debug === true) console.log(cyan(`Using environment: ${envName}`))
-    const newLocal = config.env[envName] as Env
+    const newLocal = config.env[envName]
     return [newLocal === null ? {} : newLocal, envName]
   }
 
@@ -160,7 +152,7 @@ export const internalFindEnv = (
   if (found.length === 1) {
     const foundEnv = found[0][0]
     if (options.debug === true) console.log(cyan(`Using environment: ${foundEnv}`))
-    const newLocal = found[0][1] as Env
+    const newLocal = found[0][1]
     return [newLocal === null ? {} : newLocal, foundEnv]
   }
 
@@ -174,15 +166,14 @@ export const internalFindEnv = (
  * @returns
  */
 export const internalResolveEnv = async (
-  environment: EnvScripts = {},
+  environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
   resolvedEnv: ResolvedEnv = {}
-): Promise<[ResolvedEnv, StdinResponses]> => {
+): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
     await resolveScript(key, script, stdin, resolvedEnv)
   }
-  return [resolvedEnv, stdin]
 }
 
 /**
@@ -195,30 +186,78 @@ export const resolveEnv = async (
   config: Config = {} as any,
   environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
-  globalEnv: ResolvedEnv = {},
+  env: ResolvedEnv = {},
   options: Options = {} as any
 ): Promise<[ResolvedEnv, StdinResponses, string[]]> => {
-  let allEnvs: ResolvedEnv = { ...globalEnv }
-  let allStdinResponses: StdinResponses = { ...stdin }
+  // load and apply imports
+  const envs: TopLevelEnvironments = {}
+  const scripts: TopLevelScripts = {}
+
+  /* Aggregator function, for merging imported configs. */
+  const mergeEnvAndScripts = (tmp: Config, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
+    // merge scripts
+    Object.assign(aggrScripts, tmp.scripts)
+    // merge envs
+    if (isDefined(tmp.env)) {
+      Object.entries(tmp.env).forEach(([key, envVars]) => {
+        // merge environments
+        if (!isDefined(env)) {
+          throw new Error(`Environment ${key} is null.`)
+        }
+        if (isDefined(aggrEnvs[key])) {
+          aggrEnvs[key] = { ...aggrEnvs[key], ...envVars }
+        } else {
+          aggrEnvs[key] = envVars
+        }
+      })
+    }
+    // TODO handle imports?
+  }
+
+  // START IMPORTS
+
+  if (Array.isArray(config.imports) && config.imports.length > 0) {
+    for (const importPath of config.imports) {
+      if (options.debug === true) console.log(`Importing: ${importPath}`)
+      const tmp = loadConfig(importPath)
+      mergeEnvAndScripts(tmp, envs, scripts)
+    }
+  }
+  // do final top level merge
+  mergeEnvAndScripts(config, envs, scripts)
+  config.scripts = scripts
+  config.env = envs
+
+  // END IMPORTS
+
+  // look for and apply all matching environments
   const allEnvNames: string[] = []
   for (const envName of environmentNames) {
-    const [env = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
-    const [resolvedEnv, stdinResponses] = await internalResolveEnv(env, stdin, allEnvs)
-    allEnvs = { ...allEnvs, ...resolvedEnv }
-    allStdinResponses = { ...allStdinResponses, ...stdinResponses }
+    const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
+    await internalResolveEnv(foundEnv, stdin, env)
     allEnvNames.push(resolvedEnvName)
   }
-  return [allEnvs, allStdinResponses, allEnvNames]
+  return [env, stdin, allEnvNames]
 }
 
-export const loadConfig = (): string => {
+export const loadConfig = (configFile: string, saveDefaultIfMissing = false): Config => {
   let config
-  if (!fs.existsSync(CONFIG_PATH)) {
-    console.log(cyan(`No ${CONFIG_PATH} file found. Creating a sample to get your started...`))
+  const fileExists = fs.existsSync(configFile)
+  // file exists
+  if (fileExists) {
+    const yamlStr = fs.readFileSync(configFile, 'utf-8')
+    const yaml = YAML.parse(yamlStr)
+    if (yaml === null) {
+      throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
+    }
+    return yaml
+  } else if (saveDefaultIfMissing) {
+    // create default
+    console.log(cyan(`No ${configFile} file found. Creating a sample to get you started...`))
     config = YAML.stringify(DEFAULT_CONFIG)
-    fs.writeFileSync(CONFIG_PATH, config, 'utf-8')
+    fs.writeFileSync(configFile, config, 'utf-8')
+    return DEFAULT_CONFIG
   } else {
-    config = fs.readFileSync(CONFIG_PATH, 'utf-8')
+    throw new Error(`No ${configFile} file found.`)
   }
-  return config
 }

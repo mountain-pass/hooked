@@ -8,6 +8,7 @@
 # - $stdin
 # - $resolve
 #
+
 env:
   default:
     username:
@@ -21,14 +22,18 @@ env:
     NOW:
       $cmd: date +%Y-%m-%dT%H:%M:%S%z
     JAVASCRIPT:
-      $cmd: node -e "console.log(1+1)"
+      $cmd: node -e "console.log(1+1)" || echo 'ERROR'
     DOCKER:
-      $cmd: docker run --rm node:lts-alpine -e "console.log(1+2)"
+      $cmd: docker run --rm node:lts-alpine -e "console.log(1+2)" || echo 'NOT_PRESENT'
+    JQ_VERSION:
+      $cmd: |
+        #!/bin/sh -ev
+        jq --version || echo 'NOT_PRESENT'
 
 # This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
   echo:
-    $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}
+    $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
   install:
     local:
       $cmd: npm i -g --force .

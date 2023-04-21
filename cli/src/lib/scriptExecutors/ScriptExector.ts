@@ -18,7 +18,13 @@ export const isScriptExectorResponse = (o: any): o is ScriptExecutorResponse => 
   return typeof o === 'object' && typeof o.value === 'string'
 }
 
-export const resolveCmdScript = async (key: string | undefined, script: CmdScript, stdin: StdinResponses, env: ResolvedEnv, captureOutput = true): Promise<string> => {
+export const resolveCmdScript = async (
+  key: string | undefined,
+  script: CmdScript,
+  stdin: StdinResponses,
+  env: ResolvedEnv,
+  captureOutput = true
+): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
