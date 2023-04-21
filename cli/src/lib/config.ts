@@ -17,6 +17,7 @@ import {
   type ResolveScript,
   type ResolvedEnv, type Script, type StdinResponses, type EnvScripts
 } from './types.js'
+import { type Options } from '../index.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -52,7 +53,8 @@ export const getEnvVarRefs = (str: string): string[] => {
  */
 export const findScript = async (
   config: Config,
-  scriptPath: string[]
+  scriptPath: string[],
+  options: Options
 ): Promise<[Script, string[]]> => {
   let script = config.scripts
   const resolvedScriptPath: string[] = []
@@ -102,7 +104,7 @@ export const findScript = async (
         script = script[answers.next]
       })
   }
-  console.log(cyan(`Using script: ${resolvedScriptPath.join(' ')}`))
+  if (options.debug === true) console.log(cyan(`Using script: ${resolvedScriptPath.join(' ')}`))
   return [script, resolvedScriptPath]
 }
 
@@ -136,7 +138,8 @@ export const parseConfig = (config: string, env?: any): Config => {
  */
 export const internalFindEnv = (
   config: Config,
-  envName = 'default'
+  envName = 'default',
+  options: Options
 ): [Env, string] => {
   if (!isDefined(config) || !isDefined(config.env)) {
     throw new Error('No environments found in config. Must have at least one environment.')
@@ -144,7 +147,7 @@ export const internalFindEnv = (
 
   // look for exact match
   if (isDefined(config.env[envName])) {
-    console.log(cyan(`Using environment: ${envName}`))
+    if (options.debug === true) console.log(cyan(`Using environment: ${envName}`))
     const newLocal = config.env[envName] as Env
     return [newLocal === null ? {} : newLocal, envName]
   }
@@ -156,7 +159,7 @@ export const internalFindEnv = (
   const found = envs.filter(([key, value]) => key.startsWith(envName))
   if (found.length === 1) {
     const foundEnv = found[0][0]
-    console.log(cyan(`Using environment: ${foundEnv}`))
+    if (options.debug === true) console.log(cyan(`Using environment: ${foundEnv}`))
     const newLocal = found[0][1] as Env
     return [newLocal === null ? {} : newLocal, foundEnv]
   }
@@ -192,13 +195,14 @@ export const resolveEnv = async (
   config: Config = {} as any,
   environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
-  globalEnv: ResolvedEnv = {}
+  globalEnv: ResolvedEnv = {},
+  options: Options = {} as any
 ): Promise<[ResolvedEnv, StdinResponses, string[]]> => {
   let allEnvs: ResolvedEnv = { ...globalEnv }
   let allStdinResponses: StdinResponses = { ...stdin }
   const allEnvNames: string[] = []
   for (const envName of environmentNames) {
-    const [env = {}, resolvedEnvName] = internalFindEnv(config, envName)
+    const [env = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
     const [resolvedEnv, stdinResponses] = await internalResolveEnv(env, stdin, allEnvs)
     allEnvs = { ...allEnvs, ...resolvedEnv }
     allStdinResponses = { ...allStdinResponses, ...stdinResponses }

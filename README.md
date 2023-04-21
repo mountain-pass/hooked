@@ -55,7 +55,7 @@ j --log
 
 ---
 
-Here is some example output, after selecting options:
+Here is some example output, with the `--debug` option on:
 ```sh
 Using environment: default
 ? What is your name? Bob

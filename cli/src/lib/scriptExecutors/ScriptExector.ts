@@ -7,7 +7,7 @@ import {
 import { executeCmd } from './$cmd.js'
 import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 
-const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
+export const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
 export interface ScriptExecutorResponse {
   value: string
