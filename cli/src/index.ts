@@ -75,7 +75,7 @@ program
 
         // execute script
         if (isCmdScript(script)) {
-          resolveCmdScript(script, env, false)
+          await resolveCmdScript(undefined, script, stdin, env, false)
         } else {
           throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
         }

@@ -111,7 +111,7 @@ _More coming soon._
 - [x] don't include process.env in the `--printenv`
 - [x] throw error if $cmd is missing required environment variables
 - [x] $stdin > $choices (include populate from $cmd etc)
-- [ ] !! env vars specific to the script being run
+- [x] env vars specific to the script being run
 
 # soon
 - [ ] $imports - extend from other yaml configs

@@ -7,6 +7,7 @@ export interface Config {
 export type Dictionary<ValueType> = Record<string, ValueType>
 
 export type Env = Record<string, any>
+export type EnvScripts = Record<string, Script>
 
 export type ResolvedEnv = Record<string, string>
 
@@ -22,7 +23,7 @@ export interface SuccessfulScript {
 // script types
 
 export interface CmdScript {
-  $env?: Dictionary<Script>
+  $env?: Env
   $cmd: string
 }
 
@@ -36,7 +37,7 @@ export interface StdinScript {
   $stdin: string
   $default?: string
   // allow multiple options
-  $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript
+  $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
 }
 export type Script = CmdScript | StdinScript | EnvScript | ResolveScript
 
@@ -57,5 +58,7 @@ export const isStdinScript = (script: Script): script is StdinScript => {
 }
 
 export const isScript = (script: any): script is Script => {
-  return typeof script === 'object' && (isCmdScript(script) || isStdinScript(script) || isEnvScript(script) || isResolveScript(script))
+  return typeof script === 'object' &&
+  script !== null &&
+  (isCmdScript(script) || isStdinScript(script) || isEnvScript(script) || isResolveScript(script))
 }

@@ -5,7 +5,7 @@ import {
   type CmdScript, type EnvScript, type StdinScript, type ResolveScript, isScript
 } from '../types.js'
 import { executeCmd } from './$cmd.js'
-import { getEnvVarRefs } from '../config.js'
+import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -18,7 +18,13 @@ export const isScriptExectorResponse = (o: any): o is ScriptExecutorResponse => 
   return typeof o === 'object' && typeof o.value === 'string'
 }
 
-export const resolveCmdScript = (script: CmdScript, env: ResolvedEnv, captureOutput = true): string => {
+export const resolveCmdScript = async (key: string | undefined, script: CmdScript, stdin: StdinResponses, env: ResolvedEnv, captureOutput = true): Promise<string> => {
+  // if "step" env is defined, resolve environment variables
+  if (isDefined(script.$env)) {
+    // TODO provide stdin
+    await internalResolveEnv(script.$env, stdin, env)
+  }
+
   // check for missing environment variables
   const requiredKeys = getEnvVarRefs(script.$cmd)
   const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
@@ -30,27 +36,30 @@ export const resolveCmdScript = (script: CmdScript, env: ResolvedEnv, captureOut
   let newValue = executeCmd(script.$cmd, { stdio: captureOutput ? undefined : 'inherit', env })
   // remove trailing newlines
   newValue = newValue.replace(/(\r?\n)*$/, '')
+  if (typeof key === 'string') {
+    env[key] = newValue
+  }
   return newValue
 }
 
-export const resolveEnvScript = (script: EnvScript, env: ResolvedEnv): string => {
+export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
   const resolvedEnvValue = env[script.$env]
   if (isDefined(resolvedEnvValue)) {
-    return resolvedEnvValue
+    env[key] = resolvedEnvValue
   } else {
     throw new Error(`Global environment variable not found: ${script.$env}`)
   }
 }
 
 export const resolveStdinScript = async (
-  script: StdinScript,
   key: string,
+  script: StdinScript,
   stdin: StdinResponses,
   env: ResolvedEnv
-): Promise<string> => {
+): Promise<void> => {
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
-    return stdin[key]
+    env[key] = stdin[key]
   } else {
     let choices
     // resolve choices if they are a script
@@ -63,7 +72,7 @@ export const resolveStdinScript = async (
       choices = script.$choices
     }
     // otherwise prompt user
-    return await inquirer
+    await inquirer
       .prompt([
         {
           type: isDefined(choices) ? 'list' : 'text',
@@ -75,12 +84,13 @@ export const resolveStdinScript = async (
       ])
       .then((answers) => {
         const value = answers[key]
-        return value
+        env[key] = value
+        stdin[key] = value
       })
   }
 }
 
-export const resolveResolveScript = (script: ResolveScript, env: ResolvedEnv): string => {
+export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv): void => {
   // use string replacement to resolve from the resolvedEnv
   const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => {
     const lookupval = env[p1]
@@ -90,7 +100,7 @@ export const resolveResolveScript = (script: ResolveScript, env: ResolvedEnv): s
       return match
     }
   })
-  return newValue
+  env[key] = newValue
 }
 
 export const resolveScript = async (
@@ -101,18 +111,21 @@ export const resolveScript = async (
 ): Promise<string> => {
   if (isCmdScript(script)) {
     // $cmd
-    return resolveCmdScript(script, env)
+    await resolveCmdScript(key, script, stdin, env)
   } else if (isEnvScript(script)) {
     // $env
-    return resolveEnvScript(script, env)
+    resolveEnvScript(key, script, env)
   } else if (isStdinScript(script)) {
     // $stdin
-    return await resolveStdinScript(script, key, stdin, env)
+    await resolveStdinScript(key, script, stdin, env)
   } else if (isResolveScript(script)) {
     // $resolve
-    return resolveResolveScript(script, env)
+    resolveResolveScript(key, script, env)
   } else if (typeof script === 'string') {
-    return script
+    env[key] = script
+  }
+  if (typeof env[key] === 'string') {
+    return env[key]
   }
   throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
 }

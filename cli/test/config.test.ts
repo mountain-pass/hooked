@@ -103,7 +103,7 @@ describe('config', () => {
 
   it('env should resolve $resolve', async () => {
     // eslint-disable-next-line no-template-curly-in-string
-    const config: Config = { env: { default: { username: { $resolve: 'i-like-${foo}' }, foo: 'bar' } }, scripts: {} }
+    const config: Config = { env: { default: { foo: 'bar', username: { $resolve: 'i-like-${foo}' } } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, {})
     expect(env).to.eql({ foo: 'bar', username: 'i-like-bar' })
     expect(stdin).to.eql({})
@@ -233,9 +233,15 @@ describe('config', () => {
   })
 
   it('executing a $cmd with satisfied env should succeed', async () => {
-    expect(() => resolveCmdScript({ $cmd: 'echo "${HELLO}"' }, { HELLO: "Goodbye" })).to.not.throw(Error)
+    await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { HELLO: "Hello" })).to.not.be.rejectedWith(Error)
   })
-  it('executing a script with UNsatisfied env should throw an error', async () => {
-    expect(() => resolveCmdScript({ $cmd: 'echo "${HELLO}"' }, { NOTHELLO: "Goodbye" })).to.throw('Script is missing required environment variables: ["HELLO"]')
+  it('executing a script with UNsatisfied env should fail', async () => {
+    await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { NOTHELLO: "Goodbye" })).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+  })
+  it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
+    await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, {})).to.not.be.rejectedWith(Error)
+  })
+  it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
+    await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, {})).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
   })
 })
