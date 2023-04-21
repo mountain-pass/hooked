@@ -123,7 +123,7 @@ _More coming soon._
 - [ ] leverage existing scripts
   - [ ] Npm
   - [ ] Makefile
-  - [ ] Child folders?
+  - [ ] Child folders with hooked.yaml?
 - [ ] Pipelines
 - [ ] Slack runner
 - [ ] Input type > Remote (e.g. rest api)

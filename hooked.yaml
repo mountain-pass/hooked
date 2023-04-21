@@ -18,11 +18,17 @@ env:
     #   $stdin: "Please choose a recently Downloaded file:"
     #   $choices:
     #     $cmd: ls -1t ~/Downloads | head -10
-    # NOW:
-    #   $cmd: date +%Y-%m-%dT%H:%M:%S%z
+    NOW:
+      $cmd: date +%Y-%m-%dT%H:%M:%S%z
+    JAVASCRIPT:
+      $cmd: node -e "console.log(1+1)"
+    DOCKER:
+      $cmd: docker run --rm node:lts-alpine -e "console.log(1+2)"
 
 # This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
+  echo:
+    $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}
   install:
     local:
       $cmd: npm i -g --force .
