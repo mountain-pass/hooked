@@ -1,10 +1,9 @@
-import { DEFAULT_CONFIG } from './defaults.js'
 
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
-import { type Options } from '../index.js'
 import { cyan } from './colour.js'
+import { type Options } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
 import {
   isScript,
@@ -92,7 +91,8 @@ export const findScript = async (
           name: 'next',
           message: 'Please select a script',
           default: choices[0],
-          choices
+          choices,
+          loop: false
         }
       ])
       .then((answers) => {
@@ -240,8 +240,7 @@ export const resolveEnv = async (
   return [env, stdin, allEnvNames]
 }
 
-export const loadConfig = (configFile: string, saveDefaultIfMissing = false): Config => {
-  let config
+export const loadConfig = (configFile: string): Config => {
   const fileExists = fs.existsSync(configFile)
   // file exists
   if (fileExists) {
@@ -251,12 +250,6 @@ export const loadConfig = (configFile: string, saveDefaultIfMissing = false): Co
       throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
     }
     return yaml
-  } else if (saveDefaultIfMissing) {
-    // create default
-    console.log(cyan(`No ${configFile} file found. Creating a sample to get you started...`))
-    config = YAML.stringify(DEFAULT_CONFIG)
-    fs.writeFileSync(configFile, config, 'utf-8')
-    return DEFAULT_CONFIG
   } else {
     throw new Error(`No ${configFile} file found.`)
   }

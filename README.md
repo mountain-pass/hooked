@@ -112,30 +112,24 @@ _More coming soon._
 - [x] $stdin > $choices (include populate from $cmd etc)
 - [x] env vars specific to the script being run
 - [x] $imports - extend from other yaml configs
+- [x] --init script (also happens if no config file)
+  - [x] Create new config > "Blank"
+  - [x] Create new config > "NPM"
+  - [x] Create new config > from existing NPM (package.json)
+- [x] run --init if no args supplied
+- [x] No loop on list
 
 # soon
 
-- [ ] Auto create doesn't work anymore
-- [ ] --init script (also happens if no config file)
-  - [ ] Create new config > "Blank"
-  - [ ] Create new config > "NPM"
-  - [ ] Create new config > "Docker"
-  - [ ] Create new config > $HOME/hooked.yaml
-  - [ ] Create new config > from existing NPM (package.json)
-  - [ ] Create new config > from existing Makefile
-e.g. add NODE path to access node 
-```
-env:
-  default:
-    PATH:
-      $cmd: echo ${PATH}:`pwd`/node_modules/.bin
-```
+- [ ] $imports > extend to support remote (http://) urls
+- [ ] Pipelines
 
+# future
+- [ ] $imports > extend $cmd to include a $cwd (current working directory e.g. relative to an imported script?)
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)
   - [ ] Add emoji support
-- [ ] No loop on list
 - [ ] Tty handling - show error message? (already handled?)
 - [ ] Inquirer
   - [ ] Use the Inquirer - "Defaults" parameter
@@ -143,16 +137,9 @@ env:
   - [ ] Tree plugin
   - [ ] Exit option -> Interrupted plugin (esc to quit)
   - [ ] Press to continue
-
-# future
-- [ ] wizard
-- [ ] $imports > extend $cmd to include a $cwd (current working directory, relative to imported script)
-- [ ] $imports > extend to support remote (http://) urls
-- [ ] Pipelines
 - [ ] Slack runner
-- [ ] ---
 - [ ] publish a yaml schema definition?
-- [ ] change `-in` from json to `-in key=val key2=val2`
+- [ ] change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)
 - [ ] global settings > username
 - [ ] if only one possible child path, runs it straight away
 - [ ] identity, in history, use for ssh key gen and approval
@@ -178,3 +165,6 @@ env:
 - [ ] ~~Input type > Remote (e.g. rest api)~~ - just use $cmd to populate inputs (one line per choice)
 - [ ] ~~$javascript - e.g. Math.max(10, ${DATE})~~ - just use docker and/or $cmd
 - [ ] ~~have "shared" environment variables (env agnostic)~~ just use multi environments
+- [ ] ~~--init script > Create new config > "Docker"~~ if standardised, this could be a remote file
+- [ ] ~~--init script > Create new config > $HOME/hooked.yaml~~ left to the user to setup
+- [ ] ~~--init script > Create new config > from existing Makefile~~ too obscure, wait until desired before creating
