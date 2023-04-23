@@ -38,7 +38,7 @@ scripts:
     local:
       $cmd: npm i -g --force .
     global:
-      $cmd: npm i -g --force @mountainpass/hooked-cli
+      $cmd: npm i -g --prefer-online --force @mountainpass/hooked-cli
   uninstall:
     local:
       $cmd: npm uninstall -g --force hooked
