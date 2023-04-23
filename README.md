@@ -32,6 +32,8 @@ I want something simpler and more easy to use...
 npm i -g @mountainpass/hooked-cli
 ```
 
+(If cached, you may need to specify `--prefer-online --force`)
+
 # usage
 
 ```sh
