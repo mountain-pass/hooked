@@ -114,12 +114,43 @@ _More coming soon._
 - [x] $imports - extend from other yaml configs
 
 # soon
+
+- [ ] Auto create doesn't work anymore
+- [ ] --init script (also happens if no config file)
+  - [ ] Create new config > "Blank"
+  - [ ] Create new config > "NPM"
+  - [ ] Create new config > "Docker"
+  - [ ] Create new config > $HOME/hooked.yaml
+  - [ ] Create new config > from existing NPM (package.json)
+  - [ ] Create new config > from existing Makefile
+e.g. add NODE path to access node 
+```
+env:
+  default:
+    PATH:
+      $cmd: echo ${PATH}:`pwd`/node_modules/.bin
+```
+
+- [ ] styling
+  - [ ] Add description
+  - [ ] Add colour (edited)
+  - [ ] Add emoji support
+- [ ] No loop on list
+- [ ] Tty handling - show error message? (already handled?)
+- [ ] Inquirer
+  - [ ] Use the Inquirer - "Defaults" parameter
+  - [ ] Add autocomplete plugin
+  - [ ] Tree plugin
+  - [ ] Exit option -> Interrupted plugin (esc to quit)
+  - [ ] Press to continue
+
+# future
+- [ ] wizard
 - [ ] $imports > extend $cmd to include a $cwd (current working directory, relative to imported script)
 - [ ] $imports > extend to support remote (http://) urls
 - [ ] Pipelines
 - [ ] Slack runner
-
-# future
+- [ ] ---
 - [ ] publish a yaml schema definition?
 - [ ] change `-in` from json to `-in key=val key2=val2`
 - [ ] global settings > username
