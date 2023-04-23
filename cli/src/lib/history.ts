@@ -39,12 +39,16 @@ export const formatLocalISOString = (ts: number, tzoffsetMinutes = new Date().ge
  * @param showTimestamp
  * @returns
  */
-export const displaySuccessfulScript = (script: SuccessfulScript, showTimestamp = false): string => {
+export const displaySuccessfulScript = (
+  script: SuccessfulScript,
+  showTimestamp = false,
+  tzoffsetMinutes = new Date().getTimezoneOffset()
+): string => {
   const { ts, scriptPath, envNames, stdin } = script
-  const timestamp = formatLocalISOString(ts)
-  const scriptstr = scriptPath.join(' ')
-  const envstr = envNames.length > 1 ? `-e ${envNames.join(',')}` : ''
-  const stdinstr = Object.keys(stdin).length > 0 ? `-in '${JSON.stringify(stdin)}'` : ''
+  const timestamp = formatLocalISOString(ts, tzoffsetMinutes)
+  const scriptstr = scriptPath.map(s => s.includes(' ') ? `"${s}"` : s).join(' ')
+  const envstr = envNames.length > 1 ? `--env ${envNames.join(',')}` : ''
+  const stdinstr = Object.keys(stdin).length > 0 ? `--stdin '${JSON.stringify(stdin)}'` : ''
   return `${showTimestamp ? `${timestamp}: ` : ''}j ${scriptstr} ${envstr} ${stdinstr}`
 }
 

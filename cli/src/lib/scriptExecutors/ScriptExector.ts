@@ -85,7 +85,8 @@ export const resolveStdinScript = async (
           name: key,
           message: script.$stdin,
           default: script.$default,
-          choices
+          choices,
+          loop: false
         }
       ])
       .then((answers) => {

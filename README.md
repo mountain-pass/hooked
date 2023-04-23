@@ -121,8 +121,11 @@ _More coming soon._
 
 # soon
 
+- [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
 - [ ] Pipelines
+
+# error: Command failed: /Users/nickpersonal/mountain-pass/hooked/admin/.tmp.sh - but why?
 
 # future
 - [ ] $imports > extend $cmd to include a $cwd (current working directory e.g. relative to an imported script?)
@@ -131,12 +134,10 @@ _More coming soon._
   - [ ] Add colour (edited)
   - [ ] Add emoji support
 - [ ] Tty handling - show error message? (already handled?)
-- [ ] Inquirer
-  - [ ] Use the Inquirer - "Defaults" parameter
-  - [ ] Add autocomplete plugin
-  - [ ] Tree plugin
-  - [ ] Exit option -> Interrupted plugin (esc to quit)
-  - [ ] Press to continue
+- [ ] ~~Inquirer > Use the Inquirer - "Defaults" parameter~~ - already have this behaviour
+- [ ] Inquirer > Add autocomplete plugin
+- [ ] Inquirer > Tree plugin
+- [ ] ~~Inquirer > Exit option -> Interrupted plugin (esc to quit)~~ just use ctrl+c
 - [ ] Slack runner
 - [ ] publish a yaml schema definition?
 - [ ] change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)
