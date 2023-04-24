@@ -103,13 +103,6 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           addHistory(successfulScript)
         }
       } catch (err: any) {
-        const message: string = err.message
-        if (typeof message === 'string' && message.startsWith('Command failed:')) {
-          console.error(red(JSON.stringify(err)))
-          console.error(red(err.message.split('\n')[0]))
-          console.error(red('Use "--debug" to see stack trace.'))
-          return
-        }
         if (options.debug === true) {
           console.error(err)
         } else {

@@ -36,7 +36,10 @@ scripts:
     $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
   install:
     local:
-      $cmd: npm i -g --force .
+      $cmd: |
+        npx lerna exec --scope @mountainpass/* npm install
+        npx lerna run --scope @mountainpass/* build
+        npm i -g --force .
     global:
       $cmd: npm i -g --prefer-online --force @mountainpass/hooked-cli
   uninstall:

@@ -14,7 +14,11 @@ export const executeCmd = (
     fs.unlinkSync(filepath)
     return output !== null ? output.toString() : ''
   } catch (err: any) {
-    err.script = multilineCommand
+    const status = err.status as string
+    const message = err.message as string
+    err.message = `Command failed with status code ${status}\n` +
+    `Underlying error: "${message}"\n` +
+    'Consider adding a "set -ve" to your $cmd to see which line errored.'
     throw err
   }
 }
