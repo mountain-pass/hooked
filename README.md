@@ -132,14 +132,15 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
   - [x] Create new config > from existing NPM (package.json)
 - [x] run --init if no args supplied
 - [x] No loop on list
+- [x] hide debug output behind an opts
 
 ## Soon
 
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
 - [ ] Pipelines
-
-## error: Command failed: /Users/nickpersonal/mountain-pass/hooked/admin/.tmp.sh - but why?
+- [ ] if only one possible child path, runs it straight away
+- [ ] replay last command / replace from log
 
 ## Future
 - [ ] $imports > extend $cmd to include a $cwd (current working directory e.g. relative to an imported script?)
@@ -148,27 +149,18 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
   - [ ] Add colour (edited)
   - [ ] Add emoji support
 - [ ] Tty handling - show error message? (already handled?)
-- [ ] ~~Inquirer > Use the Inquirer - "Defaults" parameter~~ - already have this behaviour
 - [ ] Inquirer > Add autocomplete plugin
 - [ ] Inquirer > Tree plugin
-- [ ] ~~Inquirer > Exit option -> Interrupted plugin (esc to quit)~~ just use ctrl+c
 - [ ] Slack runner
 - [ ] publish a yaml schema definition?
-- [ ] change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)
-- [ ] global settings > username
-- [ ] if only one possible child path, runs it straight away
+- [ ] global settings > username or ssh key
 - [ ] identity, in history, use for ssh key gen and approval
-- [ ] permissions
+- [ ] permissions (only really enforcable on server)
 - [ ] run remotely (e.g. on build server, esp for gated access)
 - [ ] concept of `prerequisites` (e.g. must have 'node' installed, or $cmd must exit with 0)
-- [ ] add more executors (e.g. javascript?)
-- [ ] run in docker container (ala docker-shell) `container: node:lts-alpine`
-- [ ] opt to list all commands
-- [ ] hide debug output behind an opts
-- [ ] non-interactive mode?
-- [ ] opt to select env names? (as opposed to having a default)
+- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
 
-# descoped
+# Descoped
 - [ ] ~~$inject - inject yaml from a file~~ - nah, just use the $imports instead
   - [ ] ~~local~~
   - [ ] ~~remote (e.g. `extends: https://myserver/foo.yaml`)~~
@@ -183,3 +175,10 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] ~~--init script > Create new config > "Docker"~~ if standardised, this could be a remote file
 - [ ] ~~--init script > Create new config > $HOME/hooked.yaml~~ left to the user to setup
 - [ ] ~~--init script > Create new config > from existing Makefile~~ too obscure, wait until desired before creating
+- [ ] ~~Inquirer > Use the Inquirer - "Defaults" parameter~~ - already have this behaviour
+- [ ] ~~Inquirer > Exit option -> Interrupted plugin (esc to quit)~~ just use ctrl+c
+- [ ] ~~add more executors (e.g. javascript?)~~ - nah, user can just leverage a container or cli tool
+- [ ] ~~opt to list all commands~~ - unnecessary, can already prompt user
+- [ ] ~~non-interactive mode?~~
+- [ ] ~~opt to select env names? (as opposed to having a default)~~
+- [ ] ~~change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)~~

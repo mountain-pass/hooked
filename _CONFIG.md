@@ -8,9 +8,7 @@ The configuration has three top level items:
 
 - `env:` - (optional) takes an `object`.
   - `<environmentName>:` - the name of a pre-configured environment (active when matches the `--env` parameter).
-    - `<environmentVariableKey>:` - the name of an environment variable to set. It can have one of the following values:
-      - `string` - the environment variable will resolve to this exact value.
-      - `object` - any [Environment Resolver](#environment-resolvers).
+    - `<environmentVariableKey>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-resolvers) as a value.
 
 - `scripts:` - (optional) takes an `object`
 
@@ -36,7 +34,7 @@ scripts:
 
 # Environment Resolvers
 
-All environment variables, consist of a key `string` and a value `string`. We've provided some custom resolvers, to allow more complicated value resolution solutions.
+All environment variables consist of a key `string` and a value `string`. We've provided basic and custom resolvers, to support more complicated value-resolution scenarios.
 
 ## `string`
 
@@ -84,9 +82,9 @@ env:
 **Tips:**
 
 - you can use multiline string for a longer script
-- you can update the `PATH` env var, in order to access more scripts.
+- you can update the `PATH` env var to use custom scripts.
 - you can utilise a container service like Docker to run custom language scripts.
-- you can specify the shell to use (& verbose output & fail fast), by using `#!/bin/sh -ve` on the first line
+- you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
 - if you want a script to always pass, append ` || true` to the end of the failing line.
 
 ## `$stdin`
