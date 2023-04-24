@@ -157,6 +157,8 @@ The `scripts` object takes any number of child descendant objects, using the `ke
 
 The objects should eventually end in a [`$cmd`](#cmd) object, which allows the user to execute a predefined script.
 
+How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
+
 **Example:**
 
 ```yaml
