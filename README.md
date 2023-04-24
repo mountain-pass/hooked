@@ -109,7 +109,7 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 # Backlog
 
-## Now
+## Done
 
 - [x] can run scripts based on yaml hierarchy
 - [x] can run scripts based on yaml hierarchy (using prefixes)
