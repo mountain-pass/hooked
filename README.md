@@ -1,4 +1,4 @@
-# @mountainpass/hooked (aka "j")
+# 🪝🪝 @mountainpass/hooked (aka "j") 🪝🪝
 
 # rationale
 
@@ -17,7 +17,7 @@ When executing the scripts, it must be:
 
 ## existing options
 
-|tool|cons|pros|
+|🔨 tool 🔨|🚨 cons 🚨|✅ pros ✅|
 |---|---|---|
 | NPM | <ul><li>not cli discoverable</li><li>primarily a package manager</li><li>scripting changes affects (docker) build caching</li><li>scripting has to be escaped (json)</li><li>cannot do multiline scripts</li></ul> | <ul><li>has access to self install cli tools</li></ul> |
 | Makefile | <ul><li>not cli discoverable</li><li>ugly</li><li>non intuitive</li><li>feels brittle</li><li>not bash</li><li>odd env resolution behaviour</li></ul> | <ul><li>familiarity amonst seasoned devs</li></ul> |
