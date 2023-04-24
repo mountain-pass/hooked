@@ -1,6 +1,6 @@
 # 🪝🪝 @mountainpass/hooked (aka "j") 🪝🪝
 
-# rationale
+# Rationale
 
 I want to be able to setup advanced build server scripts, that can be run:
 - by anyone
@@ -15,7 +15,7 @@ When executing the scripts, it must be:
 - suggestive
 - simple
 
-## existing options
+## Existing tools
 
 |🔨 tool 🔨|🚨 cons 🚨|✅ pros ✅|
 |---|---|---|
@@ -26,7 +26,7 @@ When executing the scripts, it must be:
 
 I want something simpler and more easy to use...
 
-# install
+# Install
 
 ```
 npm i -g @mountainpass/hooked-cli
@@ -34,7 +34,7 @@ npm i -g @mountainpass/hooked-cli
 
 (If cached, you may need to specify `--prefer-online --force`)
 
-# usage
+# Usage
 
 ```sh
 j --help
@@ -43,21 +43,23 @@ j --help
 
 ---
 
-Just type `j`, and it'll setup a sample `hooked.yaml` config file. It will then prompt you for inputs!
+## Getting started
+
+Just type `--init`, and it'll ask to choose a sample `hooked.yaml` config file to start with.
 ```sh
-j
+j --init
 ```
 
----
+## Preconfigured environments
 
-New to a project or don't know where to start? See (and copy) what others have run recently:
+Use `--env` to specify the environment/s you'd like to use. 
+```sh
+j --env <yourenv1,yourenv2,etc>
 ```
-j --log
-```
 
----
+## Rerunnable commands
 
-Here is some example output, with the `--debug` option on:
+Here is some example output, with the `--debug` option:
 ```sh
 Using environment: default
 ? What is your name? Bob
@@ -74,14 +76,21 @@ Note the `rerun: ...` output? You can use that, to rerun a command, with all inp
 j say hello --env default --stdin '{"FIRSTNAME":"Bob"}'
 ```
 
----
+## Copy other people
+
+Similar to the `rerun` output, you can see (and copy) what others have run recently:
+```
+j --log
+```
+
+## Suggested scripts
 
 Don't worry, if you can't remember the full script path, you'll be prompted. Try this:
 ```sh
-j say
+j
 ```
 
----
+## Smart complete scripts
 
 Feeling ~~lazy~~ efficient? Try typing some characters of the script or environment. As long as it's enough to uniquely identify your script, the tool will do the rest!
 ```sh
@@ -92,13 +101,16 @@ j s hel --env sp
 
 Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source control, for the next person!
 
-# configuration
+# Configuration
 
 Please see the [`hooked.yaml`](hooked.yaml) example.
 
 _More coming soon._
 
-# now
+# Backlog
+
+## Now
+
 - [x] can run scripts based on yaml hierarchy
 - [x] can run scripts based on yaml hierarchy (using prefixes)
 - [x] can prompt user if path not complete
@@ -121,15 +133,15 @@ _More coming soon._
 - [x] run --init if no args supplied
 - [x] No loop on list
 
-# soon
+## Soon
 
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
 - [ ] Pipelines
 
-# error: Command failed: /Users/nickpersonal/mountain-pass/hooked/admin/.tmp.sh - but why?
+## error: Command failed: /Users/nickpersonal/mountain-pass/hooked/admin/.tmp.sh - but why?
 
-# future
+## Future
 - [ ] $imports > extend $cmd to include a $cwd (current working directory e.g. relative to an imported script?)
 - [ ] styling
   - [ ] Add description
