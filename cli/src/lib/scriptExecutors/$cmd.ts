@@ -2,13 +2,17 @@ import child_process from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { yellow } from '../colour.js'
+import crypto from 'crypto'
+
+export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
 export const executeCmd = (
   multilineCommand: string,
   opts: any = undefined
 ): string => {
   try {
-    const filepath = path.resolve('.tmp.sh')
+    // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
+    const filepath = path.resolve(`.tmp-${randomString()}.sh`)
     fs.writeFileSync(filepath, multilineCommand, 'utf-8')
     fs.chmodSync(filepath, 0o755)
     const output = child_process.execSync(filepath, opts)
