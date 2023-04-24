@@ -170,14 +170,14 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
   - [ ] ~~Makefile~~ - nah, just use hooked instead!
   - [ ] ~~auto detect child folders with hooked.yaml?~~ - nah, just use the $import feature instead!
 - [ ] ~~Input type > Remote (e.g. rest api)~~ - just use $cmd to populate inputs (one line per choice)
-- [ ] ~~$javascript - e.g. Math.max(10, ${DATE})~~ - just use docker and/or $cmd
+- [ ] ~~javascript - e.g. Math.max(10, ${DATE})~~ - just use docker and/or $cmd
+- [ ] ~~add more executors (e.g. javascript?)~~ - nah, user can just leverage a container or cli tool (same as above)
 - [ ] ~~have "shared" environment variables (env agnostic)~~ just use multi environments
 - [ ] ~~--init script > Create new config > "Docker"~~ if standardised, this could be a remote file
 - [ ] ~~--init script > Create new config > $HOME/hooked.yaml~~ left to the user to setup
 - [ ] ~~--init script > Create new config > from existing Makefile~~ too obscure, wait until desired before creating
 - [ ] ~~Inquirer > Use the Inquirer - "Defaults" parameter~~ - already have this behaviour
 - [ ] ~~Inquirer > Exit option -> Interrupted plugin (esc to quit)~~ just use ctrl+c
-- [ ] ~~add more executors (e.g. javascript?)~~ - nah, user can just leverage a container or cli tool
 - [ ] ~~opt to list all commands~~ - unnecessary, can already prompt user
 - [ ] ~~non-interactive mode?~~
 - [ ] ~~opt to select env names? (as opposed to having a default)~~

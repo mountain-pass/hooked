@@ -1,6 +1,7 @@
 import child_process from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import { yellow } from '../colour.js'
 
 export const executeCmd = (
   multilineCommand: string,
@@ -11,7 +12,11 @@ export const executeCmd = (
     fs.writeFileSync(filepath, multilineCommand, 'utf-8')
     fs.chmodSync(filepath, 0o755)
     const output = child_process.execSync(filepath, opts)
-    fs.unlinkSync(filepath)
+    if (fs.existsSync(filepath)) {
+      fs.unlinkSync(filepath)
+    } else {
+      console.warn(yellow(`warn: Could not delete ${filepath}`))
+    }
     return output !== null ? output.toString() : ''
   } catch (err: any) {
     const status = err.status as string
