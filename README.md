@@ -103,9 +103,9 @@ Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source c
 
 # Configuration
 
-Please see the [`hooked.yaml`](hooked.yaml) example.
+This deserves it's own section... [check it out](_CONFIG.md).
 
-_More coming soon._
+Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 # Backlog
 
