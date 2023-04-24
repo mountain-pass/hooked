@@ -134,7 +134,7 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] No loop on list
 - [x] hide debug output behind an opts
 
-## Soon
+## Next
 
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
