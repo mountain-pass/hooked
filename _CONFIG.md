@@ -1,5 +1,7 @@
 # Configuration <!-- omit in toc -->
 
+[Back to Index](README.md)
+
 - [Overview](#overview)
 - [Environment Resolvers](#environment-resolvers)
   - [`string`](#string)

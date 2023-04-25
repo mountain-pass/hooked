@@ -160,9 +160,9 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] Pipelines
 - [ ] if only one possible child path, runs it straight away
 - [ ] replay last command / replace from log
+- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
 
 ## Future
-- [ ] $imports > extend $cmd to include a $cwd (current working directory e.g. relative to an imported script?)
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)
@@ -177,7 +177,6 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] permissions (only really enforcable on server)
 - [ ] run remotely (e.g. on build server, esp for gated access)
 - [ ] concept of `prerequisites` (e.g. must have 'node' installed, or $cmd must exit with 0)
-- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
 
 # Descoped
 - [ ] ~~$inject - inject yaml from a file~~ - nah, just use the $imports instead
@@ -201,3 +200,4 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] ~~non-interactive mode?~~
 - [ ] ~~opt to select env names? (as opposed to having a default)~~
 - [ ] ~~change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)~~
+- [ ] ~~$imports > extend $cmd to optionally specify a $cwd (current working directory e.g. relative to an imported script?)~~ - tricky, any imported file *should* parameterise this, or be agnostic of dir
