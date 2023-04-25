@@ -1,4 +1,31 @@
-# 🪝🪝 @mountainpass/hooked (aka "j") 🪝🪝
+# 🪝🪝 @mountainpass/hooked (aka "j") 🪝🪝 <!-- omit in toc -->
+
+- [Install](#install)
+- [Rationale](#rationale)
+  - [Existing tools](#existing-tools)
+- [Usage](#usage)
+  - [Getting started](#getting-started)
+  - [Preconfigured environments](#preconfigured-environments)
+  - [Rerunnable commands](#rerunnable-commands)
+  - [Copy other people](#copy-other-people)
+  - [Suggested scripts](#suggested-scripts)
+  - [Smart complete scripts](#smart-complete-scripts)
+- [Configuration](#configuration)
+- [Backlog](#backlog)
+  - [Done](#done)
+  - [Next](#next)
+  - [Future](#future)
+- [Descoped](#descoped)
+
+
+
+# Install
+
+```
+npm i -g @mountainpass/hooked-cli
+```
+
+(If cached, you may need to specify `--prefer-online --force`)
 
 # Rationale
 
@@ -25,14 +52,6 @@ When executing the scripts, it must be:
 | Shell Scripts | <ul><li>not cli discoverable</li><li>have to jump between files</li><li>not cross platform</li></ul> | <ul><li>familiarity</li></ul> |
 
 I want something simpler and more easy to use...
-
-# Install
-
-```
-npm i -g @mountainpass/hooked-cli
-```
-
-(If cached, you may need to specify `--prefer-online --force`)
 
 # Usage
 
