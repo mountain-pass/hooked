@@ -1,4 +1,16 @@
-# Configuration
+# Configuration <!-- omit in toc -->
+
+- [Overview](#overview)
+- [Environment Resolvers](#environment-resolvers)
+  - [`string`](#string)
+  - [`$cmd`](#cmd)
+  - [`$stdin`](#stdin)
+  - [`$env`](#env)
+  - [`$resolve`](#resolve)
+- [Scripts](#scripts)
+- [Conventions](#conventions)
+
+# Overview
 
 When run, the app looks for a `hooked.yaml` file in the current working directory.
 
