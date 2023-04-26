@@ -54,10 +54,12 @@ When executing the scripts, it must be:
 I want something simpler and more easy to use...
 
 ✅ pros of hooked ✅
-- less context switching - one file for all my scripts (or multiple, choose your own adventure!)
-- more readable - because of "smart" completion my script names are becoming more descriptive
-- less environment configuration - only required environment variables are resolved
-- more extensibile - I'm starting to write more generic and reusable scripts
+- less context switching - one file for all my scripts (or multiple, choose your own adventure!).
+- more readable - because of "smart" completion my script names are becoming more descriptive.
+- less environment configuration - only required environment variables are resolved, meaning non-admins don't need a full environment setup.
+- more extensibile - I'm starting to write more generic, reusable, parameterised scripts.
+- less typing - using `j _logs_` I rebuild/redeploy (almost) handsfree.
+- scripts reuse - I can create scripts that call my other hooked scripts. Easy pipelines.
 
 # Usage
 

@@ -3,19 +3,20 @@ import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
 import { cyan } from './colour.js'
+import { LOGS_MENU_OPTION } from './defaults.js'
+import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type Options } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
 import {
   isScript,
+  type CmdScript,
   type Config,
   type EnvironmentVariables,
   type ResolvedEnv, type Script, type StdinResponses,
   type TopLevelEnvironments,
-  type TopLevelScripts,
-  type CmdScript
+  type TopLevelScripts
 } from './types.js'
-import { fetchHistory, fetchHistoryAsRunnableLogs, displaySuccessfulScript } from './history.js'
-import { LOGS_MENU_OPTION } from './defaults.js'
+import { resolvePath } from './utils/fileUtils.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -235,8 +236,9 @@ export const resolveEnv = async (
 
   if (Array.isArray(config.imports) && config.imports.length > 0) {
     for (const importPath of config.imports) {
-      if (options.debug === true) console.log(`Importing: ${importPath}`)
-      const tmp = loadConfig(importPath)
+      const filepath = resolvePath(importPath)
+      if (options.debug === true) console.log(`Importing: ${filepath}`)
+      const tmp = loadConfig(filepath)
       mergeEnvAndScripts(tmp, envs, scripts)
     }
   }

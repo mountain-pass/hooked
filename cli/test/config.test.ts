@@ -11,6 +11,8 @@ import { type Config } from '../src/lib/types.js'
 import YAML from 'yaml'
 chai.use(chaiAsPromised)
 const { expect } = chai
+import os from 'os'
+import path from 'path'
 
 describe('config', () => {
   afterEach(() => {
@@ -316,7 +318,7 @@ describe('config', () => {
         hello: { $cmd: 'echo "Hello"' },
         goodbye: { $cmd: 'echo "Goodbye"' }
       })
-      sinon.assert.calledWithExactly(fsspy1, "~/hooked.yaml")
+      sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), "hooked.yaml"))
       sinon.assert.calledOnce(fsspy2)
     })
 
@@ -348,7 +350,7 @@ describe('config', () => {
         hello: { $cmd: 'echo "Hello"' },
         goodbye: { $cmd: 'echo "Goodbye"' }
       })
-      sinon.assert.calledWithExactly(fsspy1, "~/hooked.yaml")
+      sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), "hooked.yaml"))
       sinon.assert.calledOnce(fsspy2)
     })
 
