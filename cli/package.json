@@ -52,8 +52,8 @@
   },
   "dependencies": {
     "commander": "10.0.1",
-    "inquirer": "9.1.5",
-    "yaml": "2.2.1"
+    "inquirer": "9.2.0",
+    "yaml": "2.2.2"
   },
   "devDependencies": {
     "@types/chai": "4.3.4",
@@ -61,20 +61,20 @@
     "@types/commander": "2.12.2",
     "@types/inquirer": "9.0.3",
     "@types/mocha": "10.0.1",
-    "@types/node": "18.15.11",
+    "@types/node": "18.16.1",
     "@types/sinon": "10.0.14",
     "@types/yaml": "1.9.7",
-    "@typescript-eslint/eslint-plugin": "5.59.0",
+    "@typescript-eslint/eslint-plugin": "5.59.1",
     "chai": "4.3.7",
     "chai-as-promised": "7.1.1",
-    "eslint": "8.38.0",
+    "eslint": "8.39.0",
     "eslint-config-standard-with-typescript": "34.0.1",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-n": "15.7.0",
     "eslint-plugin-promise": "6.1.1",
     "mocha": "10.2.0",
     "nodemon": "2.0.22",
-    "sinon": "15.0.3",
+    "sinon": "15.0.4",
     "ts-mocha": "10.0.0",
     "ts-node": "10.9.1",
     "typescript": "5.0.4"

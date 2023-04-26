@@ -163,10 +163,10 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 ## Next
 
-- [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
 - [ ] if only one possible child path, prompt user to run it straight away
 - [ ] replay last command / replace from log
+- [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 
 ## Future
 - [ ] make `$secret` envs, that are only imported explicitly for a single run
