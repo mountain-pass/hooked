@@ -98,15 +98,15 @@ export const resolveStdinScript = async (
 }
 
 export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv): void => {
+  // check for missing environment variables
+  const requiredKeys = getEnvVarRefs(script.$resolve)
+  const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
+  if (missingKeys.length > 0) {
+    throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+  }
+
   // use string replacement to resolve from the resolvedEnv
-  const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => {
-    const lookupval = env[p1]
-    if (typeof lookupval === 'string') {
-      return lookupval
-    } else {
-      return match
-    }
-  })
+  const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => env[p1])
   env[key] = newValue
 }
 
@@ -119,17 +119,18 @@ export const resolveScript = async (
   if (isCmdScript(script)) {
     // $cmd
     await resolveCmdScript(key, script, stdin, env)
-  } else if (isEnvScript(script)) {
-    // $env
-    resolveEnvScript(key, script, env)
+  // } else if (isEnvScript(script)) {
+  //   // $env
+  //   resolveEnvScript(key, script, env)
   } else if (isStdinScript(script)) {
     // $stdin
     await resolveStdinScript(key, script, stdin, env)
-  } else if (isResolveScript(script)) {
-    // $resolve
-    resolveResolveScript(key, script, env)
+  // } else if (isResolveScript(script)) {
+  //   // $resolve
+  //   resolveResolveScript(key, script, env)
   } else if (typeof script === 'string') {
-    env[key] = script
+    resolveResolveScript(key, { $resolve: script }, env)
+    // env[key] = script
   }
   if (typeof env[key] === 'string') {
     return env[key]

@@ -90,60 +90,62 @@ describe('config', () => {
     expect(envNames).to.eql(['default'])
   })
 
-  it('env should resolve $env', async () => {
-    const config: Config = { env: { default: { username: { $env: 'USER' } } }, scripts: {} }
+  it('$env - env should resolve $env', async () => {
+    const config: Config = { env: { default: { username: '${USER}' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, { USER: 'fred' })
     expect(env).to.eql({ username: 'fred', USER: 'fred' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
   })
 
-  it('env should throw error if $env does not exist', async () => {
-    const config: Config = { env: { default: { username: { $env: 'USER' } } }, scripts: {} }
-    await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith('Global environment variable not found: USER')
+  it('$env - env should throw error if $env does not exist', async () => {
+    const config: Config = { env: { default: { username: '${USER}' } }, scripts: {} }
+    await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(`Environment 'username' is missing required environment variables: ["USER"]`)
   })
 
-  it('env should resolve $resolve', async () => {
+  it('$resolve - env should resolve $resolve', async () => {
     // eslint-disable-next-line no-template-curly-in-string
-    const config: Config = { env: { default: { foo: 'bar', username: { $resolve: 'i-like-${foo}' } } }, scripts: {} }
+    const config: Config = { env: { default: { foo: 'bar', username: 'i-like-${foo}' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, {})
     expect(env).to.eql({ foo: 'bar', username: 'i-like-bar' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
   })
 
-  it('env should resolve variables in order', async () => {
+  it('$resolve - env should resolve variables in order', async () => {
+     // will not resolve 'seven', because ${eight} has not yet been defined
     const config: Config = {
       env: {
         default: {
           one: '1',
-          two: { $resolve: '${one}-2' },
-          three: { $resolve: '${two}-3' },
-          four: { $resolve: '${three}-4' },
-          five: { $resolve: '${four}-5' },
-          six: { $resolve: '${five}-6' },
-          seven: { $resolve: '${eight}-7' }, // will not resolve, eight has not yet been defined
-          eight: { $resolve: '8' },
+          two: '${one}-2',
+          three: '${two}-3',
+          four: '${three}-4',
+          five: '${four}-5',
+          six: '${five}-6',
+          seven: '${eight}-7',
+          eight: '8',
         }
       },
       scripts: {}
     }
-    const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, {})
-    expect(env).to.eql({
-      one: '1',
-      two: '1-2',
-      three: '1-2-3',
-      four: '1-2-3-4',
-      five: '1-2-3-4-5',
-      six: '1-2-3-4-5-6',
-      seven: '${eight}-7',
-      eight: '8',
-    })
-    expect(stdin).to.eql({})
-    expect(envNames).to.eql(['default'])
+    await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(`Environment 'seven' is missing required environment variables: ["eight"]`)
+    // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, {})
+    // expect(env).to.eql({
+    //   one: '1',
+    //   two: '1-2',
+    //   three: '1-2-3',
+    //   four: '1-2-3-4',
+    //   five: '1-2-3-4-5',
+    //   six: '1-2-3-4-5-6',
+    //   // seven: '${eight}-7',
+    //   eight: '8',
+    // })
+    // expect(stdin).to.eql({})
+    // expect(envNames).to.eql(['default'])
   })
 
-  it('env should resolve $cmd', async () => {
+  it('$cmd - env should resolve $cmd', async () => {
     const config: Config = { env: { default: { foo: { $cmd: 'echo "bar"' } } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
     expect(env).to.eql({ foo: 'bar' })
@@ -151,12 +153,12 @@ describe('config', () => {
     expect(envNames).to.eql(['default'])
   })
 
-  it('env should throw error if $cmd exits with non-zero', async () => {
+  it('$cmd - env should throw error if $cmd exits with non-zero', async () => {
     const config: Config = { env: { default: { foo: { $cmd: 'notacommand' } } }, scripts: {} }
     await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(Error)
   })
 
-  it('env should resolve $stdin', async () => {
+  it('$stdin - env should resolve $stdin', async () => {
     // stub
     const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
     // test
@@ -168,7 +170,7 @@ describe('config', () => {
     sinon.assert.calledOnce(inqspy)
   })
 
-  it('env should resolve $stdin from defaults', async () => {
+  it('$stdin - env should resolve $stdin from defaults', async () => {
     // stub
     const inqspy = sinon.spy(inquirer, 'prompt')
     // test
@@ -180,7 +182,7 @@ describe('config', () => {
     sinon.assert.notCalled(inqspy)
   })
 
-  it('$stdin should support $choices string array', async () => {
+  it('$stdin - $stdin should support $choices string array', async () => {
     // stub
     const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
     // test
@@ -194,11 +196,12 @@ describe('config', () => {
       name: 'name',
       message: 'what is your name?',
       default: undefined,
-      choices: ['one', 'two']
+      choices: ['one', 'two'],
+      loop: false
     }])
   })
 
-  it('$stdin should support $choices $cmd', async () => {
+  it('$stdin - $stdin should support $choices $cmd', async () => {
     // stub
     const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
     // test
@@ -212,7 +215,8 @@ describe('config', () => {
       name: 'name',
       message: 'what is your name?',
       default: undefined,
-      choices: ['one', 'two', 'three']
+      choices: ['one', 'two', 'three'],
+      loop: false
     }])
   })
 
@@ -290,7 +294,7 @@ describe('config', () => {
       hello: { $cmd: 'echo "Hello"' },
       goodbye: { $cmd: 'echo "Goodbye"' }
     })
-    sinon.assert.calledOnce(fsspy1)
+    sinon.assert.calledWithExactly(fsspy1, "~/hooked.yaml")
     sinon.assert.calledOnce(fsspy2)
   })
 })

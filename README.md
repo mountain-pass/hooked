@@ -111,7 +111,9 @@ j
 
 ## Smart complete scripts
 
-Feeling ~~lazy~~ efficient? Try typing some characters of the script or environment. As long as it's enough to uniquely identify your script, the tool will do the rest!
+Feeling ~~lazy~~ efficient? Try typing some prefix characters of the script or environment. As long as it's enough to uniquely identify your script, the tool will do the rest!
+
+*Example: shorthand for run "say hello --env spanish*
 ```sh
 j s hel --env sp
 ```
@@ -152,17 +154,20 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] run --init if no args supplied
 - [x] No loop on list
 - [x] hide debug output behind an opts
+- [x] consolidate `string`, `$env` and `$resolve` to behave the same way (`$env` is a clash!)
 
 ## Next
 
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod)
 - [ ] $imports > extend to support remote (http://) urls
-- [ ] Pipelines
-- [ ] if only one possible child path, runs it straight away
+- [ ] if only one possible child path, prompt user to run it straight away
 - [ ] replay last command / replace from log
-- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
 
 ## Future
+- [ ] make `$secret` envs, that are only imported explicitly for a single run
+  - [ ] `$cmd` > `$env` - make specific only to that run?
+- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
+  - [ ] don't want to introduce dependencies
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)
@@ -201,3 +206,5 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] ~~opt to select env names? (as opposed to having a default)~~
 - [ ] ~~change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)~~
 - [ ] ~~$imports > extend $cmd to optionally specify a $cwd (current working directory e.g. relative to an imported script?)~~ - tricky, any imported file *should* parameterise this, or be agnostic of dir
+- [ ] ~~Pipelines~~ - couldn't that just use a script?
+  

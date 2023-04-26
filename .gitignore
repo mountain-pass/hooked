@@ -69,3 +69,4 @@ yarn.lock
 NOTES.md
 admin/
 tmp/
+.tmp-*.sh

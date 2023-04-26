@@ -1,8 +1,7 @@
 
 env:
   default:
-    # username:
-    #   $env: USER
+    # username: ${USER}
     # GIT_COMMIT:
     #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
     # RECENT_DOWNLOAD:
@@ -54,6 +53,8 @@ scripts:
     $cmd: |
       #!/bin/sh -e
       npx lerna exec --scope @mountainpass/* npm install
+      npx lerna run --scope @mountainpass/* test
+      rm cli/.tmp-*.sh
       npx lerna run --scope @mountainpass/* build
       npx lerna version patch --yes --force-publish --message '%s [skip ci]'
       npx lerna publish from-package --yes

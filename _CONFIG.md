@@ -7,8 +7,6 @@
   - [`string`](#string)
   - [`$cmd`](#cmd)
   - [`$stdin`](#stdin)
-  - [`$env`](#env)
-  - [`$resolve`](#resolve)
 - [Scripts](#scripts)
 - [Conventions](#conventions)
 
@@ -24,9 +22,9 @@ The configuration has three top level items:
   - `<environmentName>:` - the name of a pre-configured environment (active when matches the `--env` parameter).
     - `<environmentVariableKey>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-resolvers) as a value.
 
-- `scripts:` - (optional) takes an `object`
+- `scripts:` - (optional) takes an `object` ([see Scripts](#scripts)).
 
-*Example*
+*Example: hooked.yaml*
 
 ```yaml
 imports:
@@ -35,8 +33,7 @@ imports:
 
 env:
   default:
-    MONGO_URL:
-      $env: MONGO_URL_PROD_READONLY
+    MONGO_URL: ${MONGO_URL_PROD_READONLY}
 
 scripts:
   mongobackup_prod:
@@ -54,6 +51,10 @@ All environment variables consist of a key `string` and a value `string`. We've 
 
 Resolves to a plain text string.
 
+Resolves any `${..}` environment variables within the string.
+
+Throws an error if an environment variable is missing. Can be used to enforce presence of variables.
+
 **Parameters:**
 
 - _Not applicable_
@@ -63,7 +64,8 @@ Resolves to a plain text string.
 ```yaml
 env:
   default:
-    WELCOME_MESSAGE: Hello there!
+    WELCOME_MESSAGE: Hello there ${USER}!
+    NAME: ${USER}
 ```
 
 ## `$cmd`
@@ -78,7 +80,7 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 **Parameters:**
 
 - `$cmd` - (`string`) the command to run.
-- `$env` - (`object` - optional) custom environment variables to resolve, before running this script.
+- `$env` - (`object` - optional) additional environment variables to resolve, before running this script.
 
 **Example:**
 
@@ -95,7 +97,7 @@ env:
 
 **Tips:**
 
-- you can use multiline string for a longer script
+- you can use multiline string for a longer script.
 - you can update the `PATH` env var to use custom scripts.
 - you can utilise a container service like Docker to run custom language scripts.
 - you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
@@ -125,45 +127,6 @@ env:
         - red
         - green
 ```
-
-
-## `$env`
-
-Resolves to the value of the parent system's environment variable. 
-
-Throws an error if the parent environment variable is missing. Can be used to enforce presence of variables.
-
-**Parameters:**
-
-- `$env` - (`string`) the environment variable name to resolve.
-
-
-**Example:**
-
-```yaml
-env:
-  default:
-    MONGO_URL:
-      $env: SECRET_ENV_VAR_ONLY_ON_BUILD_SERVER
-```
-
-
-## `$resolve`
-
-Resolves any `${..}` environment variables within a string.
-
-**Parameters:**
-
-- `$resolve` - (`string`) the string to resolve.
-
-**Example:**
-
-```yaml
-env:
-  default:
-    WELCOME_MESSAGE:
-      $resolve: Hello there ${USER}!
-````
 
 # Scripts
 
