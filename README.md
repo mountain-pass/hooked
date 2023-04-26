@@ -60,6 +60,7 @@ I want something simpler and more easy to use...
 - more extensibile - I'm starting to write more generic, reusable, parameterised scripts.
 - less typing - using `j _logs_` I rebuild/redeploy (almost) handsfree.
 - scripts reuse - I can create scripts that call my other hooked scripts. Easy pipelines.
+- documentation - I'm now writing scripts to print out information, and open relevant websites e.g. `open https://somewebsite.com`
 
 # Usage
 
