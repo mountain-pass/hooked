@@ -54,9 +54,10 @@ When executing the scripts, it must be:
 I want something simpler and more easy to use...
 
 ✅ pros of hooked ✅
-- one file for all my scripts (or multiple, user's choice)
-- because of "smart" completion, my script names are becoming more descriptive
-- I invest more time in my scripts
+- less context switching - one file for all my scripts (or multiple, choose your own adventure!)
+- more readable - because of "smart" completion my script names are becoming more descriptive
+- less environment configuration - only required environment variables are resolved
+- more extensibile - I'm starting to write more generic and reusable scripts
 
 # Usage
 
@@ -171,8 +172,8 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 ## Future
 - [ ] make `$secret` envs, that are only imported explicitly for a single run
   - [ ] `$cmd` > `$env` - make specific only to that run?
-- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine`
-  - [ ] don't want to introduce dependencies
+- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine` - 
+  - [ ] don't want to introduce dependencies, docker may not be present
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)

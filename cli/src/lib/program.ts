@@ -8,7 +8,7 @@ import {
   resolveEnv,
   stripProcessEnvs
 } from './config.js'
-import { CONFIG_PATH } from './defaults.js'
+import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
 import { isDefined, resolveCmdScript } from './scriptExecutors/ScriptExector.js'
@@ -99,8 +99,8 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           // execute script
           await resolveCmdScript(undefined, script, stdin, env, false)
 
-          // store in history (if successful!)
-          addHistory(successfulScript)
+          // store in history (if successful and not the _logs_ option!)
+          if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         }
       } catch (err: any) {
         if (options.debug === true) {

@@ -15,6 +15,7 @@ import {
   type CmdScript
 } from './types.js'
 import { fetchHistory, fetchHistoryAsRunnableLogs, displaySuccessfulScript } from './history.js'
+import { LOGS_MENU_OPTION } from './defaults.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -63,7 +64,7 @@ export const findScript = async (
       return [display, { $cmd }] as [string, CmdScript]
     })
     if (history.length > 0) {
-      script = { _logs_: Object.fromEntries(history), ...script }
+      script = { [LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
     } else {
       console.log(cyan('No history found.'))
     }

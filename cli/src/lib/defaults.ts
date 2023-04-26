@@ -6,6 +6,8 @@ import { type PackageJson } from './utils/packageJson.js'
 export const HISTORY_PATH = path.resolve('.hooked_history.log')
 export const CONFIG_PATH = path.resolve('hooked.yaml')
 
+export const LOGS_MENU_OPTION = '_logs_'
+
 export const CONFIG_BLANK = (): Config => {
   return {
     env: { default: { HELLO: 'Hola' } },
