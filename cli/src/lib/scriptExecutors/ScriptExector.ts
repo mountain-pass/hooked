@@ -132,7 +132,7 @@ export const resolveScript = async (
     resolveResolveScript(key, { $resolve: script }, env)
     // env[key] = script
   }
-  if (typeof env[key] === 'string') {
+  if (typeof env[key] === 'string' || typeof env[key] === 'number' || typeof env[key] === 'boolean') {
     return env[key]
   }
   throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
