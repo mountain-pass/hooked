@@ -169,6 +169,8 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 ## Next
 
+- [ ] add a warning on homedir/import scripts if the chmod isn't `400`
+- [ ] show parent script folders are expandable, as opposed to script leaf nodes (e.g. using icons or plus as a convention?)
 - [ ] if only one possible child path, prompt user to run it straight away
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 

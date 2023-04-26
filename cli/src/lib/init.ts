@@ -18,6 +18,7 @@ export const init = async (): Promise<void> => {
       type: 'list',
       name: 'init',
       message: 'Create new config from:',
+      pageSize: 20,
       choices: [
         { name: 'new Blank template', value: 'blank' },
         { name: 'new NPM template', value: 'npm' },

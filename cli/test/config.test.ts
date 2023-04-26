@@ -33,6 +33,7 @@ describe('config', () => {
         type: 'list',
         name: 'next',
         message: 'Please select a script',
+        pageSize: 20,
         default: '_logs_',
         choices: ['_logs_', 'foo'],
         loop: false
@@ -228,6 +229,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
+        pageSize: 20,
         default: undefined,
         choices: ['one', 'two'],
         loop: false
@@ -247,6 +249,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
+        pageSize: 20,
         default: undefined,
         choices: ['one', 'two', 'three'],
         loop: false

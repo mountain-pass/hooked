@@ -109,6 +109,7 @@ export const findScript = async (
           type: 'list',
           name: 'next',
           message: 'Please select a script',
+          pageSize: 20,
           default: choices[0],
           choices,
           loop: false

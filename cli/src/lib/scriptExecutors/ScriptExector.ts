@@ -93,6 +93,7 @@ export const resolveStdinScript = async (
           type: isDefined(choices) ? 'list' : 'text',
           name: key,
           message: script.$stdin,
+          pageSize: 20,
           default: script.$default,
           choices,
           loop: false
