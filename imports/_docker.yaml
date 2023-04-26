@@ -18,6 +18,9 @@ scripts:
         #!/bin/sh -ve
         docker system prune --volumes --all
 
+    login:
+      $cmd: echo ${DOCKER_PASSWORD} | docker login ghcr.io -u ${DOCKER_USERNAME} --password-stdin
+
     build local:
       $cmd: |
         #!/bin/sh -ve
