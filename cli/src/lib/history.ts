@@ -2,18 +2,41 @@
 import fs from 'fs'
 import { HISTORY_PATH } from './defaults.js'
 import { type SuccessfulScript } from './types.js'
+import { cyan } from './colour.js'
+
+/**
+ * Retrieves the history log of previous commands.
+ * @param max (default: 20) - max number of records to fetch
+ * @returns
+ */
+export const fetchHistory = (max: number = 20): SuccessfulScript[] => {
+  const filepath = HISTORY_PATH
+  if (fs.existsSync(filepath)) {
+    const lines = fs.readFileSync(filepath, 'utf-8').split(/\r?\n/g)
+    return lines
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line) as SuccessfulScript)
+      .sort((a, b) => b.ts - a.ts)
+      .filter((_, i) => i < max)
+  } else {
+    return []
+  }
+}
+
+export const fetchHistoryAsRunnableLogs = (max: number = 20): string[] => {
+  const history = fetchHistory(max)
+  return history.map(script => displaySuccessfulScript(script, true))
+}
 
 /**
  * Prints a history of previous commands.
  */
-export const printHistory = (): void => {
-  const filepath = HISTORY_PATH
-  const lines = fs.readFileSync(filepath, 'utf-8').split(/\r?\n/g)
-  for (const line of lines) {
-    if (line.length > 0) {
-      const script = JSON.parse(line)
-      console.log(displaySuccessfulScript(script, true))
-    }
+export const printHistory = (max: number = 20): void => {
+  const history = fetchHistoryAsRunnableLogs(max)
+  if (history.length > 0) {
+    history.forEach(console.log)
+  } else {
+    console.log(cyan('No history found.'))
   }
 }
 

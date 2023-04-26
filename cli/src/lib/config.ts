@@ -11,8 +11,10 @@ import {
   type EnvironmentVariables,
   type ResolvedEnv, type Script, type StdinResponses,
   type TopLevelEnvironments,
-  type TopLevelScripts
+  type TopLevelScripts,
+  type CmdScript
 } from './types.js'
+import { fetchHistory, fetchHistoryAsRunnableLogs, displaySuccessfulScript } from './history.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -52,6 +54,21 @@ export const findScript = async (
   options: Options
 ): Promise<[Script, string[]]> => {
   let script = config.scripts
+
+  // inject _logs_ into scripts
+  if (isDefined(config.scripts)) {
+    const history = fetchHistory().map((log) => {
+      const display = displaySuccessfulScript(log, true)
+      const $cmd = displaySuccessfulScript(log, false)
+      return [display, { $cmd }] as [string, CmdScript]
+    })
+    if (history.length > 0) {
+      script = { _logs_: Object.fromEntries(history), ...script }
+    } else {
+      console.log(cyan('No history found.'))
+    }
+  }
+
   const resolvedScriptPath: string[] = []
   for (const path of scriptPath) {
     // find exact match
@@ -80,10 +97,9 @@ export const findScript = async (
     ) {
       const availableScripts = `\t- ${stringifyScripts(config).join('\t- ')}`
       const scriptStr = scriptPath.join(' ')
-      throw new Error(`No scripts found at path: ${scriptStr}\nDid you mean?\n${availableScripts}`)
+      throw new Error(`No scripts found at path: ${JSON.stringify(scriptStr)}\nDid you mean?\n${availableScripts}`)
     }
     const choices = Object.keys(script)
-    // TODO auto select if only one choice?
     await inquirer
       .prompt([
         {
