@@ -1,9 +1,10 @@
 
 import fs from 'fs'
 import inquirer from 'inquirer'
+import path from 'path'
 import YAML from 'yaml'
 import { cyan } from './colour.js'
-import { LOGS_MENU_OPTION } from './defaults.js'
+import { LOGS_MENU_OPTION, getLocalImportsCachePath } from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type Options } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
@@ -16,7 +17,7 @@ import {
   type TopLevelEnvironments,
   type TopLevelScripts
 } from './types.js'
-import { resolvePath } from './utils/fileUtils.js'
+import fileUtils from './utils/fileUtils.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -235,9 +236,32 @@ export const resolveEnv = async (
   // START IMPORTS
 
   if (Array.isArray(config.imports) && config.imports.length > 0) {
-    for (const importPath of config.imports) {
-      const filepath = resolvePath(importPath)
-      if (options.debug === true) console.log(`Importing: ${filepath}`)
+    const remotes = config.imports.filter(i => i.startsWith('https://'))
+    const remotesCache = remotes.map(i => getLocalImportsCachePath(path.basename(i)))
+    const allLocal = config.imports.map(i => i.startsWith('https://') ? getLocalImportsCachePath(path.basename(i)) : i)
+
+    // pull remotes if not cached
+    if (options.pull === true) {
+      // force-pull remotes
+      await Promise.all(remotes.map(async (url, i) => await fileUtils.downloadFile(url, remotesCache[i], options.debug)))
+    } else {
+      // pull remotes if not cached
+      await Promise.all(remotes.map(async (url, i) => {
+        if (!fs.existsSync(remotesCache[i])) {
+          await fileUtils.downloadFile(url, remotesCache[i], options.debug)
+        }
+      }))
+    }
+    // complain if any local files are missing
+    const missingLocalFiles = allLocal.filter(i => !fs.existsSync(fileUtils.resolvePath(i)))
+    if (missingLocalFiles.length > 0) {
+      throw new Error(`Missing import files: ${missingLocalFiles.join(', ')}`)
+    }
+
+    // load imports from local
+    for (const importPath of allLocal) {
+      const filepath = fileUtils.resolvePath(importPath)
+      if (options.debug === true) console.log(cyan(`Importing: ${filepath}`))
       const tmp = loadConfig(filepath)
       mergeEnvAndScripts(tmp, envs, scripts)
     }

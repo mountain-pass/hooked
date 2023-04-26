@@ -63,6 +63,10 @@ export const isStdinScript = (script: Script): script is StdinScript => {
   return typeof (script as any).$stdin === 'string'
 }
 
+export const isDefined = (o: any): o is object => {
+  return typeof o !== 'undefined' && o !== null
+}
+
 export const isScript = (script: any): script is Script => {
   return typeof script === 'object' &&
   script !== null &&

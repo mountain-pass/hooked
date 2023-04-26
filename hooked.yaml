@@ -23,6 +23,10 @@ env:
 scripts:
   echo:
     $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
+  copy:
+    $cmd: |
+      mkdir -p ~/.hooked/imports
+      cp imports/*.yaml ~/.hooked/imports
   install:
     local:
       $cmd: |

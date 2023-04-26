@@ -12,6 +12,6 @@ const { expect } = chai
 describe('fileUtils', () => {
 
   it('should resolve home directories', async () => {
-    expect(resolvePath('~/hooked.yaml')).to.equal(path.join(os.homedir(), 'hooked.yaml'))
+    expect(resolvePath('~/.hooked/hooked.yaml')).to.equal(path.join(os.homedir(), '.hooked', 'hooked.yaml'))
   })
 })

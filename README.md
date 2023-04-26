@@ -164,10 +164,10 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] hide debug output behind an opts
 - [x] consolidate `string`, `$env` and `$resolve` to behave the same way (`$env` is a clash!)
 - [x] replay last command / replay from log using `_log_` option
+- [x] $imports > extend to support remote (https://) urls (and a `--pull` option)
 
 ## Next
 
-- [ ] $imports > extend to support remote (http://) urls (and a `--pull` option)
 - [ ] if only one possible child path, prompt user to run it straight away
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 

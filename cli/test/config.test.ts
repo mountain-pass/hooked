@@ -13,6 +13,8 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 import os from 'os'
 import path from 'path'
+import fileUtils from '../src/lib/utils/fileUtils.js'
+import { getLocalImportsCachePath } from '../src/lib/defaults.js'
 
 describe('config', () => {
   afterEach(() => {
@@ -297,11 +299,11 @@ describe('config', () => {
           hello: { $cmd: 'echo "Hello"' }
         }
       }
-      const fsspy1 = sinon.stub(fs, 'existsSync').returns(true)
-      const fsspy2 = sinon.stub(fs, 'readFileSync').returns(YAML.stringify(importedConfig))
+      const spyFsExistsSync = sinon.stub(fs, 'existsSync').returns(true)
+      const spyFsReadFileSync = sinon.stub(fs, 'readFileSync').returns(YAML.stringify(importedConfig))
       // test
       const rootConfig = { 
-        imports: ['~/hooked.yaml'],
+        imports: ['~/.hooked/hooked.yaml'],
         env: { default: { ddd: 'yyy' } },
         scripts: {
           goodbye: { $cmd: 'echo "Goodbye"' }
@@ -318,11 +320,11 @@ describe('config', () => {
         hello: { $cmd: 'echo "Hello"' },
         goodbye: { $cmd: 'echo "Goodbye"' }
       })
-      sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), "hooked.yaml"))
-      sinon.assert.calledOnce(fsspy2)
+      sinon.assert.calledWithExactly(spyFsExistsSync, path.join(os.homedir(), '.hooked', 'hooked.yaml'))
+      sinon.assert.calledOnce(spyFsReadFileSync)
     })
 
-    it('base config with imports works', async () => {
+    it('base config with remote https:// imports works', async () => {
       // setup
       const importedConfig: Config = { 
         env: { default: { bbb: { $cmd: 'echo "222"' } } }, 
@@ -330,11 +332,18 @@ describe('config', () => {
           hello: { $cmd: 'echo "Hello"' }
         }
       }
-      const fsspy1 = sinon.stub(fs, 'existsSync').returns(true)
+      let count = 0
+      const fsspy1 = sinon.stub(fs, 'existsSync').callsFake((path: any) => {
+        if (path.endsWith('custom.yaml')) {
+          return count++ === 0 ? false : true
+        }
+        return true
+      })
       const fsspy2 = sinon.stub(fs, 'readFileSync').returns(YAML.stringify(importedConfig))
+      const fsspy3 = sinon.stub(fileUtils, 'downloadFile').resolves(true)
       // test
       const rootConfig = { 
-        imports: ['~/hooked.yaml'],
+        imports: ['https://www.foobar.com/.hooked/custom.yaml'],
         env: { default: { aaa: { $cmd: 'echo "111"' } } },
         scripts: {
           goodbye: { $cmd: 'echo "Goodbye"' }
@@ -350,8 +359,9 @@ describe('config', () => {
         hello: { $cmd: 'echo "Hello"' },
         goodbye: { $cmd: 'echo "Goodbye"' }
       })
-      sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), "hooked.yaml"))
+      sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), '.hooked', 'imports', 'custom.yaml'))
       sinon.assert.calledOnce(fsspy2)
+      sinon.assert.calledOnceWithExactly(fsspy3, 'https://www.foobar.com/.hooked/custom.yaml', getLocalImportsCachePath('custom.yaml'), undefined)
     })
 
   })

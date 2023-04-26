@@ -47,3 +47,8 @@
 {"ts":1682482826976,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
 {"ts":1682483609022,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
 {"ts":1682483637739,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1682492244488,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1682492273577,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1682504611396,"scriptPath":["copy"],"envNames":["default"],"stdin":{}}
+{"ts":1682504825709,"scriptPath":["copy"],"envNames":["default"],"stdin":{}}
+{"ts":1682504925177,"scriptPath":["copy"],"envNames":["default"],"stdin":{}}

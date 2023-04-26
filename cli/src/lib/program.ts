@@ -24,6 +24,7 @@ export interface Options {
   init?: boolean
   log?: boolean
   debug?: boolean
+  pull?: boolean
 }
 
 export default async (argv: string[] = process.argv): Promise<Command> => {
@@ -39,6 +40,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .option('--printenv', 'print the resolved environment')
     .option('-l, --log', 'print the log of previous scripts')
     .option('-d, --debug', 'show error stacks, show debug logs')
+    .option('-p, --pull', 'force download all imports from remote to local cache')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: Options) => {
