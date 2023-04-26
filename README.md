@@ -53,6 +53,11 @@ When executing the scripts, it must be:
 
 I want something simpler and more easy to use...
 
+✅ pros of hooked ✅
+- one file for all my scripts (or multiple, user's choice)
+- because of "smart" completion, my script names are becoming more descriptive
+- I invest more time in my scripts
+
 # Usage
 
 ```sh

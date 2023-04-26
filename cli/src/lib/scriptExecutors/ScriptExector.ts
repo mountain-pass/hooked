@@ -4,7 +4,7 @@ import {
   isStdinScript, type StdinResponses, isResolveScript,
   type CmdScript, type EnvScript, type StdinScript, type ResolveScript, isScript
 } from '../types.js'
-import { executeCmd } from './$cmd.js'
+import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 
 export const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
@@ -37,6 +37,9 @@ export const resolveCmdScript = async (
   if (missingKeys.length > 0) {
     throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
   }
+
+  // cleanup old tmp files
+  cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
   let newValue = executeCmd(script.$cmd, { stdio: captureOutput ? undefined : 'inherit', env })

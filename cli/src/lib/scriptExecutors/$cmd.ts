@@ -3,8 +3,23 @@ import fs from 'fs'
 import path from 'path'
 import { yellow } from '../colour.js'
 import crypto from 'crypto'
+import { type ResolvedEnv } from '../types.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
+
+export const cleanupOldTmpFiles = (env: ResolvedEnv): void => {
+  // if the root, clean up old .tmp-*.sh files
+  const isRoot = env.HOOKED_ROOT !== 'false'
+  if (isRoot) {
+    // set HOOKED_ROOT for child invocations
+    env.HOOKED_ROOT = 'false'
+    fs.readdirSync('.').forEach((file) => {
+      if (file.startsWith('.tmp-') && file.endsWith('.sh')) {
+        fs.unlinkSync(file)
+      }
+    })
+  }
+}
 
 export const executeCmd = (
   multilineCommand: string,

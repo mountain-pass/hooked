@@ -148,7 +148,7 @@ describe('config', () => {
   it('$cmd - env should resolve $cmd', async () => {
     const config: Config = { env: { default: { foo: { $cmd: 'echo "bar"' } } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-    expect(env).to.eql({ foo: 'bar' })
+    expect(env).to.eql({ HOOKED_ROOT: "false", foo: 'bar' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
   })
@@ -207,7 +207,7 @@ describe('config', () => {
     // test
     const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-    expect(env).to.eql({ name: 'jack' })
+    expect(env).to.eql({ HOOKED_ROOT: "false", name: 'jack' })
     expect(stdin).to.eql({ name: 'jack' })
     expect(envNames).to.eql(['default'])
     sinon.assert.calledOnceWithExactly(inqspy, [{
@@ -286,6 +286,7 @@ describe('config', () => {
       }
     } as Config
     await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
+      HOOKED_ROOT: "false",
       bbb: '222',
       aaa: '111'
     }, {}, ['default']])
