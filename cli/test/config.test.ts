@@ -267,6 +267,39 @@ describe('config', () => {
     await expect(resolveEnv({ scripts: null, env: { default: [] } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
   })
 
+  it('base config should allow string, number and boolean', async () => {
+    // setup
+    const importedConfig: Config = { 
+      env: { default: { aaa: 'zzz', bbb: 123 as any, ccc: true as any } }, 
+      scripts: { 
+        hello: { $cmd: 'echo "Hello"' }
+      }
+    }
+    const fsspy1 = sinon.stub(fs, 'existsSync').returns(true)
+    const fsspy2 = sinon.stub(fs, 'readFileSync').returns(YAML.stringify(importedConfig))
+    // test
+    const rootConfig = { 
+      imports: ['~/hooked.yaml'],
+      env: { default: { ddd: 'yyy' } },
+      scripts: {
+        goodbye: { $cmd: 'echo "Goodbye"' }
+      }
+    } as Config
+    await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
+      aaa: 'zzz',
+      bbb: '123',
+      ccc: 'true',
+      ddd: 'yyy',
+    }, {}, ['default']])
+    // assert
+    expect(rootConfig.scripts).to.eql({
+      hello: { $cmd: 'echo "Hello"' },
+      goodbye: { $cmd: 'echo "Goodbye"' }
+    })
+    sinon.assert.calledWithExactly(fsspy1, "~/hooked.yaml")
+    sinon.assert.calledOnce(fsspy2)
+  })
+
   it('base config with imports works', async () => {
     // setup
     const importedConfig: Config = { 

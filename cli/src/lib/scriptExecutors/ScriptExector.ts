@@ -1,11 +1,17 @@
 import inquirer from 'inquirer'
+import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 import {
-  type Script, type ResolvedEnv, isCmdScript, isEnvScript,
-  isStdinScript, type StdinResponses, isResolveScript,
-  type CmdScript, type EnvScript, type StdinScript, type ResolveScript, isScript
+  isCmdScript,
+  isScript,
+  isStdinScript,
+  type CmdScript, type EnvScript,
+  type ResolveScript,
+  type ResolvedEnv,
+  type Script,
+  type StdinResponses,
+  type StdinScript
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
-import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 
 export const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -119,6 +125,9 @@ export const resolveScript = async (
   stdin: StdinResponses = {},
   env: ResolvedEnv = {}
 ): Promise<string> => {
+  if (typeof script === 'number' || typeof script === 'boolean') {
+    script = String(script)
+  }
   if (isCmdScript(script)) {
     // $cmd
     await resolveCmdScript(key, script, stdin, env)
@@ -135,7 +144,7 @@ export const resolveScript = async (
     resolveResolveScript(key, { $resolve: script }, env)
     // env[key] = script
   }
-  if (typeof env[key] === 'string' || typeof env[key] === 'number' || typeof env[key] === 'boolean') {
+  if (typeof env[key] === 'string') {
     return env[key]
   }
   throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
