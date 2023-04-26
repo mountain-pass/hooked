@@ -2,6 +2,7 @@ import inquirer from 'inquirer'
 import { getEnvVarRefs, internalResolveEnv } from '../config.js'
 import {
   isCmdScript,
+  isDefined,
   isScript,
   isStdinScript,
   type CmdScript, type EnvScript,
@@ -12,8 +13,6 @@ import {
   type StdinScript
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
-
-export const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
 export interface ScriptExecutorResponse {
   value: string

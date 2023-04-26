@@ -11,8 +11,8 @@ import {
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
-import { isDefined, resolveCmdScript } from './scriptExecutors/ScriptExector.js'
-import { isCmdScript, type SuccessfulScript } from './types.js'
+import { resolveCmdScript } from './scriptExecutors/ScriptExector.js'
+import { isCmdScript, isDefined, type SuccessfulScript } from './types.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 
 const packageJson = loadRootPackageJsonSync()
@@ -57,6 +57,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         printHistory()
         return
       }
+      let successfulScript: SuccessfulScript | undefined
       try {
         const config = loadConfig(CONFIG_PATH)
 
@@ -85,7 +86,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         }
 
         // generate rerun command
-        const successfulScript: SuccessfulScript = {
+        successfulScript = {
           ts: Date.now(),
           scriptPath: resolvedScriptPath,
           envNames: resolvedEnvNames,
@@ -111,6 +112,8 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           console.error(red(err.message))
           console.error(red('Use "--debug" to see stack trace.'))
         }
+        // print the rerun command for easy re-execution
+        if (options.debug !== true && isDefined(successfulScript)) console.log(cyan(`rerun: ${displaySuccessfulScript(successfulScript)}`))
         process.exit(1)
       }
     })
