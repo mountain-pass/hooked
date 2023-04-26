@@ -51,10 +51,10 @@ scripts:
       $cmd: npx lerna publish from-package --yes
   publish:
     $cmd: |
-      #!/bin/sh -e
+      #!/bin/sh -ve
       npx lerna exec --scope @mountainpass/* npm install
       npx lerna run --scope @mountainpass/* test
-      rm cli/.tmp-*.sh
+      rm cli/.tmp-*.sh || true
       npx lerna run --scope @mountainpass/* build
       npx lerna version patch --yes --force-publish --message '%s [skip ci]'
       npx lerna publish from-package --yes
