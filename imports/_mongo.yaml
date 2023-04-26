@@ -1,0 +1,50 @@
+# NOTE: Requires ${MONGO_URL} and docker
+
+env:
+  default:
+    DOCKER_VERSION:
+      $cmd: docker -v
+
+scripts:
+  mongo:
+    start:
+      $cmd: |
+        set -ve
+        docker run -d -p 27017:27017 -v `pwd`/mongo:/data/db --name mongo mongo
+    stopAndRemove:
+      $cmd: |
+        set -ve
+        docker stop mongo || true
+        docker rm mongo || true
+        rm -rf `pwd`/mongo
+    showLogs:
+      $cmd: |
+        set -ve
+        docker logs -tn 200 mongo
+    status:
+      $cmd: |
+        set -ve
+        docker ps | grep mongo
+    takeBackup (NOTE does not maintain the atomicity guarantees of transactions across shards):
+      $env:
+        ARCHIVE_PREFIX:
+          $stdin: Please enter an archive prefix
+          $default: mongodump
+      $cmd: |
+        set -ve
+        docker run --rm -w `pwd` -v `pwd`:`pwd` mongo mongodump --uri ${MONGO_URL} --gzip --archive=${ARCHIVE_PREFIX}-$(date +'%Y%d%m-%H%M').gz
+    restoreBackupToLocal:
+      $env:
+        MONGO_ARCHIVE:
+          $stdin: "Please select an archive to restore:"
+          $choices:
+            $cmd: |
+              set -ve
+              ls -1r *.gz | head -20
+      $cmd: |
+        set -ve
+        docker run --rm -w `pwd` -v `pwd`:`pwd` --network=host mongo mongorestore --uri mongodb://localhost:27017 --drop --gzip --archive=${MONGO_ARCHIVE}
+    restoreBackupToProduction:
+      $cmd: |
+        set -ve
+        echo Not yet implemented!

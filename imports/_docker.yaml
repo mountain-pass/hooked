@@ -1,0 +1,52 @@
+# NOTE: Requires ${DOCKER_FILE} and docker
+
+env:
+  default:
+    DOCKER_VERSION:
+      $cmd: docker -v
+    DOCKER_FILE: Dockerfile
+    PLATFORM: linux/amd64,linux/arm64/v8
+  linux:
+    PLATFORM: linux/amd64
+  macm1:
+    PLATFORM: linux/arm64/v8
+
+scripts:
+  docker:
+    system prune (volumes & all):
+      $cmd: |
+        #!/bin/sh -ve
+        docker system prune --volumes --all
+
+    build local:
+      $cmd: |
+        #!/bin/sh -ve
+        docker build \
+          --tag ${DOCKER_IMAGE} \
+          --file ${DOCKER_FILE} \
+          .
+
+    build platform image to local zip:
+      $cmd: |
+        #!/bin/sh -ve
+        docker buildx build \
+          --platform ${PLATFORM} \
+          --tag ${DOCKER_IMAGE} \
+          --file ${DOCKER_FILE} \
+          --output type=docker,dest=- \
+          . | gzip > ${DOCKER_ARCHIVE}
+
+    buildAndPush platform image to registry:
+      $cmd: |
+        #!/bin/sh -ve
+        docker buildx build \
+          --platform ${PLATFORM} \
+          --tag ${DOCKER_IMAGE} \
+          --file ${DOCKER_FILE} \
+          --output=type=registry \
+          .
+
+    load local zip into local docker images:
+      $cmd: |
+        #!/bin/sh -ve
+        docker load --input ${DOCKER_ARCHIVE}
