@@ -106,7 +106,7 @@ export const findScript = async (
     await inquirer
       .prompt([
         {
-          type: 'list',
+          type: 'rawlist',
           name: 'next',
           message: 'Please select a script',
           pageSize: 20,

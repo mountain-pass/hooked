@@ -15,7 +15,7 @@ export const init = async (): Promise<void> => {
   const fromExistingNPM = fs.existsSync(packageJson) ? [{ name: 'existing NPM (package.json)', value: 'npm_exist' }] : []
   await inquirer.prompt([
     {
-      type: 'list',
+      type: 'rawlist',
       name: 'init',
       message: 'Create new config from:',
       pageSize: 20,

@@ -89,7 +89,7 @@ export const resolveStdinScript = async (
     await inquirer
       .prompt([
         {
-          type: isDefined(choices) ? 'list' : 'text',
+          type: isDefined(choices) ? 'rawlist' : 'text',
           name: key,
           message: script.$stdin,
           pageSize: 20,

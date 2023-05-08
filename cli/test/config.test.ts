@@ -30,7 +30,7 @@ describe('config', () => {
 
     sinon.assert.calledOnceWithExactly(inqspy, [
       {
-        type: 'list',
+        type: 'rawlist',
         name: 'next',
         message: 'Please select a script',
         pageSize: 20,
@@ -226,7 +226,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'list',
+        type: 'rawlist',
         name: 'name',
         message: 'what is your name?',
         pageSize: 20,
@@ -246,7 +246,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'list',
+        type: 'rawlist',
         name: 'name',
         message: 'what is your name?',
         pageSize: 20,
