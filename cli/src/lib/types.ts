@@ -1,5 +1,6 @@
 export type Dictionary<ValueType> = Record<string, ValueType>
 
+export type Plugins = Record<string, boolean>
 export type EnvironmentVariables = Record<string, Script>
 
 export type TopLevelImports = string[]
@@ -8,6 +9,7 @@ export type TopLevelEnvironments = Record<string, EnvironmentVariables>
 export type TopLevelScripts = Record<string, any>
 
 export interface Config {
+  plugins?: Plugins
   imports?: TopLevelImports
   env: TopLevelEnvironments
   scripts: TopLevelScripts
@@ -45,7 +47,13 @@ export interface StdinScript {
   // allow multiple options
   $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
 }
-export type Script = string | CmdScript | StdinScript | EnvScript | ResolveScript
+
+export interface InternalScript {
+  $env?: EnvironmentVariables
+  $internal: (options: { key: string, stdin: StdinResponses, env: ResolvedEnv }) => Promise<string>
+}
+
+export type Script = string | CmdScript | StdinScript | EnvScript | ResolveScript | InternalScript
 
 export const isCmdScript = (script: Script): script is CmdScript => {
   return typeof (script as any).$cmd === 'string'
@@ -63,12 +71,16 @@ export const isStdinScript = (script: Script): script is StdinScript => {
   return typeof (script as any).$stdin === 'string'
 }
 
+export const isInternalScript = (script: Script): script is InternalScript => {
+  return typeof (script as any).$internal === 'function'
+}
+
 export const isDefined = (o: any): o is object => {
   return typeof o !== 'undefined' && o !== null
 }
 
 export const isScript = (script: any): script is Script => {
-  return typeof script === 'object' &&
+  return (typeof script === 'object' || typeof script === 'function') &&
   script !== null &&
-  (isCmdScript(script) || isStdinScript(script) || isEnvScript(script) || isResolveScript(script))
+  (isCmdScript(script) || isStdinScript(script) || isEnvScript(script) || isResolveScript(script) || isInternalScript(script))
 }

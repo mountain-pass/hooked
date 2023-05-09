@@ -10,7 +10,9 @@ import {
   type ResolvedEnv,
   type Script,
   type StdinResponses,
-  type StdinScript
+  type StdinScript,
+  isInternalScript,
+  type InternalScript
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 
@@ -21,6 +23,25 @@ export interface ScriptExecutorResponse {
 
 export const isScriptExectorResponse = (o: any): o is ScriptExecutorResponse => {
   return typeof o === 'object' && typeof o.value === 'string'
+}
+
+export const resolveInternalScript = async (
+  key: string,
+  script: InternalScript,
+  stdin: StdinResponses,
+  env: ResolvedEnv
+): Promise<string> => {
+  // if "step" env is defined, resolve environment variables
+  if (isDefined(script.$env)) {
+    // TODO provide stdin
+    await internalResolveEnv(script.$env, stdin, env)
+  }
+
+  const result = await script.$internal({ key, stdin, env })
+  if (typeof result === 'string') {
+    env[key] = result
+  }
+  return result
 }
 
 export const resolveCmdScript = async (
@@ -128,7 +149,10 @@ export const resolveScript = async (
   if (typeof script === 'number' || typeof script === 'boolean') {
     script = String(script)
   }
-  if (isCmdScript(script)) {
+  if (isInternalScript(script)) {
+    // script is an internal function, invoke with args
+    await resolveInternalScript(key, script, stdin, env)
+  } else if (isCmdScript(script)) {
     // $cmd
     await resolveCmdScript(key, script, stdin, env)
   // } else if (isEnvScript(script)) {
@@ -147,5 +171,5 @@ export const resolveScript = async (
   if (typeof env[key] === 'string') {
     return env[key]
   }
-  throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
+  throw new Error(`Unknown script type #1: ${JSON.stringify(script)}`)
 }

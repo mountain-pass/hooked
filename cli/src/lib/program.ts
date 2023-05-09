@@ -11,9 +11,10 @@ import {
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
-import { resolveCmdScript } from './scriptExecutors/ScriptExector.js'
-import { isCmdScript, isDefined, type SuccessfulScript } from './types.js'
+import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
+import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from './types.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
+import { generateScripts } from './plugins/AbiPlugin.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -61,6 +62,14 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
       try {
         const config = loadConfig(CONFIG_PATH)
 
+        // check for plugins
+        if (config?.plugins?.abi === true) {
+          config.scripts = {
+            ...(await generateScripts()),
+            ...config.scripts
+          }
+        }
+
         const envNames = options.env.split(',')
         const stdin = JSON.parse(options.stdin)
         const globalEnv = { ...process.env as any }
@@ -76,12 +85,12 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
 
         // check script is executable...
-        if (!isCmdScript(script)) {
-          throw new Error(`Unknown script type: ${JSON.stringify(script)}`)
+        if (!isCmdScript(script) && !isInternalScript(script)) {
+          throw new Error(`Unknown script type #2: ${JSON.stringify(script)}`)
         }
 
         // resolve script env vars (if any)
-        if (isDefined(script.$env)) {
+        if (isCmdScript(script) && isDefined(script.$env)) {
           await internalResolveEnv(script.$env, stdin, env)
         }
 
@@ -100,7 +109,11 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           console.log(envString)
         } else {
           // execute script
-          await resolveCmdScript(undefined, script, stdin, env, false)
+          if (isCmdScript(script)) {
+            await resolveCmdScript(undefined, script, stdin, env, false)
+          } else if (isInternalScript(script)) {
+            await resolveInternalScript('-', script, stdin, env)
+          }
 
           // store in history (if successful and not the _logs_ option!)
           if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)

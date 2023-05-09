@@ -70,3 +70,4 @@ NOTES.md
 admin/
 tmp/
 .tmp-*.sh
+*.sol/

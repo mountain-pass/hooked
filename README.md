@@ -14,6 +14,7 @@
 - [Backlog](#backlog)
   - [Done](#done)
   - [Next](#next)
+  - [Workarounds](#workarounds)
   - [Future](#future)
 - [Descoped](#descoped)
 
@@ -167,18 +168,37 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] replay last command / replay from log using `_log_` option
 - [x] $imports > extend to support remote (https://) urls (and a `--pull` option)
 
+- [ ] dynamic exec paths - e.g. npm, makefile, abi files, etc
+  - [x] ABI - discover json files with `{ abi: [...], address: '0xabc' }` up to a max depth of 5
+  - [x] ABI - support no args + view/non-payable functions
+  - [ ] ABI - support args + view/non-payable functions
+  - [ ] ABI - support payable functions (requires wallet)
+  - [ ] ABI - document
+
 ## Next
 
-- [ ] add a warning on homedir/import scripts if the chmod isn't `400`
-- [ ] show parent script folders are expandable, as opposed to script leaf nodes (e.g. using icons or plus as a convention?)
+- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine` - 
+  - [ ] Con: don't want to introduce dependencies, docker may not be present
+  - [ ] Pro: it is super important to have consistent behaviour
+
+- [ ] secrets - make `$secret` envs, that are only imported explicitly for a single run
+  - [ ] `$secrets: <envName>: FOO=bar` - secrets, that are only supplied when explicitly requested
+  - [ ] `$scripts: ...: $cmd: $secrets: <envName>` - make specific only to that `$cmd`
+  - [ ] Pros: currently environment variables are shared with all scripts by default. We don't want that for sensitive information.
+
 - [ ] if only one possible child path, prompt user to run it straight away
+- [ ] secrets - best practice: don't import into environment, share a file instead
+- [ ] secrets - parse output stream and obfuscate e.g. `***` if printed
+
+- [ ] provide an example of a "poll until available" script
+  - e.g. `curl --fail-with-body ...`
+
+## Workarounds
+- [ ] add a warning on homedir/import scripts if the chmod isn't `400` (optional)
+- [ ] show parent script folders are expandable, as opposed to script leaf nodes - workaroud: manually prepend a `+` character
 - [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 
 ## Future
-- [ ] make `$secret` envs, that are only imported explicitly for a single run
-  - [ ] `$cmd` > `$env` - make specific only to that run?
-- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine` - 
-  - [ ] don't want to introduce dependencies, docker may not be present
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)

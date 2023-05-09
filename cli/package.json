@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "commander": "10.0.1",
+    "ethers": "6.3.0",
     "inquirer": "9.2.0",
     "yaml": "2.2.2"
   },

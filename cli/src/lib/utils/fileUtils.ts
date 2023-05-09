@@ -19,6 +19,10 @@ export const resolvePath = (filepath: string): string => {
   }
 }
 
+export const getDirnameFilename = (filepath: string): string => {
+  return new URL(filepath, import.meta.url).toString()
+}
+
 /**
  * Downloads a file to the given path.
  * @param url
