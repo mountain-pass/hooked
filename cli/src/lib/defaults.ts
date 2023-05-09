@@ -7,6 +7,8 @@ import { type PackageJson } from './utils/packageJson.js'
 export const HISTORY_PATH = path.resolve('.hooked_history.log')
 export const CONFIG_PATH = path.resolve('hooked.yaml')
 
+export const PAGE_SIZE = 10
+
 export const LOGS_MENU_OPTION = '_logs_'
 export const LOCAL_CACHE_PATH = path.join(os.homedir(), '.hooked', 'imports')
 

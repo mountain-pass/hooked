@@ -1,5 +1,5 @@
 import inquirer from 'inquirer'
-import { CONFIG_PATH, CONFIG_BLANK, CONFIG_NPM, CONFIG_NPM_EXIST } from './defaults.js'
+import { CONFIG_PATH, CONFIG_BLANK, CONFIG_NPM, CONFIG_NPM_EXIST, PAGE_SIZE } from './defaults.js'
 import YAML from 'yaml'
 import fs from 'fs'
 import path from 'path'
@@ -18,7 +18,7 @@ export const init = async (): Promise<void> => {
       type: 'rawlist',
       name: 'init',
       message: 'Create new config from:',
-      pageSize: 20,
+      pageSize: PAGE_SIZE,
       choices: [
         { name: 'new Blank template', value: 'blank' },
         { name: 'new NPM template', value: 'npm' },

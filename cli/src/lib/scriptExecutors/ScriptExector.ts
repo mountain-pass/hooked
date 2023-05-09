@@ -15,6 +15,7 @@ import {
   type InternalScript
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
+import { PAGE_SIZE } from '../defaults.js'
 
 export interface ScriptExecutorResponse {
   value: string
@@ -113,7 +114,7 @@ export const resolveStdinScript = async (
           type: isDefined(choices) ? 'rawlist' : 'text',
           name: key,
           message: script.$stdin,
-          pageSize: 20,
+          pageSize: PAGE_SIZE,
           default: script.$default,
           choices,
           loop: false

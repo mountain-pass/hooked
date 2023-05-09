@@ -69,7 +69,7 @@ export const displaySuccessfulScript = (
 ): string => {
   const { ts, scriptPath, envNames, stdin } = script
   const timestamp = formatLocalISOString(ts, tzoffsetMinutes)
-  const scriptstr = scriptPath.map(s => s.includes(' ') ? `"${s}"` : s).join(' ')
+  const scriptstr = scriptPath.map(s => (/[^\w]/).test(s) ? `"${s}"` : s).join(' ')
   const envstr = envNames.length > 1 ? `--env ${envNames.join(',')}` : ''
   const stdinstr = Object.keys(stdin).length > 0 ? `--stdin '${JSON.stringify(stdin)}'` : ''
   return `${showTimestamp ? `${timestamp}: ` : ''}j ${scriptstr} ${envstr} ${stdinstr}`

@@ -4,7 +4,7 @@ import inquirer from 'inquirer'
 import path from 'path'
 import YAML from 'yaml'
 import { cyan } from './colour.js'
-import { LOGS_MENU_OPTION, getLocalImportsCachePath } from './defaults.js'
+import { LOGS_MENU_OPTION, PAGE_SIZE, getLocalImportsCachePath } from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type Options } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
@@ -109,7 +109,7 @@ export const findScript = async (
           type: 'rawlist',
           name: 'next',
           message: 'Please select a script',
-          pageSize: 20,
+          pageSize: PAGE_SIZE,
           default: choices[0],
           choices,
           loop: false

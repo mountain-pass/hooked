@@ -171,7 +171,7 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] dynamic exec paths - e.g. npm, makefile, abi files, etc
   - [x] ABI - discover json files with `{ abi: [...], address: '0xabc' }` up to a max depth of 5
   - [x] ABI - support no args + view/non-payable functions
-  - [ ] ABI - support args + view/non-payable functions
+  - [x] ABI - support args + view/non-payable functions
   - [ ] ABI - support payable functions (requires wallet)
   - [ ] ABI - document options (e.g. `plugins: abi: true`)
 
@@ -238,4 +238,5 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [ ] ~~change `-in` from json to `-in key=val key2=val2` (var args causes clashes with script targets)~~
 - [ ] ~~$imports > extend $cmd to optionally specify a $cwd (current working directory e.g. relative to an imported script?)~~ - tricky, any imported file *should* parameterise this, or be agnostic of dir
 - [ ] ~~Pipelines~~ - couldn't that just use a script?
+- [ ] ~~consolidate `env` and `stdin` ?~~ - No - stdin must be a separate output, so that jobs can be replayed
   

@@ -14,7 +14,7 @@ const { expect } = chai
 import os from 'os'
 import path from 'path'
 import fileUtils from '../src/lib/utils/fileUtils.js'
-import { getLocalImportsCachePath } from '../src/lib/defaults.js'
+import { PAGE_SIZE, getLocalImportsCachePath } from '../src/lib/defaults.js'
 
 describe('config', () => {
   afterEach(() => {
@@ -33,7 +33,7 @@ describe('config', () => {
         type: 'rawlist',
         name: 'next',
         message: 'Please select a script',
-        pageSize: 20,
+        pageSize: PAGE_SIZE,
         default: '_logs_',
         choices: ['_logs_', 'foo'],
         loop: false
@@ -229,7 +229,7 @@ describe('config', () => {
         type: 'rawlist',
         name: 'name',
         message: 'what is your name?',
-        pageSize: 20,
+        pageSize: PAGE_SIZE,
         default: undefined,
         choices: ['one', 'two'],
         loop: false
@@ -249,7 +249,7 @@ describe('config', () => {
         type: 'rawlist',
         name: 'name',
         message: 'what is your name?',
-        pageSize: 20,
+        pageSize: PAGE_SIZE,
         default: undefined,
         choices: ['one', 'two', 'three'],
         loop: false
