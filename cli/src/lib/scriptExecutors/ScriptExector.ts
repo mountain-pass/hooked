@@ -96,6 +96,9 @@ export const resolveStdinScript = async (
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
     env[key] = stdin[key]
+  } else if (isDefined(env[key])) {
+    // else if we already have a value in the environment, use that
+    stdin[key] = env[key]
   } else {
     let choices
     // resolve choices if they are a script
