@@ -173,7 +173,7 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
   - [x] ABI - support no args + view/non-payable functions
   - [ ] ABI - support args + view/non-payable functions
   - [ ] ABI - support payable functions (requires wallet)
-  - [ ] ABI - document
+  - [ ] ABI - document options (e.g. `plugins: abi: true`)
 
 ## Next
 
