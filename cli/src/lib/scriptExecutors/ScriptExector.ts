@@ -120,7 +120,7 @@ export const resolveStdinScript = async (
           pageSize: PAGE_SIZE,
           default: script.$default,
           choices,
-          loop: false
+          loop: true
         }
       ])
       .then((answers) => {

@@ -36,7 +36,7 @@ describe('config', () => {
         pageSize: PAGE_SIZE,
         default: '_logs_',
         choices: ['_logs_', 'foo'],
-        loop: false
+        loop: true
       }
     ])
   })
@@ -232,7 +232,7 @@ describe('config', () => {
         pageSize: PAGE_SIZE,
         default: undefined,
         choices: ['one', 'two'],
-        loop: false
+        loop: true
       }])
     })
 
@@ -252,7 +252,7 @@ describe('config', () => {
         pageSize: PAGE_SIZE,
         default: undefined,
         choices: ['one', 'two', 'three'],
-        loop: false
+        loop: true
       }])
     })
 

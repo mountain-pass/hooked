@@ -1,3 +1,4 @@
+/* eslint-disable no-template-curly-in-string */
 import fs from 'fs/promises'
 import path from 'path'
 import { cyan } from '../colour.js'
@@ -84,6 +85,18 @@ const processJsonFile = async (filePath: string): Promise<any> => {
   return json
 }
 
+const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRpcProvider, wallet?: ethers.Wallet, blockNumber: number }> => {
+  const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
+  const blockNumber = typeof env.BLOCK_NUMBER !== 'undefined' ? parseInt(env.BLOCK_NUMBER) : await provider.getBlockNumber()
+  if (typeof env.PRIVATE_KEY === 'string') {
+    console.log(cyan(`ABI: Using block number: ${blockNumber}, Using private key: ***`))
+    return { provider, blockNumber, wallet: new ethers.Wallet(env.PRIVATE_KEY, provider) }
+  } else {
+    console.log(cyan(`ABI: Using block number: ${blockNumber}`))
+    return { provider, blockNumber }
+  }
+}
+
 export const generateScripts = async (): Promise<any> => {
   console.log(cyan('ABI: enabled...'))
   const files = await searchJsonFiles('.')
@@ -93,6 +106,35 @@ export const generateScripts = async (): Promise<any> => {
   } else {
     return {
       _abis_: {
+        // get the current block number
+        '_getBlockNumber()': {
+          $internal: async ({ env }: any) => {
+            const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
+            console.log(await provider.getBlockNumber())
+          }
+        },
+        // show the address of the current wallet
+        '_getAddress()': {
+          $internal: async ({ env }: any) => {
+            const { wallet } = await getProviderAndWallet(env)
+            if (typeof wallet?.address === 'string') {
+              console.log(wallet.address)
+            } else {
+              throw new Error('No wallet. You can define one by specifying a PRIVATE_KEY environment variable.')
+            }
+          }
+        },
+        // show the native balance of the current wallet
+        '_getBalance()': {
+          $internal: async ({ env }: any) => {
+            const { provider, blockNumber, wallet } = await getProviderAndWallet(env)
+            if (typeof wallet?.address === 'string') {
+              console.log(await provider.getBalance(wallet.address, blockNumber))
+            } else {
+              throw new Error('No wallet. You can define one by specifying a PRIVATE_KEY environment variable.')
+            }
+          }
+        },
         ...Object.fromEntries((files).map((file: AbiFileData) => {
           const fns = file.jsonContent.abi.filter((abi: Abi) => {
             // choose only no args (->FREE) transactions for now
@@ -100,24 +142,23 @@ export const generateScripts = async (): Promise<any> => {
             // abi.inputs.length === 0 && // has no inputs
             // ['view', 'nonpayable'].includes(abi.stateMutability) // is free
           })
-          //
+          // map each solidity file
           return [file.filePath, Object.fromEntries(fns.map((fn: Abi) => {
             const contractArgs = Object.fromEntries(fn.inputs.map((input: AbiInput) => {
               return [input.name, { $stdin: `Please enter a ${input.name} (type = ${input.type})?` }]
             }))
+            // map each function to a script
             return [`${fn.name}(${fn.inputs.map(i => i.name).join(', ')}) [${fn.stateMutability}]`, {
               $env: {
-                PROVIDER_URL: {
-                  $stdin: 'Please enter a provider url?'
-                },
+                PROVIDER_URL: '${PROVIDER_URL}',
                 ...contractArgs
               },
               $internal: async ({ env }: any) => {
-                const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
-                const contract = new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, provider)
+                const { wallet, blockNumber } = await getProviderAndWallet(env)
+                const contract = new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, wallet)
                 const params = fn.inputs.map(input => env[input.name])
                 // console.log(cyan(`calling ${fn.name}(${params.join(', ')})`))
-                console.log(await contract[fn.name](...params))
+                console.log(await contract[fn.name](...params, { blockTag: blockNumber }))
               }
             }]
           }))]

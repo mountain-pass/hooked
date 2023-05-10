@@ -112,7 +112,7 @@ export const findScript = async (
           pageSize: PAGE_SIZE,
           default: choices[0],
           choices,
-          loop: false
+          loop: true
         }
       ])
       .then((answers) => {

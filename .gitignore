@@ -71,3 +71,4 @@ admin/
 tmp/
 .tmp-*.sh
 *.sol/
+cli/test/contracts/

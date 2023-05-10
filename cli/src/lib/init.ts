@@ -24,7 +24,7 @@ export const init = async (): Promise<void> => {
         { name: 'new NPM template', value: 'npm' },
         ...fromExistingNPM
       ],
-      loop: false
+      loop: true
     }
   ]).then((answers) => {
     let config: Config = CONFIG_BLANK()
