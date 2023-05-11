@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { cyan } from '../colour.js'
 import * as ethers from 'ethers'
+import { isString } from '../types.js'
 
 type BaseTypes = 'bool' |
 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' |
@@ -85,9 +86,13 @@ const processJsonFile = async (filePath: string): Promise<any> => {
   return json
 }
 
-const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRpcProvider, wallet?: ethers.Wallet, blockNumber: number }> => {
+// eslint-disable-next-line max-len
+const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRpcProvider, wallet?: ethers.Wallet, blockNumber: string | number }> => {
   const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
-  const blockNumber = typeof env.BLOCK_NUMBER !== 'undefined' ? parseInt(env.BLOCK_NUMBER) : await provider.getBlockNumber()
+  let blockNumber: string | number = isString(env.BLOCK_NUMBER) ? env.BLOCK_NUMBER : 'latest'
+  if (!isNaN(Number(blockNumber))) {
+    blockNumber = Number(blockNumber)
+  }
   if (typeof env.PRIVATE_KEY === 'string') {
     console.log(cyan(`ABI: Using block number: ${blockNumber}, Using private key: ***`))
     return { provider, blockNumber, wallet: new ethers.Wallet(env.PRIVATE_KEY, provider) }
@@ -154,8 +159,10 @@ export const generateScripts = async (): Promise<any> => {
                 ...contractArgs
               },
               $internal: async ({ env }: any) => {
-                const { wallet, blockNumber } = await getProviderAndWallet(env)
-                const contract = new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, wallet)
+                const { provider, wallet, blockNumber } = await getProviderAndWallet(env)
+                const contract = typeof wallet !== 'undefined'
+                  ? new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, wallet)
+                  : new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, provider)
                 const params = fn.inputs.map(input => env[input.name])
                 // console.log(cyan(`calling ${fn.name}(${params.join(', ')})`))
                 console.log(await contract[fn.name](...params, { blockTag: blockNumber }))
