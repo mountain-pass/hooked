@@ -136,6 +136,8 @@ Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source c
 
 This deserves it's own section... [check it out](_CONFIG.md).
 
+We are adding Plugins too... [check out the ABI Plugin here](_ABI_PLUGIN.md)
+
 Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 # Backlog
@@ -168,13 +170,12 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] replay last command / replay from log using `_log_` option
 - [x] $imports > extend to support remote (https://) urls (and a `--pull` option)
 - [x] ability to run in docker container `$image: node:lts-alpine`
-
 - [x] ABI support
   - [x] ABI - discover json files with `{ abi: [...], address: '0xabc' }` up to a max depth of 5
   - [x] ABI - support view/non-payable functions (with args)
   - [x] ABI - support payable functions (requires wallet) => `env.PRIVATE_KEY`
   - [x] ABI - support historical function calls => `env.BLOCK_NUMBER`
-  - [ ] ABI - document options (e.g. `plugins: abi: true`)
+  - [x] ABI - document options (e.g. `plugins: abi: true`)
 
 ## Next
 
