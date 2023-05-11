@@ -32,6 +32,7 @@ export interface SuccessfulScript {
 
 export interface CmdScript {
   $env?: EnvironmentVariables
+  $image?: string
   $cmd: string
 }
 

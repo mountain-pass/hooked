@@ -167,24 +167,23 @@ Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 - [x] consolidate `string`, `$env` and `$resolve` to behave the same way (`$env` is a clash!)
 - [x] replay last command / replay from log using `_log_` option
 - [x] $imports > extend to support remote (https://) urls (and a `--pull` option)
+- [x] ability to run in docker container `$image: node:lts-alpine`
 
-- [ ] dynamic exec paths - e.g. npm, makefile, abi files, etc
+- [x] ABI support
   - [x] ABI - discover json files with `{ abi: [...], address: '0xabc' }` up to a max depth of 5
-  - [x] ABI - support no args + view/non-payable functions
-  - [x] ABI - support args + view/non-payable functions
-  - [ ] ABI - support payable functions (requires wallet)
+  - [x] ABI - support view/non-payable functions (with args)
+  - [x] ABI - support payable functions (requires wallet) => `env.PRIVATE_KEY`
+  - [x] ABI - support historical function calls => `env.BLOCK_NUMBER`
   - [ ] ABI - document options (e.g. `plugins: abi: true`)
 
 ## Next
-
-- [ ] run natively in docker container (ala docker-shell) `container: node:lts-alpine` - 
-  - [ ] Con: don't want to introduce dependencies, docker may not be present
-  - [ ] Pro: it is super important to have consistent behaviour
 
 - [ ] secrets - make `$secret` envs, that are only imported explicitly for a single run
   - [ ] `$secrets: <envName>: FOO=bar` - secrets, that are only supplied when explicitly requested
   - [ ] `$scripts: ...: $cmd: $secrets: <envName>` - make specific only to that `$cmd`
   - [ ] Pros: currently environment variables are shared with all scripts by default. We don't want that for sensitive information.
+  
+- [ ] dynamic exec paths - e.g. npm, makefile, abi files, etc
 
 - [ ] if only one possible child path, prompt user to run it straight away
 - [ ] secrets - best practice: don't import into environment, share a file instead

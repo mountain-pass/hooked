@@ -69,7 +69,7 @@ export const resolveCmdScript = async (
   cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
-  let newValue = executeCmd(script.$cmd, { stdio: captureOutput ? undefined : 'inherit', env })
+  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env })
   // remove trailing newlines
   newValue = newValue.replace(/(\r?\n)*$/, '')
   if (typeof key === 'string') {

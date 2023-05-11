@@ -80,6 +80,7 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 **Parameters:**
 
 - `$cmd` - (`string`) the command to run.
+- `$image` - (`string` - optional) the docker command to run the command in.
 - `$env` - (`object` - optional) additional environment variables to resolve, before running this script.
 
 **Example:**

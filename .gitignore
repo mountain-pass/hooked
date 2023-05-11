@@ -70,5 +70,6 @@ NOTES.md
 admin/
 tmp/
 .tmp-*.sh
+.env-*.txt
 *.sol/
 cli/test/contracts/
