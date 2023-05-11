@@ -28,7 +28,7 @@ Environment variables
 
 - `PROVIDER_URL` - (`string`) the JSON RPC endpoint to connect to.
 - `PRIVATE_KEY` - (`string` - optional) the private key of the wallet to load.
-- `BLOCK_NUMBER` - (`string` - optional) the block tag at which to execute the function.
+- `BLOCK_NUMBER` - (`string` - optional) the [block tag](https://docs.ethers.org/v5/api/providers/types/#providers-BlockTag) at which to execute the function.
 
 **Example:**
 
