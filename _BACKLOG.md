@@ -43,10 +43,10 @@
   - [x] ABI - support payable functions (requires wallet) => `env.PRIVATE_KEY`
   - [x] ABI - support historical function calls => `env.BLOCK_NUMBER`
   - [x] ABI - document options (e.g. `plugins: abi: true`)
+- [x] support emoji followed by space as a script name prefix (ignored when using prefix matchers)
+- [x] support auto adding emojis  🪝📁 `plugins: icons: true/false` to toggle (default: true)
 
 # Next
-
-- [ ] add emoticons to indicate folders 🪝📁✅
 
 - [ ] handling of sensitive env vars -> include env groups specify per job, only for that job `$env: $include: 'secretEnvGroup'` 
   

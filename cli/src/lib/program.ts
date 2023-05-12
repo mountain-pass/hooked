@@ -62,8 +62,11 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
       try {
         const config = loadConfig(CONFIG_PATH)
 
+        // setup defaults...
+        config.plugins = { ...{ abi: false, icons: true }, ...(config.plugins ?? {}) }
+
         // check for plugins
-        if (config?.plugins?.abi === true) {
+        if (config.plugins.abi) {
           config.scripts = {
             ...(await generateScripts()),
             ...config.scripts

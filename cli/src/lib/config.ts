@@ -48,6 +48,18 @@ export const getEnvVarRefs = (str: string): string[] => {
   }, {}))
 }
 
+export const stripLeadingEmojiSpace = (str: string): string => {
+  return str.replace(/^\p{Extended_Pictographic}\s/u, '')
+}
+
+export const startsWithEmojiSpace = (str: string): boolean => /^\p{Extended_Pictographic}\s/u.test(str)
+
+export const stripEmojis = (str: string): string => {
+  return str.replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /**
  * Finds a script, given a path.
  */
@@ -74,8 +86,12 @@ export const findScript = async (
 
   const resolvedScriptPath: string[] = []
   for (const path of scriptPath) {
-    // find exact match
     if (isDefined(script[path])) {
+      // find exact match
+      resolvedScriptPath.push(path)
+      script = script[path]
+    } else if (isDefined(script[stripEmojis(path)])) {
+      // find exact match without emojis
       resolvedScriptPath.push(path)
       script = script[path]
     } else {
@@ -83,7 +99,7 @@ export const findScript = async (
 
       // search by prefix
       const entries = Object.entries(script)
-      const found = entries.filter(([key, value]) => key.startsWith(path))
+      const found = entries.filter(([key, value]) => stripEmojis(key).startsWith(path))
       if (found.length === 1) {
         const foundKey = found[0][0]
         resolvedScriptPath.push(foundKey)
@@ -102,7 +118,24 @@ export const findScript = async (
       const scriptStr = scriptPath.join(' ')
       throw new Error(`No scripts found at path: ${JSON.stringify(scriptStr)}\nDid you mean?\n${availableScripts}`)
     }
-    const choices = Object.keys(script)
+    let choices: string[] = []
+    const modifiedScripts: any = {}
+    if (config.plugins?.icons === true) {
+      // if enviornment flag is set, add emoji
+      choices = Object.entries(script).map(([c, v]) => {
+        if (startsWithEmojiSpace(c)) {
+          return c
+        } else {
+          // 🪝📁✅🟢
+          const icon = isScript(v) ? '🪝' : '📁'
+          const modScript = `${icon} ${c}`
+          modifiedScripts[modScript] = true
+          return modScript
+        }
+      })
+    } else {
+      choices = Object.keys(script)
+    }
     await inquirer
       .prompt([
         {
@@ -116,8 +149,9 @@ export const findScript = async (
         }
       ])
       .then((answers) => {
-        resolvedScriptPath.push(answers.next)
-        script = script[answers.next]
+        const nextScript = modifiedScripts[answers.next] === true ? stripLeadingEmojiSpace(answers.next) : answers.next
+        resolvedScriptPath.push(nextScript)
+        script = script[nextScript]
       })
   }
   if (options.debug === true) console.log(cyan(`Using script: ${resolvedScriptPath.join(' ')}`))

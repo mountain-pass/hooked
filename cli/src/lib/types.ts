@@ -1,6 +1,9 @@
 export type Dictionary<ValueType> = Record<string, ValueType>
 
-export type Plugins = Record<string, boolean>
+export interface Plugins {
+  abi: boolean
+  icons: boolean
+}
 export type EnvironmentVariables = Record<string, Script>
 
 export type TopLevelImports = string[]

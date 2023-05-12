@@ -9,7 +9,7 @@ export const CONFIG_PATH = path.resolve('hooked.yaml')
 
 export const PAGE_SIZE = 10
 
-export const LOGS_MENU_OPTION = '_logs_'
+export const LOGS_MENU_OPTION = '🪵  _logs_'
 export const LOCAL_CACHE_PATH = path.join(os.homedir(), '.hooked', 'imports')
 
 export const getLocalImportsCachePath = (filename: string): string => path.join(LOCAL_CACHE_PATH, filename)

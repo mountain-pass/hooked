@@ -14,7 +14,7 @@ const { expect } = chai
 import os from 'os'
 import path from 'path'
 import fileUtils from '../src/lib/utils/fileUtils.js'
-import { PAGE_SIZE, getLocalImportsCachePath } from '../src/lib/defaults.js'
+import { LOGS_MENU_OPTION, PAGE_SIZE, getLocalImportsCachePath } from '../src/lib/defaults.js'
 
 describe('config', () => {
   afterEach(() => {
@@ -34,8 +34,8 @@ describe('config', () => {
         name: 'next',
         message: 'Please select a script',
         pageSize: PAGE_SIZE,
-        default: '_logs_',
-        choices: ['_logs_', 'foo'],
+        default: LOGS_MENU_OPTION,
+        choices: [LOGS_MENU_OPTION, 'foo'],
         loop: true
       }
     ])

@@ -110,7 +110,7 @@ export const generateScripts = async (): Promise<any> => {
     return {}
   } else {
     return {
-      _abis_: {
+      '🔑 _abis_': {
         // get the current block number
         '_getBlockNumber()': {
           $internal: async ({ env }: any) => {
