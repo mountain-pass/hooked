@@ -3,7 +3,7 @@
 [Back to Index](README.md)
 
 - [Overview](#overview)
-- [Environment Resolvers](#environment-resolvers)
+- [Environment Variables (and Resolvers)](#environment-variables-and-resolvers)
   - [`string`](#string)
   - [`$cmd`](#cmd)
   - [`$stdin`](#stdin)
@@ -43,9 +43,21 @@ scripts:
         # ... code to backup db ...
 ```
 
-# Environment Resolvers
+# Environment Variables (and Resolvers)
 
-All environment variables consist of a key `string` and a value `string`. We've provided basic and custom resolvers, to support more complicated value-resolution scenarios.
+Environment variables can be defined in three places:
+
+1. operating system - OS environment variables are accessible at a global level
+2. the root `env:` block - defines named groups of environment variables, which are accessible at a global level (*when enabled)
+3. as an `$env:` field - provided as a sibling element to `$cmd` (under the root element `scripts:`), this allows defining environments at a per `$cmd` level.
+
+All environment variables need to resolve to key `string` and value `string` pair.
+
+In order to support more complicated resolution scenarios, we've provided the following three resolvers:
+
+1. [`string`](#string)
+2. [`$cmd`](#cmd)
+3. [`$stdin`](#stdin)
 
 ## `string`
 
@@ -133,7 +145,7 @@ env:
 
 The `scripts` object takes any number of child descendant objects, using the `key` hierarchy as the script path.
 
-The objects should eventually end in a [`$cmd`](#cmd) object, which allows the user to execute a predefined script.
+The objects should eventually end in a [`$cmd`](#cmd) object (with an optional `$env` sibling!), which allows the user to execute a predefined script.
 
 How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
 
@@ -156,12 +168,13 @@ scripts:
         very:
           deep:
             $cmd: echo Woohoo!
-  print a message containing input from the user (this is valid!):
+  + print a message containing input from the user (this is a valid name!) ✅✅✅:
     $env:
+      GREETING: Hello
       NAME:
         $stdin: What is your name?
         $default: I don't know my name
-    $cmd: echo Hello ${NAME}
+    $cmd: echo ${GREETING} ${NAME}!
 ````
 
 These could be run, using:
