@@ -21,39 +21,40 @@ env:
 
 # This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
-  echo:
-    $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
-  copy:
+  🪝 echo:
+    $cmd: echo Hello there!
+    # $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
+  🪝 copy:
     $cmd: |
       mkdir -p ~/.hooked/imports
       cp imports/*.yaml ~/.hooked/imports
-  install:
-    local:
+  📁 install:
+    ✅ local:
       $cmd: |
         npx lerna exec --scope @mountainpass/* npm install
         npx lerna run --scope @mountainpass/* build
         npm i -g --force .
-    global:
+    ✅ global:
       $cmd: npm i -g --prefer-online --force @mountainpass/hooked-cli
-  uninstall:
-    local:
+  📁 uninstall:
+    ✅ local:
       $cmd: npm uninstall -g --force hooked
-    global:
+    ✅ global:
       $cmd: npm uninstall -g --force @mountainpass/hooked-cli
-  lerna:
-    graph:
+  📁 lerna:
+    ✅ graph:
       $cmd: npx nx graph
-    bootstrap:
+    ✅ bootstrap:
       $cmd: npx lerna bootstrap
-    install:
+    ✅ install:
       $cmd: npx lerna exec --scope @mountainpass/* npm install
-    build:
+    ✅ build:
       $cmd: npx lerna run --scope @mountainpass/* build
-    bump:
+    ✅ bump:
       $cmd: npx lerna version patch --yes --force-publish --message '%s [skip ci]'
-    publish:
+    ✅ publish:
       $cmd: npx lerna publish from-package --yes
-  publish:
+  ✅ publish:
     $cmd: |
       #!/bin/sh -ve
       npx lerna exec --scope @mountainpass/* npm install
