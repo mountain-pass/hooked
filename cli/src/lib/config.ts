@@ -127,7 +127,7 @@ export const findScript = async (
           return c
         } else {
           // 🪝📁✅🟢
-          const icon = isScript(v) ? '🪝' : '📁'
+          const icon = isScript(v) ? '🪝 ' : '📁'
           const modScript = `${icon} ${c}`
           modifiedScripts[modScript] = true
           return modScript
