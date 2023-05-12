@@ -49,7 +49,7 @@ export const getEnvVarRefs = (str: string): string[] => {
 }
 
 export const stripLeadingEmojiSpace = (str: string): string => {
-  return str.replace(/^\p{Extended_Pictographic}\s/u, '')
+  return str.replace(/^\p{Extended_Pictographic}\s+/u, '')
 }
 
 export const startsWithEmojiSpace = (str: string): boolean => /^\p{Extended_Pictographic}\s/u.test(str)
