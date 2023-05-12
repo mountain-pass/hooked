@@ -16,6 +16,7 @@ import {
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
+import { type Options } from '../program.js'
 
 export interface ScriptExecutorResponse {
   value: string
@@ -30,12 +31,13 @@ export const resolveInternalScript = async (
   key: string,
   script: InternalScript,
   stdin: StdinResponses,
-  env: ResolvedEnv
+  env: ResolvedEnv,
+  options: Options
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env)
+    await internalResolveEnv(script.$env, stdin, env, options)
   }
 
   const result = await script.$internal({ key, stdin, env })
@@ -50,12 +52,13 @@ export const resolveCmdScript = async (
   script: CmdScript,
   stdin: StdinResponses,
   env: ResolvedEnv,
+  options: Options,
   captureOutput = true
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env)
+    await internalResolveEnv(script.$env, stdin, env, options)
   }
 
   // check for missing environment variables
@@ -91,7 +94,8 @@ export const resolveStdinScript = async (
   key: string,
   script: StdinScript,
   stdin: StdinResponses,
-  env: ResolvedEnv
+  env: ResolvedEnv,
+  options: Options
 ): Promise<void> => {
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
@@ -103,7 +107,7 @@ export const resolveStdinScript = async (
     let choices
     // resolve choices if they are a script
     if (isScript(script.$choices)) {
-      const result = await resolveScript(key, script.$choices, stdin, env)
+      const result = await resolveScript(key, script.$choices, stdin, env, options)
       if (typeof result === 'string') {
         choices = result.split('\n')
       }
@@ -111,6 +115,7 @@ export const resolveStdinScript = async (
       choices = script.$choices
     }
     // otherwise prompt user
+    if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
     await inquirer
       .prompt([
         {
@@ -148,23 +153,24 @@ export const resolveScript = async (
   key: string,
   script: Script,
   stdin: StdinResponses = {},
-  env: ResolvedEnv = {}
+  env: ResolvedEnv = {},
+  options: Options
 ): Promise<string> => {
   if (typeof script === 'number' || typeof script === 'boolean') {
     script = String(script)
   }
   if (isInternalScript(script)) {
     // script is an internal function, invoke with args
-    await resolveInternalScript(key, script, stdin, env)
+    await resolveInternalScript(key, script, stdin, env, options)
   } else if (isCmdScript(script)) {
     // $cmd
-    await resolveCmdScript(key, script, stdin, env)
+    await resolveCmdScript(key, script, stdin, env, options)
   // } else if (isEnvScript(script)) {
   //   // $env
   //   resolveEnvScript(key, script, env)
   } else if (isStdinScript(script)) {
     // $stdin
-    await resolveStdinScript(key, script, stdin, env)
+    await resolveStdinScript(key, script, stdin, env, options)
   // } else if (isResolveScript(script)) {
   //   // $resolve
   //   resolveResolveScript(key, script, env)

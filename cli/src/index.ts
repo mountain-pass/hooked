@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 import program from './lib/program.js'
-program().catch(err => { console.error(err) })
+import logger from './lib/utils/logger.js'
+
+program().catch(err => { logger.error(err) })

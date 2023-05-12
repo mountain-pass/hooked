@@ -15,6 +15,7 @@ import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/Scrip
 import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from './types.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { generateScripts } from './plugins/AbiPlugin.js'
+import logger from './utils/logger.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -24,7 +25,7 @@ export interface Options {
   printenv?: boolean
   init?: boolean
   log?: boolean
-  debug?: boolean
+  batch?: boolean
   pull?: boolean
 }
 
@@ -40,18 +41,18 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .option('-in, --stdin <json>', 'specify stdin responses', '{}')
     .option('--printenv', 'print the resolved environment')
     .option('-l, --log', 'print the log of previous scripts')
-    .option('-d, --debug', 'show error stacks, show debug logs')
     .option('-p, --pull', 'force download all imports from remote to local cache')
+    .option('-b, --batch', 'batch mode - errors if an interactive prompt is required')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: Options) => {
       if (options.init === true) {
-        await init()
+        await init(options)
         return
       }
       if (!fs.existsSync(CONFIG_PATH)) {
-        console.log(cyan('No config file found. Launching setup...'))
-        await init()
+        logger.debug('No config file found. Launching setup...')
+        await init(options)
         return
       }
       if (options.log === true) {
@@ -94,7 +95,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
-          await internalResolveEnv(script.$env, stdin, env)
+          await internalResolveEnv(script.$env, stdin, env, options)
         }
 
         // generate rerun command
@@ -104,32 +105,28 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           envNames: resolvedEnvNames,
           stdin
         }
-        if (options.debug === true) console.log(cyan(`rerun: ${displaySuccessfulScript(successfulScript)}`))
+        logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
 
         if (options.printenv === true) {
           // print environment variables
           const envString = JSON.stringify(stripProcessEnvs(env, process.env as any))
-          console.log(envString)
+          logger.info(envString)
         } else {
           // execute script
           if (isCmdScript(script)) {
-            await resolveCmdScript(undefined, script, stdin, env, false)
+            await resolveCmdScript(undefined, script, stdin, env, options, false)
           } else if (isInternalScript(script)) {
-            await resolveInternalScript('-', script, stdin, env)
+            await resolveInternalScript('-', script, stdin, env, options)
           }
 
           // store in history (if successful and not the _logs_ option!)
           if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         }
       } catch (err: any) {
-        if (options.debug === true) {
-          console.error(err)
-        } else {
-          console.error(red(err.message))
-          console.error(red('Use "--debug" to see stack trace.'))
-        }
+        logger.error(err)
+        logger.error('Use "--debug" to see stack trace.')
         // print the rerun command for easy re-execution
-        if (options.debug !== true && isDefined(successfulScript)) console.log(cyan(`rerun: ${displaySuccessfulScript(successfulScript)}`))
+        if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
         process.exit(1)
       }
     })

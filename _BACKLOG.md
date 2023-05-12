@@ -45,6 +45,10 @@
   - [x] ABI - document options (e.g. `plugins: abi: true`)
 - [x] support emoji followed by space as a script name prefix (ignored when using prefix matchers)
 - [x] support auto adding emojis  🪝📁 `plugins: icons: true/false` to toggle (default: true)
+- [x] should normalise (lowercase and diacritics) strings, when matching script names
+- [x] swap logging for LOG_LEVEL env var (info, debug, warn, error)
+- [x] ensure ONLY script output is captured in the `j run > out.txt` - so jobs can be chained
+- [x] add non-interactive `--batch` mode arg
 
 # Next
 

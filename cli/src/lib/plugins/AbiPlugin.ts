@@ -4,6 +4,7 @@ import path from 'path'
 import { cyan } from '../colour.js'
 import * as ethers from 'ethers'
 import { isString } from '../types.js'
+import logger from '../utils/logger.js'
 
 type BaseTypes = 'bool' |
 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' |
@@ -50,7 +51,7 @@ const searchJsonFiles = async (directory: string): Promise<AbiFileData[]> => {
 
   const search = async (currentDirectory: string, depth = 0): Promise<void> => {
     if (depth > 5) {
-      // console.log(cyan(`ABI: Max depth reached in ${currentDirectory}`))
+      // logger.debug(`ABI: Max depth reached in ${currentDirectory}`)
       return
     }
     const files = await fs.readdir(currentDirectory)
@@ -70,7 +71,7 @@ const searchJsonFiles = async (directory: string): Promise<AbiFileData[]> => {
             foundFiles.push({ filePath: path.relative(directory, filePath), jsonContent })
           }
         } catch (err: any) {
-          console.log(cyan(`Error processing ${filePath}: ${err?.message as string}`))
+          logger.debug(`Error processing ${filePath}: ${err?.message as string}`)
         }
       }
     }
@@ -94,18 +95,18 @@ const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRp
     blockNumber = Number(blockNumber)
   }
   if (typeof env.PRIVATE_KEY === 'string') {
-    console.log(cyan(`ABI: Using block number: ${blockNumber}, Using private key: ***`))
+    logger.debug(`ABI: Using block number: ${blockNumber}, Using private key: ***`)
     return { provider, blockNumber, wallet: new ethers.Wallet(env.PRIVATE_KEY, provider) }
   } else {
-    console.log(cyan(`ABI: Using block number: ${blockNumber}`))
+    logger.debug(`ABI: Using block number: ${blockNumber}`)
     return { provider, blockNumber }
   }
 }
 
 export const generateScripts = async (): Promise<any> => {
-  console.log(cyan('ABI: enabled...'))
+  logger.debug('ABI: enabled...')
   const files = await searchJsonFiles('.')
-  console.log(cyan(`ABI: Found files - ${(files).length}`))
+  logger.debug(`ABI: Found files - ${(files).length}`)
   if (files.length === 0) {
     return {}
   } else {
@@ -115,7 +116,7 @@ export const generateScripts = async (): Promise<any> => {
         '_getBlockNumber()': {
           $internal: async ({ env }: any) => {
             const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
-            console.log(await provider.getBlockNumber())
+            logger.info(await provider.getBlockNumber())
           }
         },
         // show the address of the current wallet
@@ -123,7 +124,7 @@ export const generateScripts = async (): Promise<any> => {
           $internal: async ({ env }: any) => {
             const { wallet } = await getProviderAndWallet(env)
             if (typeof wallet?.address === 'string') {
-              console.log(wallet.address)
+              logger.info(wallet.address)
             } else {
               throw new Error('No wallet. You can define one by specifying a PRIVATE_KEY environment variable.')
             }
@@ -134,7 +135,7 @@ export const generateScripts = async (): Promise<any> => {
           $internal: async ({ env }: any) => {
             const { provider, blockNumber, wallet } = await getProviderAndWallet(env)
             if (typeof wallet?.address === 'string') {
-              console.log(await provider.getBalance(wallet.address, blockNumber))
+              logger.info(await provider.getBalance(wallet.address, blockNumber))
             } else {
               throw new Error('No wallet. You can define one by specifying a PRIVATE_KEY environment variable.')
             }
@@ -164,8 +165,8 @@ export const generateScripts = async (): Promise<any> => {
                   ? new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, wallet)
                   : new ethers.Contract(file.jsonContent.address, file.jsonContent.abi, provider)
                 const params = fn.inputs.map(input => env[input.name])
-                // console.log(cyan(`calling ${fn.name}(${params.join(', ')})`))
-                console.log(await contract[fn.name](...params, { blockTag: blockNumber }))
+                // logger.debug(`calling ${fn.name}(${params.join(', ')})`)
+                logger.info(await contract[fn.name](...params, { blockTag: blockNumber }))
               }
             }]
           }))]

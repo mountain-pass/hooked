@@ -5,6 +5,7 @@ import path from 'path'
 import { type IncomingMessage } from 'http'
 import { isDefined } from '../types.js'
 import { cyan } from '../colour.js'
+import logger from './logger.js'
 
 /**
  * Resolves a path, including home directories.
@@ -31,9 +32,9 @@ export const getDirnameFilename = (filepath: string): string => {
  * @param timeoutMs
  * @returns
  */
-export const downloadFile = async (url: string, destination: string, debugLogs: boolean = false, timeoutMs: number = 30000): Promise<any> => {
+export const downloadFile = async (url: string, destination: string, timeoutMs: number = 30000): Promise<any> => {
   return await new Promise((resolve, reject) => {
-    if (debugLogs) console.log(cyan(`Downloading ${url} -> ${destination}...`))
+    logger.debug(`Downloading ${url} -> ${destination}...`)
     const request = https.get(url, (res: IncomingMessage) => {
       const code = isDefined(res) && isDefined(res.statusCode) ? res.statusCode : -1
       if (code < 200 || code >= 300) {

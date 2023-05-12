@@ -18,6 +18,7 @@ import {
   type TopLevelScripts
 } from './types.js'
 import fileUtils from './utils/fileUtils.js'
+import logger from './utils/logger.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -60,6 +61,10 @@ export const stripEmojis = (str: string): string => {
     .trim()
 }
 
+export const normaliseString = (str: string): string => {
+  return str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+}
+
 /**
  * Finds a script, given a path.
  */
@@ -80,7 +85,7 @@ export const findScript = async (
     if (history.length > 0) {
       script = { [LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
     } else {
-      console.log(cyan('No history found.'))
+      logger.debug('No history found.')
     }
   }
 
@@ -99,7 +104,7 @@ export const findScript = async (
 
       // search by prefix
       const entries = Object.entries(script)
-      const found = entries.filter(([key, value]) => stripEmojis(key).startsWith(path))
+      const found = entries.filter(([key, value]) => stripEmojis(normaliseString(key)).startsWith(normaliseString(path)))
       if (found.length === 1) {
         const foundKey = found[0][0]
         resolvedScriptPath.push(foundKey)
@@ -136,6 +141,7 @@ export const findScript = async (
     } else {
       choices = Object.keys(script)
     }
+    if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
     await inquirer
       .prompt([
         {
@@ -154,7 +160,7 @@ export const findScript = async (
         script = script[nextScript]
       })
   }
-  if (options.debug === true) console.log(cyan(`Using script: ${resolvedScriptPath.join(' ')}`))
+  logger.debug(`Using script: ${resolvedScriptPath.join(' ')}`)
   return [script, resolvedScriptPath]
 }
 
@@ -193,7 +199,7 @@ export const internalFindEnv = (
 
   // look for exact match
   if (isDefined(config.env[envName])) {
-    if (options.debug === true) console.log(cyan(`Using environment: ${envName}`))
+    logger.debug(`Using environment: ${envName}`)
     const newLocal = config.env[envName]
     return [newLocal === null ? {} : newLocal, envName]
   }
@@ -205,7 +211,7 @@ export const internalFindEnv = (
   const found = envs.filter(([key, value]) => key.startsWith(envName))
   if (found.length === 1) {
     const foundEnv = found[0][0]
-    if (options.debug === true) console.log(cyan(`Using environment: ${foundEnv}`))
+    logger.debug(`Using environment: ${foundEnv}`)
     const newLocal = found[0][1]
     return [newLocal === null ? {} : newLocal, foundEnv]
   }
@@ -222,11 +228,12 @@ export const internalFindEnv = (
 export const internalResolveEnv = async (
   environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
-  resolvedEnv: ResolvedEnv = {}
+  resolvedEnv: ResolvedEnv = {},
+  options: Options
 ): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
-    await resolveScript(key, script, stdin, resolvedEnv)
+    await resolveScript(key, script, stdin, resolvedEnv, options)
   }
 }
 
@@ -278,12 +285,12 @@ export const resolveEnv = async (
     // pull remotes if not cached
     if (options.pull === true) {
       // force-pull remotes
-      await Promise.all(remotes.map(async (url, i) => await fileUtils.downloadFile(url, remotesCache[i], options.debug)))
+      await Promise.all(remotes.map(async (url, i) => await fileUtils.downloadFile(url, remotesCache[i])))
     } else {
       // pull remotes if not cached
       await Promise.all(remotes.map(async (url, i) => {
         if (!fs.existsSync(remotesCache[i])) {
-          await fileUtils.downloadFile(url, remotesCache[i], options.debug)
+          await fileUtils.downloadFile(url, remotesCache[i])
         }
       }))
     }
@@ -296,7 +303,7 @@ export const resolveEnv = async (
     // load imports from local
     for (const importPath of allLocal) {
       const filepath = fileUtils.resolvePath(importPath)
-      if (options.debug === true) console.log(cyan(`Importing: ${filepath}`))
+      logger.debug(`Importing: ${filepath}`)
       const tmp = loadConfig(filepath)
       mergeEnvAndScripts(tmp, envs, scripts)
     }
@@ -312,7 +319,7 @@ export const resolveEnv = async (
   const allEnvNames: string[] = []
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
-    await internalResolveEnv(foundEnv, stdin, env)
+    await internalResolveEnv(foundEnv, stdin, env, options)
     allEnvNames.push(resolvedEnvName)
   }
   return [env, stdin, allEnvNames]

@@ -3,6 +3,7 @@ import fs from 'fs'
 import { HISTORY_PATH } from './defaults.js'
 import { type SuccessfulScript } from './types.js'
 import { cyan } from './colour.js'
+import logger from './utils/logger.js'
 
 /**
  * Retrieves the history log of previous commands.
@@ -34,9 +35,9 @@ export const fetchHistoryAsRunnableLogs = (max: number = 20): string[] => {
 export const printHistory = (max: number = 20): void => {
   const history = fetchHistoryAsRunnableLogs(max)
   if (history.length > 0) {
-    history.forEach(console.log)
+    history.forEach((line) => { logger.info(line) })
   } else {
-    console.log(cyan('No history found.'))
+    logger.debug('No history found.')
   }
 }
 

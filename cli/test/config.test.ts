@@ -21,6 +21,16 @@ describe('config', () => {
     sinon.restore()
   })
 
+  it('find script should normalise strings when matching', async () => {
+    // lowercase and normalise diacritics (accents)
+    const inputScriptPath = ['FOO', 'CA ETE']
+    const [script, scriptPath] = await findScript(
+      { env: { default: { }}, scripts: { foo: { "Ça été Mičić": { $cmd: 'echo "FOO"'} }}}, 
+      inputScriptPath, 
+      { env: 'default', stdin: '{}' }
+    )
+    expect(scriptPath).to.eql(['foo', "Ça été Mičić"])
+  })
 
   it('default script prompt includes "_log_" for previous runs', async () => {
 
