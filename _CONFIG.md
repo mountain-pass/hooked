@@ -91,9 +91,10 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 
 **Parameters:**
 
-- `$cmd` - (`string`) the command to run.
-- `$image` - (`string` - optional) the docker command to run the command in.
-- `$env` - (`object` - optional) additional environment variables to resolve, before running this script.
+- `$cmd` - (`string`) The command to run. Supports multiline.
+- `$image` - (`string` - optional) If supplied, command will execute in this docker image container.
+- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). Resolved before `$envNames`.
+- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. Resolved after `$env`.
 
 **Example:**
 
