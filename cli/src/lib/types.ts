@@ -34,8 +34,13 @@ export interface SuccessfulScript {
 // script types
 
 export interface CmdScript {
+  /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
   $env?: EnvironmentVariables
+  /** Additional environment group names to resolve ONLY when executing command. Resolved after $env. */
+  $envNames?: string[]
+  /** If supplied, command will execute in this docker image container. */
   $image?: string
+  /** The command to execute. Supports multiline. */
   $cmd: string
 }
 

@@ -229,11 +229,12 @@ export const internalResolveEnv = async (
   environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
   resolvedEnv: ResolvedEnv = {},
+  config: Config,
   options: Options
 ): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
-    await resolveScript(key, script, stdin, resolvedEnv, options)
+    await resolveScript(key, script, stdin, resolvedEnv, config, options)
   }
 }
 
@@ -285,11 +286,15 @@ export const resolveEnv = async (
     // pull remotes if not cached
     if (options.pull === true) {
       // force-pull remotes
-      await Promise.all(remotes.map(async (url, i) => await fileUtils.downloadFile(url, remotesCache[i])))
+      await Promise.all(remotes.map(async (url, i) => {
+        logger.debug(`Downloading remote import #1: ${url} -> ${remotesCache[i]}`)
+        await fileUtils.downloadFile(url, remotesCache[i])
+      }))
     } else {
       // pull remotes if not cached
       await Promise.all(remotes.map(async (url, i) => {
         if (!fs.existsSync(remotesCache[i])) {
+          logger.debug(`Downloading remote import #2: ${url} -> ${remotesCache[i]}`)
           await fileUtils.downloadFile(url, remotesCache[i])
         }
       }))
@@ -319,7 +324,7 @@ export const resolveEnv = async (
   const allEnvNames: string[] = []
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
-    await internalResolveEnv(foundEnv, stdin, env, options)
+    await internalResolveEnv(foundEnv, stdin, env, config, options)
     allEnvNames.push(resolvedEnvName)
   }
   return [env, stdin, allEnvNames]

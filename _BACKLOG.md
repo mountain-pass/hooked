@@ -49,12 +49,15 @@
 - [x] swap logging for LOG_LEVEL env var (info, debug, warn, error)
 - [x] ensure ONLY script output is captured in the `j run > out.txt` - so jobs can be chained
 - [x] add non-interactive `--batch` mode arg
+- [x] handling of sensitive env vars -> include env groups specify per $cmd, only for that $cmd `$envIncludes: 'secretEnvGroup'`
 
 # Next
 
-- [ ] handling of sensitive env vars -> include env groups specify per job, only for that job `$env: $include: 'secretEnvGroup'` 
+- [ ] allow overriding default docker run script
+- [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
+- [ ] publish a yaml schema definition - e.g. # yaml-language-server: $schema=https://my.url.to/the/schema vs https://www.schemastore.org/json/
   
-- [ ] dynamic exec paths - e.g. npm, makefile, abi files, etc
+- [ ] dynamic exec paths - e.g. npm, makefile, abi files, openapi specs, etc
 - [ ] if only one possible child path, prompt user to run it straight away
 - [ ] secrets - best practice: don't import into environment, share a file instead
 - [ ] secrets - parse output stream and obfuscate e.g. `***` if printed
@@ -64,8 +67,7 @@
 
 # Workarounds
 - [ ] add a warning on homedir/import scripts if the chmod isn't `400` (optional)
-- [ ] show parent script folders are expandable, as opposed to script leaf nodes - workaroud: manually prepend a `+` character
-- [ ] Inquirer > Press to continue -> important for destructive operations (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
+- [ ] Inquirer > Press to continue -> important for destructive operations? (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 
 # Future
 - [ ] styling
@@ -76,7 +78,6 @@
 - [ ] Inquirer > Add autocomplete plugin
 - [ ] Inquirer > Tree plugin
 - [ ] Slack runner
-- [ ] publish a yaml schema definition?
 - [ ] global settings > username or ssh key
 - [ ] identity, in history, use for ssh key gen and approval
 - [ ] permissions (only really enforcable on server)
@@ -109,3 +110,4 @@
 - [ ] ~~Pipelines~~ - couldn't that just use a script?
 - [ ] ~~consolidate `env` and `stdin` ?~~ - No - stdin must be a separate output, so that jobs can be replayed
 - [ ] ~~secrets - make `$secret` envs, that are only imported explicitly for a single run~~ - No need for special top level env
+- [ ] ~~add max limit of 1000 records to history~~ - No, simply truncate your own history e.g. `echo "$(tail -50 .hooked_history.log)" > .hooked_history.log`

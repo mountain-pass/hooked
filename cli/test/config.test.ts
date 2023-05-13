@@ -15,6 +15,7 @@ import os from 'os'
 import path from 'path'
 import fileUtils from '../src/lib/utils/fileUtils.js'
 import { LOGS_MENU_OPTION, PAGE_SIZE, getLocalImportsCachePath } from '../src/lib/defaults.js'
+import { Options } from '../src/lib/program.js'
 
 describe('config', () => {
   afterEach(() => {
@@ -172,17 +173,32 @@ describe('config', () => {
 
   describe('$cmd', () => {
 
+    const CONFIG: Config = {
+      env: {
+        default: {},
+        secrets: {
+          USER: 'bob'
+        }
+      },
+      scripts: {}
+    }
+
+    const OPTIONS: Options = {
+      env: 'default',
+      stdin: '{}'
+    }
+
     it('executing a $cmd with satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { HELLO: "Hello" })).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { HELLO: "Hello" }, CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a script with UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { NOTHELLO: "Goodbye" })).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { NOTHELLO: "Goodbye" }, CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
     })
     it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, {})).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, {}, CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, {})).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, {}, CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
     })
 
     it('$cmd - env should resolve $cmd', async () => {
@@ -360,7 +376,7 @@ describe('config', () => {
         env: { default: { aaa: { $cmd: 'echo "111"' } } },
         scripts: {
           goodbye: { $cmd: 'echo "Goodbye"' }
-        }
+        },
       } as Config
       await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
         HOOKED_ROOT: "false",
@@ -374,7 +390,7 @@ describe('config', () => {
       })
       sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), '.hooked', 'imports', 'custom.yaml'))
       sinon.assert.calledOnce(fsspy2)
-      sinon.assert.calledOnceWithExactly(fsspy3, 'https://www.foobar.com/.hooked/custom.yaml', getLocalImportsCachePath('custom.yaml'), undefined)
+      sinon.assert.calledOnceWithExactly(fsspy3, 'https://www.foobar.com/.hooked/custom.yaml', getLocalImportsCachePath('custom.yaml'))
     })
 
   })

@@ -23,7 +23,7 @@ const BASE_CONFIG = {
   }
 }
 
-describe('wip program', () => {
+describe('wip program arguments', () => {
 
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
@@ -31,17 +31,8 @@ describe('wip program', () => {
   })
 
   afterEach(() => {
-    // if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
   })
-
-  // it('missing hooked.yaml file should exit', async () => {
-  //   const spyexit = sinon.stub(process, 'exit')
-  //   const spyerr = sinon.stub(console, 'error')
-  //   await program([])
-  //   sinon.assert.calledWithExactly(spyexit, 1)
-  //   sinon.assert.calledWithExactly(spyerr, `\u001b[31mNo ${CONFIG_PATH} file found.\u001b[0m`)
-  // })
 
   it('--printenv should print environment variables only', async () => {
     fs.writeFileSync('hooked.yaml', YAML.stringify(BASE_CONFIG), 'utf-8')

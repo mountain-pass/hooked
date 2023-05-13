@@ -1,5 +1,5 @@
 import inquirer from 'inquirer'
-import { getEnvVarRefs, internalResolveEnv } from '../config.js'
+import { getEnvVarRefs, internalResolveEnv, resolveEnv } from '../config.js'
 import {
   isCmdScript,
   isDefined,
@@ -12,7 +12,8 @@ import {
   type StdinResponses,
   type StdinScript,
   isInternalScript,
-  type InternalScript
+  type InternalScript,
+  type Config
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
@@ -32,12 +33,13 @@ export const resolveInternalScript = async (
   script: InternalScript,
   stdin: StdinResponses,
   env: ResolvedEnv,
+  config: Config,
   options: Options
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env, options)
+    await internalResolveEnv(script.$env, stdin, env, config, options)
   }
 
   const result = await script.$internal({ key, stdin, env })
@@ -52,18 +54,33 @@ export const resolveCmdScript = async (
   script: CmdScript,
   stdin: StdinResponses,
   env: ResolvedEnv,
+  config: Config,
   options: Options,
   captureOutput = true
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
-    // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env, options)
+    await internalResolveEnv(script.$env, stdin, env, config, options)
+  }
+
+  let onetimeEnvironment: ResolvedEnv = { ...env }
+
+  // include environments defined in $envNames
+  if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
+    const globalEnv = { ...env, ...process.env as any }
+    const [newEnv] = await resolveEnv(
+      config,
+      script.$envNames,
+      stdin,
+      globalEnv,
+      options
+    )
+    onetimeEnvironment = { ...newEnv }
   }
 
   // check for missing environment variables
   const requiredKeys = getEnvVarRefs(script.$cmd)
-  const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
+  const missingKeys = requiredKeys.filter(key => typeof onetimeEnvironment[key] === 'undefined')
   if (missingKeys.length > 0) {
     throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
   }
@@ -72,7 +89,7 @@ export const resolveCmdScript = async (
   cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
-  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env })
+  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment })
   // remove trailing newlines
   newValue = newValue.replace(/(\r?\n)*$/, '')
   if (typeof key === 'string') {
@@ -95,6 +112,7 @@ export const resolveStdinScript = async (
   script: StdinScript,
   stdin: StdinResponses,
   env: ResolvedEnv,
+  config: Config,
   options: Options
 ): Promise<void> => {
   if (isDefined(stdin[key])) {
@@ -107,7 +125,7 @@ export const resolveStdinScript = async (
     let choices
     // resolve choices if they are a script
     if (isScript(script.$choices)) {
-      const result = await resolveScript(key, script.$choices, stdin, env, options)
+      const result = await resolveScript(key, script.$choices, stdin, env, config, options)
       if (typeof result === 'string') {
         choices = result.split('\n')
       }
@@ -154,6 +172,7 @@ export const resolveScript = async (
   script: Script,
   stdin: StdinResponses = {},
   env: ResolvedEnv = {},
+  config: Config,
   options: Options
 ): Promise<string> => {
   if (typeof script === 'number' || typeof script === 'boolean') {
@@ -161,20 +180,21 @@ export const resolveScript = async (
   }
   if (isInternalScript(script)) {
     // script is an internal function, invoke with args
-    await resolveInternalScript(key, script, stdin, env, options)
+    await resolveInternalScript(key, script, stdin, env, config, options)
   } else if (isCmdScript(script)) {
     // $cmd
-    await resolveCmdScript(key, script, stdin, env, options)
+    await resolveCmdScript(key, script, stdin, env, config, options)
   // } else if (isEnvScript(script)) {
   //   // $env
   //   resolveEnvScript(key, script, env)
   } else if (isStdinScript(script)) {
     // $stdin
-    await resolveStdinScript(key, script, stdin, env, options)
+    await resolveStdinScript(key, script, stdin, env, config, options)
   // } else if (isResolveScript(script)) {
   //   // $resolve
   //   resolveResolveScript(key, script, env)
   } else if (typeof script === 'string') {
+    // NOTE if it's a string, treat it like a "resolve"
     resolveResolveScript(key, { $resolve: script }, env)
     // env[key] = script
   }

@@ -95,7 +95,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
-          await internalResolveEnv(script.$env, stdin, env, options)
+          await internalResolveEnv(script.$env, stdin, env, config, options)
         }
 
         // generate rerun command
@@ -114,9 +114,9 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         } else {
           // execute script
           if (isCmdScript(script)) {
-            await resolveCmdScript(undefined, script, stdin, env, options, false)
+            await resolveCmdScript(undefined, script, stdin, env, config, options, false)
           } else if (isInternalScript(script)) {
-            await resolveInternalScript('-', script, stdin, env, options)
+            await resolveInternalScript('-', script, stdin, env, config, options)
           }
 
           // store in history (if successful and not the _logs_ option!)
