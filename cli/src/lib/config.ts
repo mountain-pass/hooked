@@ -142,12 +142,13 @@ export const findScript = async (
       choices = Object.keys(script)
     }
     if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+    // ask user for the next script
     await inquirer
       .prompt([
         {
           type: 'rawlist',
           name: 'next',
-          message: 'Please select a script',
+          message: 'Please select an option:',
           pageSize: PAGE_SIZE,
           default: choices[0],
           choices,

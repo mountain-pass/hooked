@@ -13,11 +13,14 @@ import {
   type StdinScript,
   isInternalScript,
   type InternalScript,
-  type Config
+  type Config,
+  isStdinScriptFieldsMapping,
+  isString
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
 import { type Options } from '../program.js'
+import logger from '../utils/logger.js'
 
 export interface ScriptExecutorResponse {
   value: string
@@ -107,6 +110,15 @@ export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEn
   }
 }
 
+class InvalidConfigError extends Error {
+  constructor (m: string) {
+    super(m)
+
+    // Set the prototype explicitly.
+    Object.setPrototypeOf(this, InvalidConfigError.prototype)
+  }
+}
+
 export const resolveStdinScript = async (
   key: string,
   script: StdinScript,
@@ -127,21 +139,93 @@ export const resolveStdinScript = async (
     if (isScript(script.$choices)) {
       const result = await resolveScript(key, script.$choices, stdin, env, config, options)
       if (typeof result === 'string') {
-        choices = result.split('\n')
+        try {
+          // try json...
+          choices = JSON.parse(result)
+          // apply optional json field mappings...
+          if (isStdinScriptFieldsMapping(script.$fieldsMapping)) {
+            const mapping = script.$fieldsMapping
+            choices = choices.map((choice: any) => {
+              const newChoice: any = {}
+              if (isString(mapping.name)) {
+                if (!isDefined(choice[mapping.name])) {
+                  throw new InvalidConfigError(`Invalid $fieldsMapping.name, ${mapping.name} is invalid - ${JSON.stringify(choice)}`)
+                }
+                newChoice.name = String(choice[mapping.name])
+              }
+              if (isString(mapping.value)) {
+                if (!isDefined(choice[mapping.value])) {
+                  throw new InvalidConfigError(`Invalid $fieldsMapping.value, ${mapping.value} is invalid - ${JSON.stringify(choice)}`)
+                }
+                newChoice.value = String(choice[mapping.value])
+              }
+              if (isString(mapping.short)) {
+                if (!isDefined(choice[mapping.short])) {
+                  throw new InvalidConfigError(`Invalid $fieldsMapping.short, ${mapping.short} is invalid - ${JSON.stringify(choice)}`)
+                }
+                newChoice.short = String(choice[mapping.short])
+              }
+              return newChoice
+            })
+            // sort, if requested
+            if (script.$sort === 'alpha') {
+              choices.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+            } else if (script.$sort === 'alphaDesc') {
+              choices.sort((a: any, b: any) => b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }))
+            }
+            // filter, if requested
+            if (isString(script.$filter)) {
+              const regexStr = script.$filter
+              // by default, assume not a fully qualified regex...
+              let pattern = regexStr
+              let flags = 'im' // NOTE using 'g' will save state!
+              // if a fully qualified regex, parse it
+              if (regexStr.startsWith('/')) {
+                pattern = regexStr.slice(1, regexStr.lastIndexOf('/'))
+                flags = regexStr.slice(regexStr.lastIndexOf('/') + 1)
+              }
+              const regex = new RegExp(pattern, flags)
+              logger.debug(`using regex filter: ${regexStr} => ${regex.toString()}`)
+              const countBefore = choices.length
+              choices = choices.filter((choice: any) => regex.test(choice.name))
+              logger.debug(`filtered ${String(countBefore)} choices to ${String(choices.length)} choices`)
+            }
+          }
+        } catch (e: any) {
+          if (e instanceof InvalidConfigError) throw e
+          // if not json...
+          choices = result.split('\n')
+          // sort, if requested
+          if (script.$sort === 'alpha') {
+            choices.sort((a: any, b: any) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+          } else if (script.$sort === 'alphaDesc') {
+            choices.sort((a: any, b: any) => b.localeCompare(a, undefined, { sensitivity: 'base' }))
+          }
+          // filter, if requested
+          if (isString(script.$filter)) {
+            const regex = new RegExp(script.$filter)
+            choices = choices.filter((choice: string) => regex.test(choice))
+          }
+        }
       }
     } else if (Array.isArray(script.$choices)) {
       choices = script.$choices
     }
-    // otherwise prompt user
     if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+    // resolve env vars in name and default...
+    const newMessage = resolveResolveScript('', { $resolve: script.$stdin }, env, false)
+    const newDefault = isString(script.$default)
+      ? resolveResolveScript('', { $resolve: script.$default }, env, false)
+      : script.$default
+    // otherwise prompt user for an answer to the $stdin question
     await inquirer
       .prompt([
         {
           type: isDefined(choices) ? 'rawlist' : 'text',
           name: key,
-          message: script.$stdin,
+          message: newMessage,
           pageSize: PAGE_SIZE,
-          default: script.$default,
+          default: newDefault,
           choices,
           loop: true
         }
@@ -154,7 +238,14 @@ export const resolveStdinScript = async (
   }
 }
 
-export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv): void => {
+/**
+ * Used to resolve environment variables in a string.
+ *
+ * @param key - used for error reporting
+ * @param script - the script to resolve (the value of $resolve)
+ * @param env - environment variables to use for resolving
+ */
+export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv, insertInEnvironment: boolean = true): string => {
   // check for missing environment variables
   const requiredKeys = getEnvVarRefs(script.$resolve)
   const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
@@ -164,7 +255,10 @@ export const resolveResolveScript = (key: string, script: ResolveScript, env: Re
 
   // use string replacement to resolve from the resolvedEnv
   const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => env[p1])
-  env[key] = newValue
+  if (insertInEnvironment) {
+    env[key] = newValue
+  }
+  return newValue
 }
 
 export const resolveScript = async (
@@ -201,5 +295,5 @@ export const resolveScript = async (
   if (typeof env[key] === 'string') {
     return env[key]
   }
-  throw new Error(`Unknown script type #1: ${JSON.stringify(script)}`)
+  throw new Error(`Unknown script type #1: ${JSON.stringify(script)} at path: ${key}`)
 }

@@ -1,0 +1,279 @@
+
+env:
+  default:
+    OUTPUT: text
+
+scripts:
+  digitalocean (cloud servers):
+    auth verification:
+      init:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl auth init --access-token ${DIGITALOCEAN_ACCESS_TOKEN}
+      # list (pointless, we are operating in a serverless context):
+      #   $envNames: [DO_SECRETS]
+      #   $image: digitalocean/doctl
+      #   $cmd: /app/doctl auth list
+
+    metadata:
+      ssh_key:
+        generate ssh key (public/private):
+          $env:
+            EMAIL:
+              $stdin: What is your email address?
+            DATE:
+              $cmd: date +%Y%m%d
+          $image: mountainpass/docker-git-curl
+          $cmd: ssh-keygen -q -f "./id_rsa_${EMAIL}_${DATE}" -t rsa -b 4096 -q -P "" -C "${EMAIL}_${DATE}"
+        install ssh key on local machine:
+          $env:
+            FILE:
+              $stdin: Please choose the private key to install
+              $choices:
+                $cmd: ls -1t
+          $cmd: |
+            cp ${FILE}* ~/.ssh/
+            chmod 600 ~/.ssh/${FILE}*
+            ssh-add ~/.ssh/${FILE}
+            echo "Add to your profile: ssh-add ~/.ssh/${FILE}"
+        # copy ssh key to server:
+        #   $env:
+        #     SERVER:
+        #       $cmd: echo ${AVAILABLE_SERVERS}
+        #   $cmd: ssh-copy-id -i ~/.ssh/id_rsa_${USER} ${SERVER}
+        import ssh key from local machine into digital ocean:
+          $env:
+            NAME:
+              $stdin: Please enter an SSH key name (please use your email)
+              $default: ${USER}
+            PUBKEYFILE:
+              $stdin: Please choose a public ssh key
+              $choices:
+                $cmd: ls -1t ${HOME}/.ssh
+            COPYFILE:
+              $cmd: |
+                echo Copying ssh pub key to local .tmp folder
+                mkdir .tmp || true
+                cp -f "${HOME}/.ssh/${PUBKEYFILE}" .tmp/id_rsa.pub
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute ssh-key import ${NAME} --public-key-file .tmp/id_rsa.pub
+        list:
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute ssh-key list -o ${OUTPUT}
+        delete:
+          $env:
+            SSH_KEY:
+              $stdin: Please choose a SSH key to DELETE
+              $choices:
+                $envNames: [DO_SECRETS]
+                $image: digitalocean/doctl
+                $cmd: /app/doctl compute ssh-key list --output json
+              $fieldsMapping:
+                name: name
+                value: id
+              $sort: alpha
+            AREYOUSURE:
+              $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to delete a SSH key!
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute ssh-key delete ${SSH_KEY} --force
+      images:
+        user:
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute image list-user -o ${OUTPUT}
+        application:
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute image list-application -o ${OUTPUT}
+        distribution:
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute image list-distribution -o ${OUTPUT}
+      regions:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute region list -o ${OUTPUT}
+      sizes:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute size list -o ${OUTPUT}
+      tags:
+        list:
+          $envNames: [DO_SECRETS]
+          $image: digitalocean/doctl
+          $cmd: /app/doctl compute tag list -o ${OUTPUT}
+    servers (droplets):
+
+      ssh:
+        $env:
+          IMAGE:
+            $stdin: Choose a server
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+        # runs on host machine?
+        $envNames: [DO_SECRETS]
+        $cmd: doctl compute ssh ${IMAGE}
+        
+
+      list:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet list --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features,Tags"
+
+      delete:
+        $env:
+          IMAGE:
+            $stdin: "!Choose a server to DELETE!"
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+          AREYOUSURE:
+            $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to delete a droplet!
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: echo -- manually disabled --
+        # $cmd: /app/doctl compute droplet delete ${IMAGE} --force
+
+      enable-backups:
+        $env:
+          IMAGE:
+            $stdin: Choose a server
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet-action enable-backups ${IMAGE}
+
+      rename:
+        $env:
+          IMAGE:
+            $stdin: Choose a server
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+          NEWNAME:
+            $stdin: Please enter a new name
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet-action rename ${IMAGE} --droplet-name ${NEWNAME} --wait
+
+      tag:
+        $env:
+          IMAGE:
+            $stdin: Choose a server
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+          NEWNAME:
+            $stdin: Please enter a new tag
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet tag ${IMAGE} --tag-name ${NEWNAME}
+
+      untag:
+        $env:
+          IMAGE:
+            $stdin: Choose a server
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute droplet list --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $sort: alpha
+          NEWNAME:
+            $stdin: Please enter a tag to remove
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet untag --tag-name ${NEWNAME} ${IMAGE}
+
+      create:
+        $env:
+          IMAGE:
+            $stdin: Please choose an image
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute image list-application --output json
+            $fieldsMapping:
+              name: name
+              value: id
+            $filter: Docker.*Ubuntu
+            $sort: alpha
+          SIZE:
+            $stdin: Please choose a size
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute size list --output json
+            $fieldsMapping:
+              name: slug
+              value: slug
+              short: description
+          REGION:
+            $stdin: Please choose a region
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute region list --output json
+            $fieldsMapping:
+              name: name
+              value: slug
+            $sort: alpha
+          SSH_KEY:
+            $stdin: Please choose a SSH key
+            $choices:
+              $envNames: [DO_SECRETS]
+              $image: digitalocean/doctl
+              $cmd: /app/doctl compute ssh-key list --output json
+            $fieldsMapping:
+              name: name
+              value: fingerprint
+            $sort: alpha
+          NAME:
+            $stdin: Please enter a server name
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: |
+          /app/doctl compute droplet create \
+            --size ${SIZE} \
+            --image ${IMAGE} \
+            --region ${REGION} \
+            --ssh-keys ${SSH_KEY} \
+            --droplet-agent=true \
+            --enable-monitoring=true \
+            --output json \
+            --wait \
+            ${NAME}
+

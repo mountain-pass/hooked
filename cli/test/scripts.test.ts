@@ -76,7 +76,10 @@ describe('scripts', () => {
       await expect(resolveCmdScript(undefined, {
         $envNames: ['secretxxx'],
         $cmd: 'echo "Hello ${USER}"'
-      }, {}, {}, CONFIG, OPTIONS, true)).to.be.rejectedWith('Environment not found: secretxxx\nDid you mean?\n\t- default\n\t- secret')
+      }, {}, {}, CONFIG, OPTIONS, true))
+      .to
+      .be
+      .rejectedWith('Environment not found: secretxxx\nDid you mean?\n\t- default\n\t- secret')
     })
 
     it('$cmd - with known $envNames', async () => {

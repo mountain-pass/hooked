@@ -50,11 +50,21 @@ export interface EnvScript {
 export interface ResolveScript {
   $resolve: string
 }
+
+export interface StdinScriptFieldsMapping {
+  name: string
+  value: string
+  short?: string
+}
 export interface StdinScript {
   $stdin: string
   $default?: string
   // allow multiple options
   $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
+  /** fields mapping for json - [name, value, short?] */
+  $fieldsMapping?: StdinScriptFieldsMapping
+  $sort?: 'alpha' | 'alphaDesc' | 'none'
+  $filter?: string
 }
 
 export interface InternalScript {
@@ -78,6 +88,12 @@ export const isResolveScript = (script: Script): script is ResolveScript => {
 
 export const isStdinScript = (script: Script): script is StdinScript => {
   return typeof (script as any).$stdin === 'string'
+}
+export const isStdinScriptFieldsMapping = (script: any): script is StdinScriptFieldsMapping => {
+  return typeof script !== 'undefined' &&
+    isString(script.name) &&
+    isString(script.value) &&
+    (isString(script.short) || typeof script.short === 'undefined')
 }
 
 export const isInternalScript = (script: Script): script is InternalScript => {

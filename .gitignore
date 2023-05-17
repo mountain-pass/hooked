@@ -73,3 +73,6 @@ tmp/
 .env-*.txt
 *.sol/
 cli/test/contracts/
+.tmp/
+id_rsa*
+out.txt

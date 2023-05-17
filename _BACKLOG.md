@@ -50,10 +50,12 @@
 - [x] ensure ONLY script output is captured in the `j run > out.txt` - so jobs can be chained
 - [x] add non-interactive `--batch` mode arg
 - [x] handling of sensitive env vars -> include env groups specify per $cmd, only for that $cmd `$envIncludes: 'secretEnvGroup'`
+- [x] support JSON as input for $choices (`$filter` / `$fieldsMapping` / `$sort`)
 
 # Next
 
 - [ ] allow overriding default docker run script
+
 - [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
 - [ ] publish a yaml schema definition - e.g. # yaml-language-server: $schema=https://my.url.to/the/schema vs https://www.schemastore.org/json/
   

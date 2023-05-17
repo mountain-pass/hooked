@@ -125,8 +125,13 @@ Requests input from the user.
 
 - `$stdin` - (`string`) the prompt to ask the user.
 - `$default` - (`string` - optional) the default value to present to the user.
-- `$choices` - (`string[]` or `object` - optional) a list of choices to ask the user. If not provided, user is prompted to enter freetext.
-  - `object` - any [Environment Resolver](#environment-resolvers) can be provided as child. A choice will be provided for each newline delimited string.
+- `$choices` - (`string[]` | `EnvironmentResolver` | `string` (JSON array) | `string` (newline delimited) - optional) a list of choices to ask the user. If not provided, user is prompted to enter freetext.
+  - `EnvironmentResolver` - any [EnvironmentResolver](#environment-resolvers) can be provided as child.
+  - If a JSON string is provided which resolves to an array of objects, a choice will be provided for each object
+  - Otherwise, a newline delimited string will be used (one option per line)
+- `$fieldsMapping` - (`{name: string, value: string, short?: string}` - optional) - for JSON arrays that don't have `name` & `value` keys, please provide a fieldname mapping.
+- `$filter` - (`string` (regex) - optional) - filters `name` options
+- `$sort` - ("alpha" | "alphaDesc" - optional) - sort alphabetically by `name` (default no sort) 
 
 **Example:**
 
@@ -137,9 +142,12 @@ env:
       $stdin: Please choose a colour
       $default: blue
       $choices:
-        - blue
-        - red
-        - green
+        $cmd: curl https://somejsonendpoint.com/getPastelColours
+      $fieldsMapping:
+        name: description
+        value: id
+      $filter: /.*red.*/i
+      $sort: alpha
 ```
 
 # Scripts

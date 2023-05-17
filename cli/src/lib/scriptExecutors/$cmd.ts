@@ -48,7 +48,7 @@ export const executeCmd = (
     }
     const cmd = runInDocker
       // eslint-disable-next-line max-len
-      ? `docker run -t --rm --network host --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"`
+      ? `docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"`
       : filepath
     const output = child_process.execSync(cmd, opts)
     if (runInDocker && fs.existsSync(envfile)) {

@@ -43,7 +43,7 @@ describe('config', () => {
       {
         type: 'rawlist',
         name: 'next',
-        message: 'Please select a script',
+        message: 'Please select an option:',
         pageSize: PAGE_SIZE,
         default: LOGS_MENU_OPTION,
         choices: [LOGS_MENU_OPTION, 'foo'],
@@ -228,6 +228,40 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnce(inqspy)
+    })
+
+    it('$stdin - $stdin value should resolve env vars', async () => {
+      // stub
+      const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+      // test
+      const config: Config = { env: { default: { name: { $stdin: 'Is your name "${USER}"?' } } }, scripts: { } }
+      await resolveEnv(config, ['default'], {}, { USER: 'jill' })
+      sinon.assert.calledOnceWithExactly(inqspy, [ {
+        type: 'text',
+        name: 'name',
+        message: 'Is your name "jill"?',
+        pageSize: 10,
+        default: undefined,
+        choices: undefined,
+        loop: true
+      }])
+    })
+
+    it('$stdin - $default value should resolve env vars', async () => {
+      // stub
+      const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+      // test
+      const config: Config = { env: { default: { name: { $stdin: 'Is your name ...?', $default: '${USER}' } } }, scripts: { } }
+      await resolveEnv(config, ['default'], {}, { USER: 'jill' })
+      sinon.assert.calledOnceWithExactly(inqspy, [ {
+        type: 'text',
+        name: 'name',
+        message: 'Is your name ...?',
+        pageSize: 10,
+        default: 'jill',
+        choices: undefined,
+        loop: true
+      }])
     })
 
     it('$stdin - env should resolve $stdin from defaults', async () => {

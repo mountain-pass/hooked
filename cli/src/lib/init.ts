@@ -16,6 +16,7 @@ export const init = async (options: Options): Promise<void> => {
   const packageJson = path.resolve('package.json')
   const fromExistingNPM = fs.existsSync(packageJson) ? [{ name: 'existing NPM (package.json)', value: 'npm_exist' }] : []
   if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+  // ask user which hooked.yaml template to use
   await inquirer.prompt([
     {
       type: 'rawlist',
