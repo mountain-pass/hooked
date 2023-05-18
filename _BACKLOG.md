@@ -58,6 +58,7 @@
   - [x] build
   - [x] document
   - [ ] test
+- [ ] teardown orphaned docker containers on SYSINT
 
 - [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
 - [ ] publish a yaml schema definition - e.g. # yaml-language-server: $schema=https://my.url.to/the/schema vs https://www.schemastore.org/json/
