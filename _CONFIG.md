@@ -9,6 +9,8 @@
   - [`$stdin`](#stdin)
 - [Scripts](#scripts)
 - [Conventions](#conventions)
+- [Advanced Configuration](#advanced-configuration)
+  - [Custom Docker Command](#custom-docker-command)
 
 # Overview
 
@@ -201,3 +203,18 @@ j "print a mess"
 Environment variables are always defined with curly braces e.g. `${SOME_VALUE}`.
 
 The default environment name (if not specified with `--env`), is `default`.
+
+# Advanced Configuration
+
+## Custom Docker Command
+
+`$image` is used for running `$cmd` commands in docker containers. To change the docker command used, provide a `DOCKER_SCRIPT` environment variable.
+
+Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
+
+```yaml
+
+env:
+  default:
+    DOCKER_SCRIPT: docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"
+```

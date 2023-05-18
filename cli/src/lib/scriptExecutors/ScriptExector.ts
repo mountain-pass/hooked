@@ -92,7 +92,7 @@ export const resolveCmdScript = async (
   cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
-  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment })
+  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
   // remove trailing newlines
   newValue = newValue.replace(/(\r?\n)*$/, '')
   if (typeof key === 'string') {
@@ -246,6 +246,9 @@ export const resolveStdinScript = async (
  * @param env - environment variables to use for resolving
  */
 export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv, insertInEnvironment: boolean = true): string => {
+  // DOCKER_SCRIPT is a special exemption - it is internally resolved!
+  if (key === 'DOCKER_SCRIPT') return script.$resolve
+
   // check for missing environment variables
   const requiredKeys = getEnvVarRefs(script.$resolve)
   const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
@@ -294,6 +297,11 @@ export const resolveScript = async (
   }
   if (typeof env[key] === 'string') {
     return env[key]
+  }
+  // DOCKER_SCRIPT is a special exemption - it is internally resolved!
+  if (key === 'DOCKER_SCRIPT' && isString(script)) {
+    env[key] = script
+    return script
   }
   throw new Error(`Unknown script type #1: ${JSON.stringify(script)} at path: ${key}`)
 }

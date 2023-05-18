@@ -54,7 +54,10 @@
 
 # Next
 
-- [ ] allow overriding default docker run script
+- [x] allow overriding default docker run script
+  - [x] build
+  - [x] document
+  - [ ] test
 
 - [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
 - [ ] publish a yaml schema definition - e.g. # yaml-language-server: $schema=https://my.url.to/the/schema vs https://www.schemastore.org/json/

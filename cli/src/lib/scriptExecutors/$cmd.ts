@@ -3,7 +3,9 @@ import fs from 'fs'
 import path from 'path'
 import { yellow } from '../colour.js'
 import crypto from 'crypto'
-import { type ResolvedEnv } from '../types.js'
+import { isString, type ResolvedEnv } from '../types.js'
+import { resolveResolveScript } from './ScriptExector.js'
+import logger from '../utils/logger.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -31,7 +33,8 @@ export const cleanupOldTmpFiles = (env: ResolvedEnv): void => {
 export const executeCmd = (
   multilineCommand: string,
   dockerImage: string | undefined = undefined,
-  opts: any = undefined
+  opts: any = undefined,
+  env: ResolvedEnv
 ): string => {
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
@@ -46,9 +49,11 @@ export const executeCmd = (
       fs.writeFileSync(envfile, Object.entries(opts.env).map(([k, v]) => `${k}=${v as string}`).join('\n'), 'utf-8')
       fs.chmodSync(filepath, 0o644)
     }
+    // eslint-disable-next-line max-len, no-template-curly-in-string
+    const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
+    const dockerScript = isString(env.DOCKER_SCRIPT) ? env.DOCKER_SCRIPT : DEFAULT_DOCKER_SCRIPT
     const cmd = runInDocker
-      // eslint-disable-next-line max-len
-      ? `docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"`
+      ? resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage, parent }, false)
       : filepath
     const output = child_process.execSync(cmd, opts)
     if (runInDocker && fs.existsSync(envfile)) {
