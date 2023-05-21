@@ -127,7 +127,7 @@ scripts:
       list:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet list --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features,Tags"
+        $cmd: /app/doctl compute droplet list --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features"
 
       delete:
         $env:
