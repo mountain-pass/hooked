@@ -16,6 +16,7 @@ import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from 
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { generateScripts } from './plugins/AbiPlugin.js'
 import logger from './utils/logger.js'
+import HJSON from 'hjson'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -77,7 +78,8 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         }
 
         const envNames = options.env.split(',')
-        const stdin = JSON.parse(options.stdin)
+        // use relaxed json to parse the stdin
+        const stdin = HJSON.parse(options.stdin)
         const globalEnv = { ...process.env as any }
         const [env, , resolvedEnvNames] = await resolveEnv(
           config,

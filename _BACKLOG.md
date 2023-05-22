@@ -52,6 +52,7 @@
 - [x] handling of sensitive env vars -> include env groups specify per $cmd, only for that $cmd `$envIncludes: 'secretEnvGroup'`
 - [x] support JSON as input for $choices (`$filter` / `$fieldsMapping` / `$sort`)
 - [x] list environments
+- [x] add relaxed json parsing for --stdin
 
 # Next
 

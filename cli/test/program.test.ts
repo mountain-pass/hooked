@@ -49,4 +49,18 @@ describe('wip program', () => {
     await program(["node", "index.ts","--printenv","test"])
     sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'bar'}))
   })
+
+  it('--stdin should support strict json', async () => {
+    fs.writeFileSync('hooked.yaml', YAML.stringify({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}}), 'utf-8')
+    const spylog = sinon.stub(console, 'log')
+    await program(["node", "index.ts","--printenv","test", "--stdin", '{"FOO":"cat"}'])
+    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'cat'}))
+  })
+
+  it('--stdin should support relaxed json', async () => {
+    fs.writeFileSync('hooked.yaml', YAML.stringify({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}}), 'utf-8')
+    const spylog = sinon.stub(console, 'log')
+    await program(["node", "index.ts","--printenv","test", "--stdin", "{FOO:'dog'}"])
+    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'dog'}))
+  })
 })
