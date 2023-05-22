@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import fs from 'fs'
-import { cyan, red } from './colour.js'
+import { cyan, red, yellow } from './colour.js'
 import {
   findScript,
   internalResolveEnv,
@@ -23,6 +23,7 @@ export interface Options {
   env: string
   stdin: string
   printenv?: boolean
+  listenvs?: boolean
   init?: boolean
   log?: boolean
   batch?: boolean
@@ -39,7 +40,8 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .option('--init', 'provides options for initialising a config file')
     .option('-e, --env <env>', 'specify environment', 'default')
     .option('-in, --stdin <json>', 'specify stdin responses', '{}')
-    .option('--printenv', 'print the resolved environment')
+    .option('--printenv', 'print the resolved environment, and exits')
+    .option('--listenvs', 'lists the available environments, and exits')
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
     .option('-b, --batch', 'batch mode - errors if an interactive prompt is required')
@@ -84,6 +86,11 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           globalEnv,
           options
         )
+
+        if (options.listenvs === true) {
+          logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
+          return
+        }
 
         // find script...
         const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)

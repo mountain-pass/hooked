@@ -2,6 +2,31 @@
 env:
   default:
     OUTPUT: text
+  ask-DO_MACHINE:
+    DO_MACHINE:
+      $stdin: Choose a server
+      $choices:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet list --output json
+      $fieldsMapping:
+        name: name
+        value: id
+      $sort: alpha
+  ask-DO_SSHKEY:
+    DO_SSHKEY:
+      $stdin: Please choose a SSH key
+      $choices:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute ssh-key list --output json
+      $fieldsMapping:
+        name: name
+        value: id
+      $sort: alpha
+  ask-AREYOUSURE:
+    AREYOUSURE:
+      $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
 
 scripts:
   digitalocean (cloud servers):
@@ -63,22 +88,9 @@ scripts:
           $image: digitalocean/doctl
           $cmd: /app/doctl compute ssh-key list -o ${OUTPUT}
         delete:
-          $env:
-            SSH_KEY:
-              $stdin: Please choose a SSH key to DELETE
-              $choices:
-                $envNames: [DO_SECRETS]
-                $image: digitalocean/doctl
-                $cmd: /app/doctl compute ssh-key list --output json
-              $fieldsMapping:
-                name: name
-                value: id
-              $sort: alpha
-            AREYOUSURE:
-              $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to delete a SSH key!
-          $envNames: [DO_SECRETS]
+          $envNames: [DO_SECRETS, ask-DO_SSHKEY, ask-AREYOUSURE]
           $image: digitalocean/doctl
-          $cmd: /app/doctl compute ssh-key delete ${SSH_KEY} --force
+          $cmd: /app/doctl compute ssh-key delete ${DO_SSHKEY} --force
       images:
         user:
           $envNames: [DO_SECRETS]
@@ -108,115 +120,48 @@ scripts:
     servers (droplets):
 
       ssh:
-        $env:
-          IMAGE:
-            $stdin: Choose a server
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
-        # runs on host machine?
-        $envNames: [DO_SECRETS]
-        $cmd: doctl compute ssh ${IMAGE}
+        # runs on host machine
+        $envNames: [DO_SECRETS, ask-DO_MACHINE]
+        $cmd: doctl compute ssh ${DO_MACHINE}
         
-
       list:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
         $cmd: /app/doctl compute droplet list --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features"
 
       delete:
-        $env:
-          IMAGE:
-            $stdin: "!Choose a server to DELETE!"
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
-          AREYOUSURE:
-            $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to delete a droplet!
-        $envNames: [DO_SECRETS]
+        $envNames: [DO_SECRETS, ask-DO_MACHINE, ask-AREYOUSURE]
         $image: digitalocean/doctl
-        $cmd: echo -- manually disabled --
-        # $cmd: /app/doctl compute droplet delete ${IMAGE} --force
+        $cmd: /app/doctl compute droplet delete ${IMAGE} --force
 
       enable-backups:
-        $env:
-          IMAGE:
-            $stdin: Choose a server
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
-        $envNames: [DO_SECRETS]
+        $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet-action enable-backups ${IMAGE}
+        $cmd: /app/doctl compute droplet-action enable-backups ${DO_MACHINE}
 
       rename:
+        $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
-          IMAGE:
-            $stdin: Choose a server
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
           NEWNAME:
             $stdin: Please enter a new name
-        $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet-action rename ${IMAGE} --droplet-name ${NEWNAME} --wait
+        $cmd: /app/doctl compute droplet-action rename ${DO_MACHINE} --droplet-name ${NEWNAME} --wait
 
       tag:
+        $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
-          IMAGE:
-            $stdin: Choose a server
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
           NEWNAME:
             $stdin: Please enter a new tag
-        $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet tag ${IMAGE} --tag-name ${NEWNAME}
+        $cmd: /app/doctl compute droplet tag ${DO_MACHINE} --tag-name ${NEWNAME}
 
       untag:
+        $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
-          IMAGE:
-            $stdin: Choose a server
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute droplet list --output json
-            $fieldsMapping:
-              name: name
-              value: id
-            $sort: alpha
           NEWNAME:
             $stdin: Please enter a tag to remove
-        $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet untag --tag-name ${NEWNAME} ${IMAGE}
+        $cmd: /app/doctl compute droplet untag --tag-name ${NEWNAME} ${DO_MACHINE}
 
       create:
         $env:
@@ -251,29 +196,18 @@ scripts:
               name: name
               value: slug
             $sort: alpha
-          SSH_KEY:
-            $stdin: Please choose a SSH key
-            $choices:
-              $envNames: [DO_SECRETS]
-              $image: digitalocean/doctl
-              $cmd: /app/doctl compute ssh-key list --output json
-            $fieldsMapping:
-              name: name
-              value: fingerprint
-            $sort: alpha
           NAME:
             $stdin: Please enter a server name
-        $envNames: [DO_SECRETS]
+        $envNames: [DO_SECRETS, ask-DO_SSHKEY]
         $image: digitalocean/doctl
         $cmd: |
           /app/doctl compute droplet create \
             --size ${SIZE} \
             --image ${IMAGE} \
             --region ${REGION} \
-            --ssh-keys ${SSH_KEY} \
+            --ssh-keys ${DO_SSHKEY} \
             --droplet-agent=true \
             --enable-monitoring=true \
             --output json \
             --wait \
             ${NAME}
-

@@ -51,13 +51,14 @@
 - [x] add non-interactive `--batch` mode arg
 - [x] handling of sensitive env vars -> include env groups specify per $cmd, only for that $cmd `$envIncludes: 'secretEnvGroup'`
 - [x] support JSON as input for $choices (`$filter` / `$fieldsMapping` / `$sort`)
+- [x] list environments
 
 # Next
 
 - [x] allow overriding default docker run script
   - [x] build
   - [x] document
-  - [ ] test
+  - [ ] write unit test
 - [ ] teardown orphaned docker containers on SYSINT
 
 - [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
