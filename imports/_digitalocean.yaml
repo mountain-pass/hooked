@@ -13,6 +13,29 @@ env:
         name: name
         value: id
       $sort: alpha
+    OUTPUT: text
+  ask-DO_MACHINEIP:
+    DO_MACHINEIP:
+      $stdin: Choose a server
+      $choices:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet list --output json
+      $fieldsMapping:
+        name: $.name
+        value: $.networks.v4[?(@.type=="public")].ip_address
+      $sort: alpha
+  ask-DO_MACHINENAME:
+    DO_MACHINENAME:
+      $stdin: Choose a server
+      $choices:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet list --output json
+      $fieldsMapping:
+        name: $.name
+        value: $.name
+      $sort: alpha
   ask-DO_SSHKEY:
     DO_SSHKEY:
       $stdin: Please choose a SSH key
@@ -29,6 +52,7 @@ env:
       $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
 
 scripts:
+
   digitalocean (cloud servers):
     auth verification:
       init:

@@ -131,7 +131,7 @@ Requests input from the user.
   - `EnvironmentResolver` - any [EnvironmentResolver](#environment-resolvers) can be provided as child.
   - If a JSON string is provided which resolves to an array of objects, a choice will be provided for each object
   - Otherwise, a newline delimited string will be used (one option per line)
-- `$fieldsMapping` - (`{name: string, value: string, short?: string}` - optional) - for JSON arrays that don't have `name` & `value` keys, please provide a fieldname mapping.
+- `$fieldsMapping` - (`{name: string, value: string}` - optional) - for JSON arrays that don't have `name` & `value` keys, please provide a fieldname mapping. Also accepts [JSONPath expressions](https://github.com/dchester/jsonpath).
 - `$filter` - (`string` (regex) - optional) - filters `name` options
 - `$sort` - ("alpha" | "alphaDesc" - optional) - sort alphabetically by `name` (default no sort) 
 

@@ -54,7 +54,6 @@ export interface ResolveScript {
 export interface StdinScriptFieldsMapping {
   name: string
   value: string
-  short?: string
 }
 export interface StdinScript {
   $stdin: string

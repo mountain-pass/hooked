@@ -21,6 +21,7 @@ import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
 import { type Options } from '../program.js'
 import logger from '../utils/logger.js'
+import jp from 'jsonpath'
 
 export interface ScriptExecutorResponse {
   value: string
@@ -142,28 +143,38 @@ export const resolveStdinScript = async (
         try {
           // try (strict) json to parse input...
           choices = JSON.parse(result)
+        } catch (err) {
+          // could not parse as json, use string instead...
+        }
+        if (isDefined(choices) && !Array.isArray(choices)) {
+          throw new InvalidConfigError(`Invalid $choices script result, must be an array, found = ${result}`)
+        }
+        // if parsed successfully...
+        if (Array.isArray(choices)) {
           // apply optional json field mappings...
           if (isStdinScriptFieldsMapping(script.$fieldsMapping)) {
             const mapping = script.$fieldsMapping
             choices = choices.map((choice: any) => {
               const newChoice: any = {}
+              // if a 'name' mapping is provided, check that it resolves to a defined object
               if (isString(mapping.name)) {
-                if (!isDefined(choice[mapping.name])) {
-                  throw new InvalidConfigError(`Invalid $fieldsMapping.name, ${mapping.name} is invalid - ${JSON.stringify(choice)}`)
+                if (isDefined(choice[mapping.name])) {
+                  newChoice.name = String(choice[mapping.name])
+                } else if (isDefined(jp.value(choice, mapping.name))) {
+                  newChoice.name = String(jp.value(choice, mapping.name))
+                } else {
+                  throw new InvalidConfigError(`Invalid $fieldsMapping.name, '${mapping.name}' does not resolve - ${JSON.stringify(choice)}`)
                 }
-                newChoice.name = String(choice[mapping.name])
               }
+              // if a 'value' mapping is provided, check that it resolves to a defined object
               if (isString(mapping.value)) {
-                if (!isDefined(choice[mapping.value])) {
-                  throw new InvalidConfigError(`Invalid $fieldsMapping.value, ${mapping.value} is invalid - ${JSON.stringify(choice)}`)
+                if (isDefined(choice[mapping.value])) {
+                  newChoice.value = String(choice[mapping.value])
+                } else if (isDefined(jp.value(choice, mapping.value))) {
+                  newChoice.value = String(jp.value(choice, mapping.value))
+                } else {
+                  throw new InvalidConfigError(`Invalid $fieldsMapping.value, '${mapping.value}' does not resolve - ${JSON.stringify(choice)}`)
                 }
-                newChoice.value = String(choice[mapping.value])
-              }
-              if (isString(mapping.short)) {
-                if (!isDefined(choice[mapping.short])) {
-                  throw new InvalidConfigError(`Invalid $fieldsMapping.short, ${mapping.short} is invalid - ${JSON.stringify(choice)}`)
-                }
-                newChoice.short = String(choice[mapping.short])
               }
               return newChoice
             })
@@ -191,9 +202,8 @@ export const resolveStdinScript = async (
               logger.debug(`filtered ${String(countBefore)} choices to ${String(choices.length)} choices`)
             }
           }
-        } catch (e: any) {
-          if (e instanceof InvalidConfigError) throw e
-          // if not json...
+        } else {
+          // if not json array, treat as string...
           choices = result.split('\n')
           // sort, if requested
           if (script.$sort === 'alpha') {

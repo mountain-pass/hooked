@@ -53,6 +53,7 @@
 - [x] support JSON as input for $choices (`$filter` / `$fieldsMapping` / `$sort`)
 - [x] list environments
 - [x] add relaxed json parsing for --stdin
+- [x] support jsonpath in $fieldsMapping
 
 # Next
 
