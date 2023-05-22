@@ -132,7 +132,7 @@ scripts:
       delete:
         $envNames: [DO_SECRETS, ask-DO_MACHINE, ask-AREYOUSURE]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet delete ${IMAGE} --force
+        $cmd: /app/doctl compute droplet delete ${DO_MACHINE} --force
 
       enable-backups:
         $envNames: [DO_SECRETS, ask-DO_MACHINE]
