@@ -141,6 +141,8 @@ scripts:
           $envNames: [DO_SECRETS]
           $image: digitalocean/doctl
           $cmd: /app/doctl compute tag list -o ${OUTPUT}
+
+
     servers (droplets):
 
       ssh:
@@ -151,7 +153,7 @@ scripts:
       list:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet list --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features"
+        $cmd: /app/doctl compute droplet list -o ${OUTPUT} --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features"
 
       delete:
         $envNames: [DO_SECRETS, ask-DO_MACHINE, ask-AREYOUSURE]
