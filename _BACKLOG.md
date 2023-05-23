@@ -55,10 +55,10 @@
 - [x] list environments
 - [x] add relaxed json parsing for --stdin
 - [x] support jsonpath in $fieldsMapping
+- [x] append a `?` to indicate optional `imports:`
 
 # Next
 
-- [ ] append a `?` to indicate optional `imports:`
 <!-- - [ ] precalc options if no env inputs? ?? No idea -->
 - [ ] required version validation - yml: `version: >1.0.20`
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
