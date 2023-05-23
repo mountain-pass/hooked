@@ -1,0 +1,78 @@
+import { getLocalImportsCachePath } from '../defaults.js'
+import { type TopLevelImports } from '../types.js'
+import fileUtils from './fileUtils.js'
+import logger from './logger.js'
+import fs from 'fs'
+import path from 'path'
+
+/**
+ * Fetches the imports into the local cache.
+ * @param imports
+ * @param pull
+ */
+export const fetchImports = async (imports: TopLevelImports | undefined, pull: boolean = false): Promise<string[]> => {
+  const removeOptionalTrailingQuestion = (url: string): string => url.replace(/\?$/, '')
+
+  if (Array.isArray(imports) && imports.length > 0) {
+    const remotes = imports.filter(i => i.startsWith('https://'))
+    const locals = imports.filter(i => !i.startsWith('https://'))
+    const remotesCache = remotes.map(i => getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i))))
+    const allLocal: string[] = []
+    // const allLocal = imports.map(i => i.startsWith('https://')
+    //   ? getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i)))
+    //   : i)
+
+    // force-pull remotes
+    if (pull) {
+      await Promise.all(remotes.map(async (url, i) => {
+        logger.debug(`Downloading remote import #1: ${url} -> ${remotesCache[i]}`)
+        try {
+          await fileUtils.downloadFile(removeOptionalTrailingQuestion(url), remotesCache[i])
+          allLocal.push(remotesCache[i])
+        } catch (e) {
+          if (url.endsWith('?')) {
+            console.debug(`Optional import file not found: ${url}`)
+          } else {
+            throw e
+          }
+        }
+      }))
+    } else {
+      // pull remotes if not cached
+      await Promise.all(remotes.map(async (url, i) => {
+        if (!fs.existsSync(remotesCache[i])) {
+          logger.debug(`Downloading remote import #2: ${url} -> ${remotesCache[i]}`)
+          try {
+            await fileUtils.downloadFile(removeOptionalTrailingQuestion(url), remotesCache[i])
+            allLocal.push(remotesCache[i])
+          } catch (e) {
+            if (url.endsWith('?')) {
+              console.debug(`Optional import file not found: ${url}`)
+            } else {
+              throw e
+            }
+          }
+        } else {
+          allLocal.push(remotesCache[i])
+        }
+      }))
+    }
+    // report (and error) if any required files are missing
+    const missingLocalFiles = locals.filter(i => !fs.existsSync(fileUtils.resolvePath(removeOptionalTrailingQuestion(i))))
+    const notMissingLocalFiles = locals.filter(i => fs.existsSync(fileUtils.resolvePath(removeOptionalTrailingQuestion(i))))
+      .map(i => removeOptionalTrailingQuestion(i))
+    const missingOptionalFiles = missingLocalFiles.filter(i => i.endsWith('?'))
+    const missingRequiredFiles = missingLocalFiles.filter(i => !i.endsWith('?'))
+    for (const file of missingOptionalFiles) {
+      console.debug(`Optional import file not found: ${file}`)
+    }
+    if (missingRequiredFiles.length > 0) {
+      throw new Error(`Missing import files: ${missingLocalFiles.join(', ')}`)
+    }
+    allLocal.push(...notMissingLocalFiles)
+    return allLocal
+  } else {
+    logger.debug('No imports found')
+    return []
+  }
+}

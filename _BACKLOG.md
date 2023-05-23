@@ -4,6 +4,7 @@
 
 - [Done](#done)
 - [Next](#next)
+- [create files at given location (even remotely or in docker image)](#create-files-at-given-location-even-remotely-or-in-docker-image)
 - [Workarounds](#workarounds)
 - [Future](#future)
 - [Descoped](#descoped)
@@ -56,6 +57,12 @@
 - [x] support jsonpath in $fieldsMapping
 
 # Next
+
+- [ ] append a `?` to indicate optional `imports:`
+<!-- - [ ] precalc options if no env inputs? ?? No idea -->
+- [ ] required version validation - yml: `version: >1.0.20`
+- [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
+# create files at given location (even remotely or in docker image)
 
 - [x] allow overriding default docker run script
   - [x] build
