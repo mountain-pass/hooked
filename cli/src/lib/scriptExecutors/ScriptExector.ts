@@ -93,13 +93,20 @@ export const resolveCmdScript = async (
   cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
-  let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
-  // remove trailing newlines
-  newValue = newValue.replace(/(\r?\n)*$/, '')
-  if (typeof key === 'string') {
-    env[key] = newValue
+  try {
+    let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
+    // remove trailing newlines
+    newValue = newValue.replace(/(\r?\n)*$/, '')
+    if (typeof key === 'string') {
+      env[key] = newValue
+    }
+    return newValue
+  } catch (e: any) {
+    if (isString(script.$errorMessage)) {
+      logger.warn(script.$errorMessage)
+    }
+    throw e
   }
-  return newValue
 }
 
 export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
