@@ -93,10 +93,11 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 
 **Parameters:**
 
-- `$cmd` - (`string`) The command to run. Supports multiline.
-- `$image` - (`string` - optional) If supplied, command will execute in this docker image container.
-- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). Resolved before `$envNames`.
-- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. Resolved after `$env`.
+- `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
+- `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
+- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
+- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
+- `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
 
 **Example:**
 

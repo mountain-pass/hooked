@@ -56,11 +56,11 @@
 - [x] add relaxed json parsing for --stdin
 - [x] support jsonpath in $fieldsMapping
 - [x] append a `?` to indicate optional `imports:`
+- [x] $cmd - add ability to show a custom error message for non-zero exits `$errorMessage` (+documentation, +unittests)
 
 # Next
 
 <!-- - [ ] precalc options if no env inputs? ?? No idea -->
-- [ ] $cmd - add ability to show a custom error message for non-zero exits `$errorMessage` (+documentation)
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
 - [ ] add custom warning just in time - if trying to run $image and docker is not available
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`

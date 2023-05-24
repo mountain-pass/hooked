@@ -6,6 +6,7 @@ import sinon from 'sinon'
 import { Options } from '../src/lib/program.js'
 import { resolveCmdScript, resolveInternalScript } from '../src/lib/scriptExecutors/ScriptExector.js'
 import { Config, ResolvedEnv, StdinResponses } from '../src/lib/types.js'
+import logger from '../src/lib/utils/logger.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -29,7 +30,7 @@ describe('scripts', () => {
     sinon.restore()
   })
 
-  describe('resolveInternalScript', () => {
+  describe('$internal - executes a javascript function', () => {
 
     it('$internal - base', async () => {
       const result = await resolveInternalScript('-', {
@@ -50,16 +51,34 @@ describe('scripts', () => {
 
   })
 
-  describe('resolveCmdScript', () => {
+  describe('$cmd - executes a shell command', () => {
 
-    it('$cmd - base', async () => {
+    it('$cmd - simple example', async () => {
       const result = await resolveCmdScript(undefined, {
         $cmd: 'echo "Hello"'
     }, {}, {}, CONFIG, OPTIONS, true)
       expect(result).to.eql('Hello')
     })
 
-    it('$cmd - with $env', async () => {
+    it('$cmd - simple example with error', async () => {
+      const promise = resolveCmdScript(undefined, {
+        $cmd: 'exit 1'
+    }, {}, {}, CONFIG, OPTIONS, true)
+      await expect(promise).to.eventually.be.rejected
+    })
+
+    it('$cmd - simple example with error and errorMessage', async () => {
+      const loggerSpy = sinon.spy(logger, 'warn')
+      const errorMessage = 'Error occurred, perhaps try some remediation steps, then try again?'
+      const promise = resolveCmdScript(undefined, {
+        $cmd: 'exit 1',
+        $errorMessage: errorMessage
+    }, {}, {}, CONFIG, OPTIONS, true)
+      await expect(promise).to.eventually.be.rejected
+      sinon.assert.calledWith(loggerSpy, errorMessage)
+    })
+
+    it('$cmd - with $env resolution', async () => {
       const globalEnv: ResolvedEnv = {}
       const result = await resolveCmdScript(undefined, {
         $env: {
