@@ -1,8 +1,8 @@
 
 import fs from 'fs'
+import { stripEmojis } from './config.js'
 import { HISTORY_PATH } from './defaults.js'
 import { type SuccessfulScript } from './types.js'
-import { cyan } from './colour.js'
 import logger from './utils/logger.js'
 
 /**
@@ -70,7 +70,11 @@ export const displaySuccessfulScript = (
 ): string => {
   const { ts, scriptPath, envNames, stdin } = script
   const timestamp = formatLocalISOString(ts, tzoffsetMinutes)
-  const scriptstr = scriptPath.map(s => (/[^\w]/).test(s) ? `"${s}"` : s).join(' ')
+  const scriptstr = scriptPath.map(s => {
+    const script = stripEmojis(s)
+    // if has whitespace, add quotes
+    return (/[^\w]/).test(script) ? `"${script}"` : script
+  }).join(' ')
   const envstr = envNames.length > 1 ? `--env ${envNames.join(',')}` : ''
   const stdinstr = Object.keys(stdin).length > 0 ? `--stdin '${JSON.stringify(stdin)}'` : ''
   return `${showTimestamp ? `${timestamp}: ` : ''}j ${scriptstr} ${envstr} ${stdinstr}`

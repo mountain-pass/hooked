@@ -18,7 +18,7 @@ export const generateMakefileScripts = (env: ResolvedEnv): any => {
         prev[curr] = { $cmd: cmd }
         return prev
       }, {})
-      return { makefile: makefileScripts }
+      return { '🔧 makefile': makefileScripts }
     }
   }
   return {}

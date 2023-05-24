@@ -13,12 +13,16 @@ export const generateNpmScripts = (env: ResolvedEnv): any => {
   if (fs.existsSync(packageJsonFile)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonFile, 'utf8'))
     if (isDefined(packageJson.scripts) && Object.keys(packageJson.scripts).length > 0) {
+      const npmScripts = {
+        install: { $cmd: 'npm install' },
+        'clean install production': { $cmd: 'npm ci --production' }
+      }
       const npm = Object.keys(packageJson.scripts).reduce((prev: any, curr: string) => {
         const cmd = resolveResolveScript('-', { $resolve: npmScript }, { NPM_COMMAND: curr }, false)
         prev[curr] = { $cmd: cmd }
         return prev
-      }, {})
-      return { npm }
+      }, npmScripts)
+      return { '🪚  npm': npm }
     }
   }
   return {}

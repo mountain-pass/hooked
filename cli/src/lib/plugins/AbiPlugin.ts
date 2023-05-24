@@ -111,16 +111,16 @@ export const generateAbiScripts = async (): Promise<any> => {
     return {}
   } else {
     return {
-      '🔑 _abis_': {
+      '🔑 abi': {
         // get the current block number
-        '_getBlockNumber()': {
+        'getBlockNumber()': {
           $internal: async ({ env }: any) => {
             const provider = new ethers.JsonRpcProvider(env.PROVIDER_URL)
             logger.info(await provider.getBlockNumber())
           }
         },
         // show the address of the current wallet
-        '_getAddress()': {
+        'getAddress()': {
           $internal: async ({ env }: any) => {
             const { wallet } = await getProviderAndWallet(env)
             if (typeof wallet?.address === 'string') {
@@ -131,7 +131,7 @@ export const generateAbiScripts = async (): Promise<any> => {
           }
         },
         // show the native balance of the current wallet
-        '_getBalance()': {
+        'getBalance()': {
           $internal: async ({ env }: any) => {
             const { provider, blockNumber, wallet } = await getProviderAndWallet(env)
             if (typeof wallet?.address === 'string') {
