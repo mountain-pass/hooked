@@ -62,7 +62,7 @@ export const executeCmd = (
     if (fs.existsSync(filepath)) {
       fs.unlinkSync(filepath)
     } else {
-      console.warn(yellow(`warn: Could not delete ${filepath}`))
+      logger.warn(`warn: Could not delete ${filepath}`)
     }
     return output !== null ? output.toString() : ''
   } catch (err: any) {
