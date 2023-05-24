@@ -46,8 +46,12 @@ export const getEnvVarRefs = (str: string): string[] => {
   const regex = /\${([^}]+)}/g
   return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
     // allow environment variable defaults (shell & bash syntax)
-    const envvar = curr[1].replace(/(=|:).*$/, '')
-    prev[envvar] = 1
+    const envvar = curr[1]
+    // exclude env vars that have a fallback default value
+    const hasDefault = envvar.includes(':') || envvar.includes('=')
+    if (!hasDefault) {
+      prev[envvar] = 1
+    }
     return prev
   }, {}))
 }
