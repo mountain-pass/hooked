@@ -2,6 +2,7 @@
 import fs from 'fs'
 import { type ResolvedEnv, isDefined } from '../types.js'
 import { resolveResolveScript } from '../scriptExecutors/ScriptExector.js'
+import { loadPackageJsonSync } from '../utils/packageJson.js'
 
 export const generateNpmScripts = (env: ResolvedEnv): any => {
   // environment variables, that can be overridden by the user
@@ -11,7 +12,7 @@ export const generateNpmScripts = (env: ResolvedEnv): any => {
   } = env
 
   if (fs.existsSync(packageJsonFile)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonFile, 'utf8'))
+    const packageJson = loadPackageJsonSync(packageJsonFile)
     if (isDefined(packageJson.scripts) && Object.keys(packageJson.scripts).length > 0) {
       const npmScripts = {
         install: { $cmd: 'npm install' },

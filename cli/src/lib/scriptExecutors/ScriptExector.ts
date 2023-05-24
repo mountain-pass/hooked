@@ -15,7 +15,8 @@ import {
   type InternalScript,
   type Config,
   isStdinScriptFieldsMapping,
-  isString
+  isString,
+  isObject
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
@@ -159,7 +160,7 @@ export const resolveStdinScript = async (
         try {
           // try (strict) json to parse input...
           choices = JSON.parse(result)
-        } catch (err) {
+        } catch (err: any) {
           // could not parse as json, use string instead...
         }
         if (isDefined(choices) && !Array.isArray(choices)) {
@@ -235,7 +236,15 @@ export const resolveStdinScript = async (
         }
       }
     } else if (Array.isArray(script.$choices)) {
-      choices = script.$choices
+      if (script.$choices.length === 0) {
+        throw new Error('Invalid $choices, must be a non-empty array')
+      }
+      if (isObject(script.$choices[0])) {
+        choices = script.$choices
+      } else {
+        // ensure name is a string
+        choices = script.$choices.map((choice: string) => ({ name: String(choice), value: String(choice) }))
+      }
     }
     if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
     // resolve env vars in name and default...

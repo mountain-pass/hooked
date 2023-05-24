@@ -111,6 +111,10 @@ export const isString = (o: any): o is string => {
   return typeof o === 'string'
 }
 
+export const isObject = (o: any): o is object => {
+  return typeof o === 'object'
+}
+
 export const isScript = (script: any): script is Script => {
   return (typeof script === 'object' || typeof script === 'function') &&
   script !== null &&

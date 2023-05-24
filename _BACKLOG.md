@@ -63,6 +63,7 @@
 
 # Next
 
+- [ ] allow `$cmd` only scripts to be specified as a string on the env key?
 - [ ] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
 - [ ] allow outside environment resolution in all `*_SCRIPTS`.
 
@@ -80,7 +81,9 @@
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
 - [ ] when run, warn if not the latest version
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
-- [ ] teardown orphaned docker containers on SYSINT and cleanup .env and .tmp
+- [ ] teardown orphaned docker containers on SYSINT
+- [ ] cleanup .env and .tmp on startup
+
 
 # create files at given location (even remotely or in docker image)
 

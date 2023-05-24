@@ -56,14 +56,15 @@ export const executeCmd = (
       ? resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage, parent }, false)
       : filepath
     const output = child_process.execSync(cmd, opts)
-    if (runInDocker && fs.existsSync(envfile)) {
-      fs.unlinkSync(envfile)
-    }
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath)
-    } else {
-      logger.warn(`warn: Could not delete ${filepath}`)
-    }
+    // TODO - Remove if not required - program now deletes .env*.txt and .tmp*.sh files on startup
+    // if (runInDocker && fs.existsSync(envfile)) {
+    //   fs.unlinkSync(envfile)
+    // }
+    // if (fs.existsSync(filepath)) {
+    //   fs.unlinkSync(filepath)
+    // } else {
+    //   logger.warn(`warn: Could not delete ${filepath}`)
+    // }
     return output !== null ? output.toString() : ''
   } catch (err: any) {
     const status = err.status as string

@@ -19,6 +19,7 @@ import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import logger from './utils/logger.js'
 import HJSON from 'hjson'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
+import { cleanUpOldScripts } from './utils/fileUtils.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -51,6 +52,9 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: Options) => {
+      // cleanup previous files
+      cleanUpOldScripts()
+
       if (options.init === true) {
         await init(options)
         return

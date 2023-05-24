@@ -16,49 +16,125 @@ requiredEnvNames:
 
       API Documentation can be found here: https://developers.cloudflare.com/api/
 
+env:
+  default:
+    BASEURL: https://api.cloudflare.com/client/v4
+    CURL_SCRIPT: 'curl -s -H "Content-Type: application/json"'
+
 scripts:
   cloudflare:
     verify auth:
       $envNames: [CLOUDFLARE_SECRETS]
       $cmd: |
-        curl \
-          -s \
+        ${CURL_SCRIPT} \
           -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
-          -H "Content-Type:application/json" \
-          -X GET \
-          "https://api.cloudflare.com/client/v4/user/tokens/verify"
+          -X GET "${BASEURL}/user/tokens/verify"
 
     zones:
       list:
         $envNames: [CLOUDFLARE_SECRETS]
         $image: mountainpass/docker-git-curl
         $cmd: |
-          curl \
-            -s \
+          ${CURL_SCRIPT} \
             -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
-            -H "Content-Type:application/json" \
-            -X GET \
-            "https://api.cloudflare.com/client/v4/zones" | jq "[.result[] | {name, value: .id}]"
+            -X GET "${BASEURL}/zones" \
+            | jq -M "[.result[] | {name, value: .id}]"
 
     dns:
       list:
         $envNames: [CLOUDFLARE_SECRETS]
         $env:
-          zone_identifier:
+          zone_id:
             $stdin: Please choose a zone
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
-              $cmd: |
-                curl \
-                  -s \
-                  -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
-                  -H "Content-Type:application/json" \
-                  -X GET \
-                  "https://api.cloudflare.com/client/v4/zones" | jq "[.result[] | {name, value: .id}]"
+              $cmd: j cloudflare zones list
         $cmd: |
-          curl \
-            -s \
+          ${CURL_SCRIPT} \
             -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
-            -H "Content-Type:application/json" \
-            -X GET \
-            https://api.cloudflare.com/client/v4/zones/${zone_identifier}/dns_records | jq "[.result[] | {name, id, type, content, proxied}]"
+            -X GET ${BASEURL}/zones/${zone_id}/dns_records \
+            | jq -M "[.result[] | {id, content, name, proxied, type, ttl, value: .id}]"
+
+      
+      create:
+        $envNames: [CLOUDFLARE_SECRETS]
+        $env:
+          zone_id:
+            $stdin: Please choose a zone
+            $choices:
+              $envNames: [CLOUDFLARE_SECRETS]
+              $cmd: j cloudflare zones list
+          NAME:
+            $stdin: Please enter a Name
+          IPADDR:
+            $stdin: Please enter an IP Address
+          PROXIED:
+            $stdin: Please choose a Proxy type
+            $choices:
+              - true
+              - false
+          TYPE:
+            $stdin: Please choose a DNS Type
+            $choices:
+              - A
+              - CNAME
+              - TXT
+              - NS
+          JSON_PAYLOAD: '{
+              "content": "${IPADDR}",
+              "name": "${NAME}",
+              "proxied": ${PROXIED},
+              "type": "${TYPE}",
+              "ttl": 1
+            }'
+        $cmd: |
+          ${CURL_SCRIPT} \
+            -v \
+            -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+            -X POST ${BASEURL}/zones/${zone_id}/dns_records \
+            --data "${JSON_PAYLOAD}"
+      
+      delete:
+        $envNames: [CLOUDFLARE_SECRETS]
+        $env:
+          zone_id:
+            $stdin: Please choose a zone
+            $choices:
+              $envNames: [CLOUDFLARE_SECRETS]
+              $cmd: j cloudflare zones list
+          dns_id:
+            $stdin: Please choose a dns record
+            $choices:
+              $envNames: [CLOUDFLARE_SECRETS]
+              $cmd: |
+                ${CURL_SCRIPT} \
+                  -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+                  -X GET ${BASEURL}/zones/${zone_id}/dns_records \
+                  | jq -M "[.result[] | { name: \"[\(.type)] \(.name) = \(.content)\", value: .id }]"
+              $sort: alpha
+          AREYOUSURE:
+            $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
+        $cmd: |
+          ${CURL_SCRIPT} \
+            -v \
+            -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+            -X DELETE ${BASEURL}/zones/${zone_id}/dns_records/${dns_id}
+      
+      export:
+        $envNames: [CLOUDFLARE_SECRETS]
+        $env:
+          zone_id:
+            $stdin: Please choose a zone
+            $choices:
+              $envNames: [CLOUDFLARE_SECRETS]
+              $cmd: j cloudflare zones list
+        $cmd: |
+          ${CURL_SCRIPT} \
+            -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+            -X GET ${BASEURL}/zones/${zone_id}/dns_records/export
+
+      import:
+        $cmd: echo Not yet implemented. More here -> https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-import-dns-records
+
+      update / patch:
+        $cmd: echo Not yet implemented. More here -> https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record

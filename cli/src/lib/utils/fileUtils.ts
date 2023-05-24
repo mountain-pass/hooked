@@ -66,6 +66,17 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
   })
 }
 
+/**
+ * Removes old .env and .tmp files.
+ */
+export const cleanUpOldScripts = (): void => {
+  fs.readdirSync('./').forEach((file) => {
+    if (/^\.env-.*\.txt/.test(file) || /^\.tmp-.*\.sh/.test(file)) {
+      fs.unlinkSync(file)
+    }
+  })
+}
+
 export default {
   resolvePath,
   downloadFile
