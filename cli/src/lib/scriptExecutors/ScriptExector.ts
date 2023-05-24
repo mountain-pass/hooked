@@ -94,6 +94,17 @@ export const resolveCmdScript = async (
 
   // execute the command, capture the output
   try {
+    // if running an image, verify docker is installed
+    const runInDocker = isDefined(script.$image)
+    if (runInDocker) {
+      try {
+        // eslint-disable-next-line no-template-curly-in-string
+        executeCmd('which ${DOCKER_BIN=docker}', undefined, { env: onetimeEnvironment }, env)
+      } catch (e: any) {
+        // eslint-disable-next-line max-len
+        throw new Error('Docker not found (required by `$image`). Please specify the location using `DOCKER_BIN`, or install: https://docs.docker.com/engine/install/')
+      }
+    }
     let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')

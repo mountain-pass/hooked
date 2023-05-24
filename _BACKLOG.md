@@ -57,12 +57,12 @@
 - [x] support jsonpath in $fieldsMapping
 - [x] append a `?` to indicate optional `imports:`
 - [x] $cmd - add ability to show a custom error message for non-zero exits `$errorMessage` (+documentation, +unittests)
+- [x] add custom warning just in time - if trying to run $image and docker is not available
 
 # Next
 
 <!-- - [ ] precalc options if no env inputs? ?? No idea -->
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
-- [ ] add custom warning just in time - if trying to run $image and docker is not available
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
 - [ ] when run, warn if not the latest version
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
