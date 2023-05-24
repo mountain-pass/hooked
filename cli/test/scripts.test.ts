@@ -7,6 +7,7 @@ import { Options } from '../src/lib/program.js'
 import { resolveCmdScript, resolveInternalScript } from '../src/lib/scriptExecutors/ScriptExector.js'
 import { Config, ResolvedEnv, StdinResponses } from '../src/lib/types.js'
 import logger from '../src/lib/utils/logger.js'
+import docker from '../src/lib/scriptExecutors/docker.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -112,7 +113,8 @@ describe('scripts', () => {
       expect(globalEnv.USER).to.not.eql('bob')
     })
 
-    it('$cmd - with $image', async () => {
+    it('$cmd - with $image and docker does exist', async () => {
+      sinon.stub(docker, 'verifyDockerExists').returns()
       const result = await resolveCmdScript(undefined, {
         $image: 'node:16-alpine',
         $cmd: 'node -v'
@@ -120,7 +122,17 @@ describe('scripts', () => {
       expect(result).to.eql('v16.18.1')
     })
 
+    it('$cmd - with $image and docker does NOT exist', async () => {
+      sinon.stub(docker, 'verifyDockerExists').throwsException(new Error('Docker does not exist!'))
+      const result = resolveCmdScript(undefined, {
+        $image: 'node:16-alpine',
+        $cmd: 'node -v'
+      }, {}, {}, CONFIG, OPTIONS, true)
+      await expect(result).to.eventually.be.rejectedWith('Docker does not exist!')
+    })
+
     it('$cmd - with $image and $env', async () => {
+      sinon.stub(docker, 'verifyDockerExists').returns()
       const result = await resolveCmdScript(undefined, {
         $env: {
           USER: 'bob'
