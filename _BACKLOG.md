@@ -63,6 +63,9 @@
 
 # Next
 
+- [ ] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
+- [ ] allow outside environment resolution in all `*_SCRIPTS`.
+
 - [ ] document the `plugins` options
 - [ ] `imports` > add checksum verification (similar to docker sha256)
 - [ ] `imports` > add github.com (shorthand for https://raw.githubusercontent.com)
