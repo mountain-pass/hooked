@@ -83,7 +83,7 @@ j --env <yourenv1,yourenv2,etc>
 
 ## Rerunnable commands
 
-Here is some example output, with the `--debug` option:
+Here is some example output:
 ```sh
 Using environment: default
 ? What is your name? Bob

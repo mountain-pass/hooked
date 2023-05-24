@@ -60,15 +60,20 @@
 # Next
 
 <!-- - [ ] precalc options if no env inputs? ?? No idea -->
-- [ ] required version validation - yml: `version: >1.0.20`
+- [ ] $cmd - add ability to show a custom error message for non-zero exits `$errorMessage` (+documentation)
+- [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
+- [ ] add custom warning just in time - if trying to run $image and docker is not available
+- [ ] hooked.yaml version validation - yml: `version: >1.0.20`
+- [ ] when run, warn if not the latest version
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
+- [ ] teardown orphaned docker containers on SYSINT and cleanup .env and .tmp
+
 # create files at given location (even remotely or in docker image)
 
 - [x] allow overriding default docker run script
   - [x] build
   - [x] document
   - [ ] write unit test
-- [ ] teardown orphaned docker containers on SYSINT
 
 - [ ] support openapi calls - e.g. https://api-engineering.nyc3.digitaloceanspaces.com/spec-ci/DigitalOcean-public.v2.yaml
 - [ ] publish a yaml schema definition - e.g. # yaml-language-server: $schema=https://my.url.to/the/schema vs https://www.schemastore.org/json/

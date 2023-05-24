@@ -1,3 +1,17 @@
+# required environment group names (secrets)
+requiredEnvNames:
+  DO_SECRETS: |
+      Please create (or import) an environment group named `DO_SECRETS`, with the following values:
+
+      ```
+      env:
+        DO_SECRETS:
+          DIGITALOCEAN_ACCESS_TOKEN: dop_v1_<your_do_token>
+      ```
+
+      This is for security, and will only be imported when required.
+
+      A token can be generated from the following link: https://cloud.digitalocean.com/account/api/tokens
 
 env:
   default:
@@ -52,7 +66,6 @@ env:
       $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
 
 scripts:
-
   digitalocean (cloud servers):
     auth verification:
       init:

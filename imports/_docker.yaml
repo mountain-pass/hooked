@@ -2,8 +2,17 @@
 
 env:
   default:
+    DOCKER_BIN:
+      $cmd: echo ${DOCKER_BIN=docker}
     DOCKER_VERSION:
-      $cmd: docker -v
+      $cmd: ${DOCKER_BIN} -v
+      $errorMessage: |
+        Please ensure docker is installed and available on the path.
+
+        You can override the `docker` location, by setting the DOCKER_BIN environment variable.
+
+        Installation instructions can be found here: https://docs.docker.com/engine/install/
+
     DOCKER_FILE: Dockerfile
     PLATFORM: linux/amd64,linux/arm64/v8
   linux:
@@ -13,26 +22,29 @@ env:
 
 scripts:
   docker:
+
+    list images:
+      $cmd: ${DOCKER_BIN} image ls
+
+    list processes:
+      $cmd: ${DOCKER_BIN} ps
+
     system prune (volumes & all):
-      $cmd: |
-        #!/bin/sh -ve
-        docker system prune --volumes --all
+      $cmd: ${DOCKER_BIN} system prune --volumes --all
 
     login:
-      $cmd: echo ${DOCKER_PASSWORD} | docker login ghcr.io -u ${DOCKER_USERNAME} --password-stdin
+      $cmd: echo ${DOCKER_PASSWORD} | ${DOCKER_BIN} login ghcr.io -u ${DOCKER_USERNAME} --password-stdin
 
     build local:
       $cmd: |
-        #!/bin/sh -ve
-        docker build \
+        ${DOCKER_BIN} build \
           --tag ${DOCKER_IMAGE} \
           --file ${DOCKER_FILE} \
           .
 
     build platform image to local zip:
       $cmd: |
-        #!/bin/sh -ve
-        docker buildx build \
+        ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
           --file ${DOCKER_FILE} \
@@ -41,15 +53,12 @@ scripts:
 
     buildAndPush platform image to registry:
       $cmd: |
-        #!/bin/sh -ve
-        docker buildx build \
+        ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
           --file ${DOCKER_FILE} \
           --output=type=registry \
           .
 
-    load local zip into local docker images:
-      $cmd: |
-        #!/bin/sh -ve
-        docker load --input ${DOCKER_ARCHIVE}
+    load local zip into local images:
+      $cmd: ${DOCKER_BIN} load --input ${DOCKER_ARCHIVE}
