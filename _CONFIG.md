@@ -11,6 +11,8 @@
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
+  - [Custom NPM Command](#custom-npm-command)
+  - [Custom Makefile Command](#custom-makefile-command)
 
 # Overview
 
@@ -214,8 +216,32 @@ The default environment name (if not specified with `--env`), is `default`.
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
 ```yaml
-
 env:
   default:
     DOCKER_SCRIPT: docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"
+```
+
+## Custom NPM Command
+
+The `plugin: npm: true` plugin, will execute npm scripts. To change the command used, provide a `NPM_SCRIPT` environment variable.
+
+Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
+
+```yaml
+env:
+  default:
+    NPM_SCRIPT: npm run ${NPM_COMMAND}
+```
+
+## Custom Makefile Command
+
+The `plugin: makefile: true` plugin, will execute Makefile scripts. To change the command used, provide a `MAKE_SCRIPT` environment variable.
+
+Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
+
+```yaml
+env:
+  default:
+    MAKE_FILE: Makefile
+    MAKE_SCRIPT: make -s -f ${MAKE_FILE} ${MAKE_COMMAND}
 ```

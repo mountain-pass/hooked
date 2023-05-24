@@ -133,7 +133,7 @@ export const findScript = async (
     let choices: string[] = []
     const modifiedScripts: any = {}
     if (config.plugins?.icons === true) {
-      // if enviornment flag is set, add emoji
+      // if environment flag is set, add emoji
       choices = Object.entries(script).map(([c, v]) => {
         if (startsWithEmojiSpace(c)) {
           return c

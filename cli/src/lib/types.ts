@@ -3,6 +3,8 @@ export type Dictionary<ValueType> = Record<string, ValueType>
 export interface Plugins {
   abi: boolean
   icons: boolean
+  npm: boolean
+  make: boolean
 }
 export type EnvironmentVariables = Record<string, Script>
 

@@ -14,9 +14,11 @@ import { init } from './init.js'
 import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
 import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from './types.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import { generateScripts } from './plugins/AbiPlugin.js'
+import { generateAbiScripts } from './plugins/AbiPlugin.js'
+import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import logger from './utils/logger.js'
 import HJSON from 'hjson'
+import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -38,9 +40,9 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .name('hooked')
     .description('CLI execute preconfigured scripts')
     .version(packageJson.version, '-v, --version')
-    .option('--init', 'provides options for initialising a config file')
-    .option('-e, --env <env>', 'specify environment', 'default')
-    .option('-in, --stdin <json>', 'specify stdin responses', '{}')
+    .option('--init', 'runs the initialisation wizard')
+    .option('-e, --env <env>', 'accepts a comma separated list of environment names', 'default')
+    .option('-in, --stdin <json>', 'allows predefining stdin responses', '{}')
     .option('--printenv', 'print the resolved environment, and exits')
     .option('--listenvs', 'lists the available environments, and exits')
     .option('-l, --log', 'print the log of previous scripts')
@@ -67,19 +69,12 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         const config = loadConfig(CONFIG_PATH)
 
         // setup defaults...
-        config.plugins = { ...{ abi: false, icons: true }, ...(config.plugins ?? {}) }
-
-        // check for plugins
-        if (config.plugins.abi) {
-          config.scripts = {
-            ...(await generateScripts()),
-            ...config.scripts
-          }
-        }
+        config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
 
         const envNames = options.env.split(',')
         // use relaxed json to parse the stdin
         const stdin = HJSON.parse(options.stdin)
+        // resolve environment variables...
         const globalEnv = { ...process.env as any }
         const [env, , resolvedEnvNames] = await resolveEnv(
           config,
@@ -88,6 +83,30 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           globalEnv,
           options
         )
+
+        // check for abi files?
+        if (config.plugins?.abi) {
+          config.scripts = {
+            ...(await generateAbiScripts()),
+            ...config.scripts
+          }
+        }
+
+        // check for npm package.json?
+        if (config.plugins?.npm) {
+          config.scripts = {
+            ...generateNpmScripts(env),
+            ...config.scripts
+          }
+        }
+
+        // check for Makefile?
+        if (config.plugins?.make) {
+          config.scripts = {
+            ...generateMakefileScripts(env),
+            ...config.scripts
+          }
+        }
 
         if (options.listenvs === true) {
           logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
@@ -99,7 +118,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
 
         // check script is executable...
         if (!isCmdScript(script) && !isInternalScript(script)) {
-          throw new Error(`Unknown script type #2: ${JSON.stringify(script)}`)
+          throw new Error(`Unknown script type : ${JSON.stringify(script)}`)
         }
 
         // resolve script env vars (if any)

@@ -25,7 +25,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
     // force-pull remotes
     if (pull) {
       await Promise.all(remotes.map(async (url, i) => {
-        logger.debug(`Downloading remote import #1: ${url} -> ${remotesCache[i]}`)
+        logger.debug(`Downloading remote import: ${url} -> ${remotesCache[i]}`)
         try {
           await fileUtils.downloadFile(removeOptionalTrailingQuestion(url), remotesCache[i])
           allLocal.push(remotesCache[i])
@@ -41,7 +41,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
       // pull remotes if not cached
       await Promise.all(remotes.map(async (url, i) => {
         if (!fs.existsSync(remotesCache[i])) {
-          logger.debug(`Downloading remote import #2: ${url} -> ${remotesCache[i]}`)
+          logger.debug(`Downloading remote import : ${url} -> ${remotesCache[i]}`)
           try {
             await fileUtils.downloadFile(removeOptionalTrailingQuestion(url), remotesCache[i])
             allLocal.push(remotesCache[i])

@@ -103,7 +103,7 @@ const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRp
   }
 }
 
-export const generateScripts = async (): Promise<any> => {
+export const generateAbiScripts = async (): Promise<any> => {
   logger.debug('ABI: enabled...')
   const files = await searchJsonFiles('.')
   logger.debug(`ABI: Found files - ${(files).length}`)

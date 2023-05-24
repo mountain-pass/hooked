@@ -58,10 +58,21 @@
 - [x] append a `?` to indicate optional `imports:`
 - [x] $cmd - add ability to show a custom error message for non-zero exits `$errorMessage` (+documentation, +unittests)
 - [x] add custom warning just in time - if trying to run $image and docker is not available
+- [x] add `npm` plugin (default true)
+- [x] add `make` plugin (default true)
 
 # Next
 
-<!-- - [ ] precalc options if no env inputs? ?? No idea -->
+- [ ] document the `plugins` options
+- [ ] `imports` > add checksum verification (similar to docker sha256)
+- [ ] `imports` > add github.com (shorthand for https://raw.githubusercontent.com)
+- [ ] `imports` > use etag to check if changed
+- [ ] `scripts` > add regex search to cli and inapp selection - e.g. "build zip" => "build.*zip" => "build platform image to local zip"
+- [ ] `$stdin` > check that defaults work for text and choices
+- [ ] (cli args) > document reason we want `$stdin` option to be explicitly defined, and not just an environment variable
+
+<!-- - [ ] precalc options if no env inputs? ?? <0 No idea wath this means -->
+- [ ] add dynamic scripts for npm
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
 - [ ] when run, warn if not the latest version
@@ -91,6 +102,7 @@
 - [ ] Inquirer > Press to continue -> important for destructive operations? (e.g. overwrite prod) (workaround: `read -p "Are you sure? " -n 1 -r`)
 
 # Future
+- [ ] ability to dyanmically fetch the next script's children
 - [ ] styling
   - [ ] Add description
   - [ ] Add colour (edited)

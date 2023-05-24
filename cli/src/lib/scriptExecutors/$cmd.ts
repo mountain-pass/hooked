@@ -51,7 +51,7 @@ export const executeCmd = (
     }
     // eslint-disable-next-line max-len, no-template-curly-in-string
     const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
-    const dockerScript = isString(env.DOCKER_SCRIPT) ? env.DOCKER_SCRIPT : DEFAULT_DOCKER_SCRIPT
+    const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env
     const cmd = runInDocker
       ? resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage, parent }, false)
       : filepath

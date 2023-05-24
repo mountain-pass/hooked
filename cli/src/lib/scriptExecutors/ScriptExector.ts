@@ -24,6 +24,9 @@ import logger from '../utils/logger.js'
 import jp from 'jsonpath'
 import docker from './docker.js'
 
+// Environment variable names that are exempt from being resolved
+const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
+
 export interface ScriptExecutorResponse {
   value: string
   stdinResponses?: StdinResponses
@@ -269,8 +272,8 @@ export const resolveStdinScript = async (
  * @param env - environment variables to use for resolving
  */
 export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv, insertInEnvironment: boolean = true): string => {
-  // DOCKER_SCRIPT is a special exemption - it is internally resolved!
-  if (key === 'DOCKER_SCRIPT') return script.$resolve
+  // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
+  if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key)) return script.$resolve
 
   // check for missing environment variables
   const requiredKeys = getEnvVarRefs(script.$resolve)
@@ -321,10 +324,10 @@ export const resolveScript = async (
   if (typeof env[key] === 'string') {
     return env[key]
   }
-  // DOCKER_SCRIPT is a special exemption - it is internally resolved!
-  if (key === 'DOCKER_SCRIPT' && isString(script)) {
+  // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
+  if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key) && isString(script)) {
     env[key] = script
     return script
   }
-  throw new Error(`Unknown script type #1: ${JSON.stringify(script)} at path: ${key}`)
+  throw new Error(`Unknown script type: ${JSON.stringify(script)} at path: ${key}`)
 }
