@@ -42,6 +42,8 @@ export interface CmdScript {
   $image?: string
   /** The command to execute. Supports multiline. */
   $cmd: string
+  /** The message to show, if an error occurs. */
+  $errorMessage?: string
 }
 
 export interface EnvScript {
