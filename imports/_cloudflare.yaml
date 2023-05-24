@@ -1,0 +1,64 @@
+
+
+requiredEnvNames:
+  DO_SECRETS: |
+      Please create (or import) an environment group named `CLOUDFLARE_SECRETS`, with the following values:
+
+      ```
+      env:
+        CLOUDFLARE_SECRETS:
+          CLOUDFLARE_BEARER_TOKEN: <your_bearer_token>
+      ```
+
+      This is for security, and will only be imported when required.
+
+      A token can be generated from the following link: https://dash.cloudflare.com/profile/api-tokens
+
+      API Documentation can be found here: https://developers.cloudflare.com/api/
+
+scripts:
+  cloudflare:
+    verify auth:
+      $envNames: [CLOUDFLARE_SECRETS]
+      $cmd: |
+        curl \
+          -s \
+          -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+          -H "Content-Type:application/json" \
+          -X GET \
+          "https://api.cloudflare.com/client/v4/user/tokens/verify"
+
+    zones:
+      list:
+        $envNames: [CLOUDFLARE_SECRETS]
+        $image: mountainpass/docker-git-curl
+        $cmd: |
+          curl \
+            -s \
+            -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+            -H "Content-Type:application/json" \
+            -X GET \
+            "https://api.cloudflare.com/client/v4/zones" | jq "[.result[] | {name, value: .id}]"
+
+    dns:
+      list:
+        $envNames: [CLOUDFLARE_SECRETS]
+        $env:
+          zone_identifier:
+            $stdin: Please choose a zone
+            $choices:
+              $envNames: [CLOUDFLARE_SECRETS]
+              $cmd: |
+                curl \
+                  -s \
+                  -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+                  -H "Content-Type:application/json" \
+                  -X GET \
+                  "https://api.cloudflare.com/client/v4/zones" | jq "[.result[] | {name, value: .id}]"
+        $cmd: |
+          curl \
+            -s \
+            -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
+            -H "Content-Type:application/json" \
+            -X GET \
+            https://api.cloudflare.com/client/v4/zones/${zone_identifier}/dns_records | jq "[.result[] | {name, id, type, content, proxied}]"
