@@ -21,7 +21,17 @@ const logDebug = ['debug'].includes(logLevel)
 // debug   Y Y Y Y
 
 const error = (str: string | Error): void => {
-  if (logError) console.error(isString(str) ? red(str) : red(str.message))
+  if (logError) {
+    if (isString(str)) {
+      console.error(red(str))
+    } else {
+      if (isString(str.stack)) {
+        console.error(red(str.stack))
+      } else {
+        console.error(red(str.message))
+      }
+    }
+  }
 }
 
 const warn = (str: any): void => {

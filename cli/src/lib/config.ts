@@ -45,7 +45,9 @@ export const stripProcessEnvs = (env: ResolvedEnv, processEnv: ResolvedEnv = pro
 export const getEnvVarRefs = (str: string): string[] => {
   const regex = /\${([^}]+)}/g
   return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
-    prev[curr[1]] = 1
+    // allow environment variable defaults (shell & bash syntax)
+    const envvar = curr[1].replace(/(=|:).*$/, '')
+    prev[envvar] = 1
     return prev
   }, {}))
 }

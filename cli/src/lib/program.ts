@@ -133,7 +133,6 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         }
       } catch (err: any) {
         logger.error(err)
-        logger.error('Use "--debug" to see stack trace.')
         // print the rerun command for easy re-execution
         if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
         process.exit(1)
