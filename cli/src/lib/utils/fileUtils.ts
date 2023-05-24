@@ -35,6 +35,10 @@ export const getDirnameFilename = (filepath: string): string => {
 export const downloadFile = async (url: string, destination: string, timeoutMs: number = 30000): Promise<any> => {
   return await new Promise((resolve, reject) => {
     logger.debug(`Downloading ${url} -> ${destination}...`)
+    // ensure parent directory exists!
+    if (!fs.existsSync(path.dirname(destination))) {
+      fs.mkdirSync(path.dirname(destination), { recursive: true })
+    }
     const request = https.get(url, (res: IncomingMessage) => {
       const code = isDefined(res) && isDefined(res.statusCode) ? res.statusCode : -1
       if (code < 200 || code >= 300) {
