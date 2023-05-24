@@ -291,7 +291,57 @@ describe('config', () => {
         message: 'what is your name?',
         pageSize: PAGE_SIZE,
         default: undefined,
-        choices: ['one', 'two'],
+        choices: [
+          {name: 'one', value: 'one'}, 
+          {name: 'two', value: 'two'}
+        ],
+        loop: true
+      }])
+    })
+
+    it('$stdin - $stdin should support $choices boolean array', async () => {
+      // stub
+      const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+      // test
+      const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: [true, false] } } }, scripts: { } }
+      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
+      expect(env).to.eql({ name: 'jack' })
+      expect(stdin).to.eql({ name: 'jack' })
+      expect(envNames).to.eql(['default'])
+      sinon.assert.calledOnceWithExactly(inqspy, [{
+        type: 'rawlist',
+        name: 'name',
+        message: 'what is your name?',
+        pageSize: PAGE_SIZE,
+        default: undefined,
+        choices: [
+        {name:'true',value:'true'}, 
+        {name:'false',value:'false'}
+        ],
+        loop: true
+      }])
+    })
+
+    it('$stdin - $stdin should support $choices number array', async () => {
+      // stub
+      const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
+      // test
+      const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: [1,2,3] } } }, scripts: { } }
+      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
+      expect(env).to.eql({ name: 'jack' })
+      expect(stdin).to.eql({ name: 'jack' })
+      expect(envNames).to.eql(['default'])
+      sinon.assert.calledOnceWithExactly(inqspy, [{
+        type: 'rawlist',
+        name: 'name',
+        message: 'what is your name?',
+        pageSize: PAGE_SIZE,
+        default: undefined,
+        choices: [
+          { name: '1', value: '1' },
+          { name: '2', value: '2' },
+          { name: '3', value: '3' },
+        ],
         loop: true
       }])
     })

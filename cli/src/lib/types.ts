@@ -63,7 +63,7 @@ export interface StdinScript {
   $stdin: string
   $default?: string
   // allow multiple options
-  $choices?: string[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
+  $choices?: string[] | boolean[] | number[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
   /** fields mapping for json - [name, value, short?] */
   $fieldsMapping?: StdinScriptFieldsMapping
   $sort?: 'alpha' | 'alphaDesc' | 'none'

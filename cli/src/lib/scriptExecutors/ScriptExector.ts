@@ -243,7 +243,7 @@ export const resolveStdinScript = async (
         choices = script.$choices
       } else {
         // ensure name is a string
-        choices = script.$choices.map((choice: string) => ({ name: String(choice), value: String(choice) }))
+        choices = script.$choices.map((choice: string | boolean | number) => ({ name: String(choice), value: String(choice) }))
       }
     }
     if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
