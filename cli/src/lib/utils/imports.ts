@@ -31,7 +31,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
           allLocal.push(remotesCache[i])
         } catch (e) {
           if (url.endsWith('?')) {
-            console.debug(`Optional import file not found: ${url}`)
+            logger.debug(`Optional import file not found: ${url}`)
           } else {
             throw e
           }
@@ -47,7 +47,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
             allLocal.push(remotesCache[i])
           } catch (e) {
             if (url.endsWith('?')) {
-              console.debug(`Optional import file not found: ${url}`)
+              logger.debug(`Optional import file not found: ${url}`)
             } else {
               throw e
             }
@@ -64,7 +64,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
     const missingOptionalFiles = missingLocalFiles.filter(i => i.endsWith('?'))
     const missingRequiredFiles = missingLocalFiles.filter(i => !i.endsWith('?'))
     for (const file of missingOptionalFiles) {
-      console.debug(`Optional import file not found: ${file}`)
+      logger.debug(`Optional import file not found: ${file}`)
     }
     if (missingRequiredFiles.length > 0) {
       throw new Error(`Missing import files: ${missingLocalFiles.join(', ')}`)
