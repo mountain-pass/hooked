@@ -68,3 +68,6 @@
 {"ts":1684935649956,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
 {"ts":1684936600766,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
 {"ts":1684936671160,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1684947115709,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1684947196703,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1684947218640,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}

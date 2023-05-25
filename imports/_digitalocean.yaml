@@ -160,8 +160,8 @@ scripts:
 
       ssh:
         # runs on host machine
-        $envNames: [DO_SECRETS, ask-DO_MACHINE]
-        $cmd: doctl compute ssh ${DO_MACHINE}
+        $envNames: [DO_SECRETS, ask-DO_MACHINEIP]
+        $cmd: ssh root@${DO_MACHINEIP}
         
       list:
         $envNames: [DO_SECRETS]
