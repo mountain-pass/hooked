@@ -26,7 +26,7 @@ import { PAGE_SIZE } from '../defaults.js'
 import { type Options } from '../program.js'
 import logger from '../utils/logger.js'
 import jp from 'jsonpath'
-import docker from './docker.js'
+import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
@@ -106,7 +106,7 @@ export const resolveCmdScript = async (
     // if running an image, verify docker is installed
     const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
-      docker.verifyDockerExists(onetimeEnvironment, env)
+      verifyLocalRequiredTools.verifyDockerExists(onetimeEnvironment, env)
     }
 
     // run the actual command

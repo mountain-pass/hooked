@@ -61,6 +61,7 @@
 - [x] add `npm` plugin (default true)
 - [x] add `make` plugin (default true)
 - [x] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
+- [x] when run, warn if not the latest version (check using `npm view @mountainpass/hooked-cli version`)
 
 # Next
 
@@ -83,7 +84,6 @@
 - [ ] add dynamic scripts for npm
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
-- [ ] when run, warn if not the latest version
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
 - [ ] teardown orphaned docker containers on SYSINT
 - [ ] cleanup .env and .tmp on startup

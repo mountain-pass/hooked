@@ -12,6 +12,7 @@ import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
 import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
+import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from './types.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
@@ -87,6 +88,9 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           globalEnv,
           options
         )
+
+        // check for newer versions
+        verifyLocalRequiredTools.verifyLatestVersion(globalEnv, globalEnv)
 
         // check for abi files?
         if (config.plugins?.abi) {

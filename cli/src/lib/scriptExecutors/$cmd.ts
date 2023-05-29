@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type ResolvedEnv } from '../types.js'
 import { resolveResolveScript } from './ScriptExector.js'
+import logger from '../utils/logger.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -59,7 +60,8 @@ const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv):
 export const executeCmd = (
   script: CmdScript,
   opts: any = undefined,
-  env: ResolvedEnv
+  env: ResolvedEnv,
+  timeoutMs?: number // TODO implement?
 ): string => {
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
@@ -67,9 +69,10 @@ export const executeCmd = (
     const filepath = path.resolve(`.tmp-${rand}.sh`)
     const envfile = path.resolve(`.env-${rand}.txt`)
     const parent = path.dirname(filepath)
+    let output = '' as any
+    const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
     // run script based on underlying implementation
-    let output = ''
     if (isDockerCmdScript(script)) {
       // run on docker
       writeShellScript(filepath, script.$cmd)
@@ -77,18 +80,18 @@ export const executeCmd = (
       const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env
       const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage: script.$image, parent }, false)
-      output = child_process.execSync(cmd, opts)
+      output = child_process.execSync(cmd, { ...additionalOpts, ...opts })
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
       writeShellScript(filepath, script.$cmd, opts.env)
       const DEFAULT_SSH_SCRIPT = 'ssh "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env
       const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath, user_at_server: script.$ssh, parent }, false)
-      output = child_process.execSync(cmd, opts)
+      output = child_process.execSync(cmd, { ...additionalOpts, ...opts })
     } else {
       // otherwise fallback to local machine
       writeShellScript(filepath, script.$cmd, opts.env)
-      output = child_process.execSync(filepath, opts)
+      output = child_process.execSync(filepath, { ...additionalOpts, ...opts })
     }
     // deliberately do not delete files on cleanup - so user has visibility for debugging.
     // plus scripts are cleaned up on startup...
