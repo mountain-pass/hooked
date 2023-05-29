@@ -7,6 +7,7 @@ import sinon from 'sinon'
 import YAML from 'yaml'
 import { CONFIG_PATH } from '../src/lib/defaults.js'
 import program from '../src/lib/program.js'
+import verifyLocalRequiredTools from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -28,6 +29,7 @@ describe('wip program', () => {
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
+    sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').returns()
   })
 
   afterEach(() => {

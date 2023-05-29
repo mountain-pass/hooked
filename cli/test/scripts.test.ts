@@ -5,9 +5,9 @@ import { describe } from 'mocha'
 import sinon from 'sinon'
 import { Options } from '../src/lib/program.js'
 import { resolveCmdScript, resolveInternalScript } from '../src/lib/scriptExecutors/ScriptExector.js'
-import { Config, ResolvedEnv, StdinResponses } from '../src/lib/types.js'
+import docker from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
+import { Config, ResolvedEnv } from '../src/lib/types.js'
 import logger from '../src/lib/utils/logger.js'
-import docker from '../src/lib/scriptExecutors/docker.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
