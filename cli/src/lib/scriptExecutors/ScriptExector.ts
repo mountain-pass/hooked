@@ -16,7 +16,10 @@ import {
   type Config,
   isStdinScriptFieldsMapping,
   isString,
-  isObject
+  isObject,
+  isDockerCmdScript,
+  type DockerCmdScript,
+  type SSHCmdScript
 } from '../types.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import { PAGE_SIZE } from '../defaults.js'
@@ -60,7 +63,7 @@ export const resolveInternalScript = async (
 
 export const resolveCmdScript = async (
   key: string | undefined,
-  script: CmdScript,
+  script: CmdScript | DockerCmdScript | SSHCmdScript,
   stdin: StdinResponses,
   env: ResolvedEnv,
   config: Config,
@@ -99,12 +102,15 @@ export const resolveCmdScript = async (
 
   // execute the command, capture the output
   try {
+    // TODO move inside execute cmd!
     // if running an image, verify docker is installed
-    const runInDocker = isDefined(script.$image)
+    const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
       docker.verifyDockerExists(onetimeEnvironment, env)
     }
-    let newValue = executeCmd(script.$cmd, script.$image, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
+
+    // run the actual command
+    let newValue = executeCmd(script, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
     if (typeof key === 'string') {

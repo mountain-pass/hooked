@@ -8,7 +8,7 @@ const verifyDockerExists = (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): 
   if (dockerExists !== true) {
     try {
       // eslint-disable-next-line no-template-curly-in-string
-      executeCmd('which ${DOCKER_BIN=docker}', undefined, { env: onetimeEnvironment }, env)
+      executeCmd({ $cmd: 'which ${DOCKER_BIN=docker}' }, { env: onetimeEnvironment }, env)
       dockerExists = true
     } catch (e: any) {
       // eslint-disable-next-line max-len

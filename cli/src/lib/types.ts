@@ -40,12 +40,20 @@ export interface CmdScript {
   $env?: EnvironmentVariables
   /** Additional environment group names to resolve ONLY when executing command. Resolved after $env. */
   $envNames?: string[]
-  /** If supplied, command will execute in this docker image container. */
-  $image?: string
   /** The command to execute. Supports multiline. */
   $cmd: string
   /** The message to show, if an error occurs. */
   $errorMessage?: string
+}
+
+export interface DockerCmdScript extends CmdScript {
+  /** If supplied, command will execute in this docker image container. */
+  $image: string
+}
+
+export interface SSHCmdScript extends CmdScript {
+  /** If supplied, command will execute in this remote server. */
+  $ssh: string
 }
 
 export interface EnvScript {
@@ -63,7 +71,7 @@ export interface StdinScript {
   $stdin: string
   $default?: string
   // allow multiple options
-  $choices?: string[] | boolean[] | number[] | CmdScript | StdinScript | EnvScript | ResolveScript | null
+  $choices?: string[] | boolean[] | number[] | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | null
   /** fields mapping for json - [name, value, short?] */
   $fieldsMapping?: StdinScriptFieldsMapping
   $sort?: 'alpha' | 'alphaDesc' | 'none'
@@ -75,10 +83,18 @@ export interface InternalScript {
   $internal: (options: { key: string, stdin: StdinResponses, env: ResolvedEnv }) => Promise<string>
 }
 
-export type Script = string | CmdScript | StdinScript | EnvScript | ResolveScript | InternalScript
+export type Script = string | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript
 
 export const isCmdScript = (script: Script): script is CmdScript => {
   return typeof (script as any).$cmd === 'string'
+}
+
+export const isDockerCmdScript = (script: Script): script is DockerCmdScript => {
+  return typeof (script as any).$cmd === 'string' && typeof (script as any).$image === 'string'
+}
+
+export const isSSHCmdScript = (script: Script): script is SSHCmdScript => {
+  return typeof (script as any).$cmd === 'string' && typeof (script as any).$ssh === 'string'
 }
 
 export const isEnvScript = (script: Script): script is EnvScript => {

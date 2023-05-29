@@ -60,12 +60,16 @@
 - [x] add custom warning just in time - if trying to run $image and docker is not available
 - [x] add `npm` plugin (default true)
 - [x] add `make` plugin (default true)
+- [x] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
 
 # Next
 
+- [ ] show success / error messages after environment?
+- [ ] show success / error messages after scripts?
+- [ ] remember where we got to last "scripts"
+- [ ] remember previous stdin (use as defaults)
 - [ ] allow `$cmd` only scripts to be specified as a string on the env key?
-- [ ] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
-- [ ] allow outside environment resolution in all `*_SCRIPTS`.
+- [ ] allow environment resolution in all `*_SCRIPTS`.
 
 - [ ] document the `plugins` options
 - [ ] `imports` > add checksum verification (similar to docker sha256)

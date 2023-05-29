@@ -11,6 +11,7 @@
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
+  - [Custom SSH Command](#custom-ssh-command)
   - [Custom NPM Command](#custom-npm-command)
   - [Custom Makefile Command](#custom-makefile-command)
 
@@ -97,6 +98,7 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 
 - `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
 - `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
+- `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
 - `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
 - `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
 - `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
@@ -219,6 +221,18 @@ Here is an example, using the default command as a baseline. Note: the `${...}` 
 env:
   default:
     DOCKER_SCRIPT: docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"
+```
+
+## Custom SSH Command
+
+`$ssh` is used for running `$cmd` commands in remote server. To change the SSH command used, provide a `SSH_SCRIPT` environment variable.
+
+Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
+
+```yaml
+env:
+  default:
+    SSH_SCRIPT: ssh "${user_at_server}" < "${filepath}"
 ```
 
 ## Custom NPM Command
