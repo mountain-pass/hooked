@@ -31,7 +31,7 @@ const envToDockerEnvfile = (env: ResolvedEnv): string => {
 
 const envToShellExports = (env: ResolvedEnv): string => {
   // TODO make this configurable via ENVIRONMENT?
-  return Object.entries(env).map(([k, v]) => `export ${k}="${v}"\n`).join('')
+  return '\n' + Object.entries(env).map(([k, v]) => `export ${k}="${v}"\n`).join('') + '\n'
 }
 
 const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv): void => {
@@ -41,7 +41,7 @@ const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv):
     const envexports = envToShellExports(env)
     const match = patt.exec(content)
     if (match != null) {
-      content = content.substring(0, 28) + envexports + content.substring(28)
+      content = content.substring(0, patt.lastIndex) + envexports + content.substring(patt.lastIndex)
     } else {
       content = envexports + content
     }
