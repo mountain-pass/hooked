@@ -57,6 +57,7 @@ scripts:
   publish:
     $cmd: |
       #!/bin/sh -ve
+                             
       npx lerna exec --scope @mountainpass/* npm install
       npx lerna run --scope @mountainpass/* test
       rm cli/.tmp-*.sh || true
