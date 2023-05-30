@@ -13,8 +13,8 @@ const verifyLatestVersion = async (onetimeEnvironment: ResolvedEnv, env: Resolve
     // eslint-disable-next-line no-template-curly-in-string
     logger.debug('Checking if latest version...')
     // eslint-disable-next-line max-len
-    const latestPublishedVersion = await executeCmd({ $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env, 2000)
-    if (latestPublishedVersion.trim() !== packageJson.version.trim()) {
+    const latestPublishedVersion = (await executeCmd({ $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env, 2000)).trim()
+    if (latestPublishedVersion !== packageJson.version) {
       logger.warn(`Not using latest ${packageJson.name}. Please consider upgrading to ${latestPublishedVersion} (current: ${packageJson.version})\n` +
       `Run: npm i -g --prefer-online --force ${packageJson.name}`)
     } else {
