@@ -4,9 +4,9 @@ import child_process, { type ChildProcess, type ExecException } from 'child_proc
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
+import { yellow } from '../colour.js'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type ResolvedEnv } from '../types.js'
 import { resolveResolveScript } from './ScriptExector.js'
-import logger from '../utils/logger.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -116,10 +116,10 @@ export const executeCmd = async (
     if (Array.isArray(opts.stdio)) {
       const [, stdout, stderr] = opts.stdio
       if (stdout === 'inherit') {
-        child.stdout?.on('data', logger.info)
+        child.stdout?.on('data', (data: string | Buffer) => process.stdout.write(data.toString()))
       }
       if (stderr === 'inherit') {
-        child.stderr?.on('data', logger.warn)
+        child.stderr?.on('data', (data: string | Buffer) => process.stderr.write(yellow(data.toString())))
       }
     }
     // all output streams are closed
