@@ -169,7 +169,8 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     })
 
   nodeCleanup((exitCode, signal) => {
-    logger.debug('Shutting down...')
+    logger.debug(`Shutting down... ${JSON.stringify({ exitCode, signal })}`)
+    const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
     // kill child processes
     logger.debug('Cleaning up child processes...')
     for (const child of childProcesses) {
@@ -180,10 +181,14 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     Promise.all(dockerNames.map(async (dockerName) => {
       return await executeCmd({ $cmd: `docker kill ${dockerName} || true` }, {}, {})
     }))
-      .then(() => process.kill(process.pid, 'SIGKILL'))
+      .then(() => {
+        process.exit(newExitCode)
+        // process.kill(process.pid, 'SIGINT')
+      })
       .catch((err) => {
         logger.error(err)
-        process.kill(process.pid, 'SIGKILL')
+        process.exit(newExitCode)
+        // process.kill(process.pid, 'SIGINT')
       })
     nodeCleanup.uninstall() // don't call cleanup handler again, allow promises to cleanup!
     return false
