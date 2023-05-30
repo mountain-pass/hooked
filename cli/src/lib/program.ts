@@ -143,7 +143,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           envNames: resolvedEnvNames,
           stdin
         }
-        logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
+        logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
 
         if (options.printenv === true) {
           // print environment variables
