@@ -8,12 +8,12 @@ let lazyCheckDockerExists: boolean | undefined
 
 const packageJson = loadRootPackageJsonSync()
 
-const verifyLatestVersion = (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): void => {
+const verifyLatestVersion = async (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): Promise<void> => {
   try {
     // eslint-disable-next-line no-template-curly-in-string
     logger.debug('Checking if latest version...')
     // eslint-disable-next-line max-len
-    const latestPublishedVersion = executeCmd({ $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env, 2000)
+    const latestPublishedVersion = await executeCmd({ $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env, 2000)
     if (latestPublishedVersion.trim() !== packageJson.version.trim()) {
       logger.warn(`Not using latest ${packageJson.name}. Please consider upgrading to ${latestPublishedVersion} (current: ${packageJson.version})\n` +
       `Run: npm i -g --prefer-online --force ${packageJson.name}`)
@@ -26,14 +26,15 @@ const verifyLatestVersion = (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv):
   }
 }
 
-const verifyDockerExists = (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): void => {
+const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): Promise<void> => {
   if (!isDefined(lazyCheckDockerExists)) {
     try {
       // eslint-disable-next-line no-template-curly-in-string
-      const version = executeCmd({ $cmd: '${DOCKER_BIN=docker} -v' }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env)
+      const version = await executeCmd({ $cmd: '${DOCKER_BIN=docker} -v' }, { env: onetimeEnvironment, stdio: ['ignore', 'pipe', 'ignore'] }, env)
       logger.debug(`Found docker: ${version}`)
       lazyCheckDockerExists = true
     } catch (e: any) {
+      // logger.warn(e.message)
       // eslint-disable-next-line max-len
       throw new Error('Docker not found (required by `$image`). Please specify the location using `DOCKER_BIN`, or install: https://docs.docker.com/engine/install/')
     }

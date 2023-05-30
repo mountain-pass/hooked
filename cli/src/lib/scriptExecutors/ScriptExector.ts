@@ -106,11 +106,14 @@ export const resolveCmdScript = async (
     // if running an image, verify docker is installed
     const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
-      verifyLocalRequiredTools.verifyDockerExists(onetimeEnvironment, env)
+      await verifyLocalRequiredTools.verifyDockerExists(onetimeEnvironment, env)
     }
 
     // run the actual command
-    let newValue = executeCmd(script, { stdio: captureOutput ? undefined : 'inherit', env: onetimeEnvironment }, env)
+    let newValue = await executeCmd(script, {
+      stdio: captureOutput ? ['ignore', 'ignore', 'ignore'] : ['inherit', 'inherit', 'inherit'],
+      env: onetimeEnvironment
+    }, env)
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
     if (typeof key === 'string') {

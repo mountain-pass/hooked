@@ -29,7 +29,7 @@ describe('wip program', () => {
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
-    sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').returns()
+    sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
   })
 
   afterEach(() => {

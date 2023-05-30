@@ -62,8 +62,13 @@
 - [x] add `make` plugin (default true)
 - [x] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
 - [x] when run, warn if not the latest version (check using `npm view @mountainpass/hooked-cli version`)
+- [x] teardown orphaned docker containers on SYSINT
 
 # Next
+
+
+- [ ] `$cmd` > add ability to `$timeoutMs`
+- [ ] `$cmd` > add ability to `$retries` (retries on error, default `0`=disabled, `-1`=indefinite, additional `$retryDelayMs`)
 
 - [ ] show success / error messages after environment?
 - [ ] show success / error messages after scripts?
@@ -85,7 +90,6 @@
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
 - [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
-- [ ] teardown orphaned docker containers on SYSINT
 - [ ] cleanup .env and .tmp on startup
 
 

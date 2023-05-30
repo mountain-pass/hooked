@@ -114,7 +114,7 @@ describe('scripts', () => {
     })
 
     it('$cmd - with $image and docker does exist', async () => {
-      sinon.stub(docker, 'verifyDockerExists').returns()
+      sinon.stub(docker, 'verifyDockerExists').resolves()
       const result = await resolveCmdScript(undefined, {
         $image: 'node:16-alpine',
         $cmd: 'node -v'
@@ -123,7 +123,7 @@ describe('scripts', () => {
     })
 
     it('$cmd - with $image and docker does NOT exist', async () => {
-      sinon.stub(docker, 'verifyDockerExists').throwsException(new Error('Docker does not exist!'))
+      sinon.stub(docker, 'verifyDockerExists').rejects(new Error('Docker does not exist!'))
       const result = resolveCmdScript(undefined, {
         $image: 'node:16-alpine',
         $cmd: 'node -v'
@@ -132,7 +132,7 @@ describe('scripts', () => {
     })
 
     it('$cmd - with $image and $env', async () => {
-      sinon.stub(docker, 'verifyDockerExists').returns()
+      sinon.stub(docker, 'verifyDockerExists').resolves()
       const result = await resolveCmdScript(undefined, {
         $env: {
           USER: 'bob'

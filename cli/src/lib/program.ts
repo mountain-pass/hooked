@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import fs from 'fs'
 import { cyan, red, yellow } from './colour.js'
+import nodeCleanup from 'node-cleanup'
 import {
   findScript,
   internalResolveEnv,
@@ -21,6 +22,7 @@ import logger from './utils/logger.js'
 import HJSON from 'hjson'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { cleanUpOldScripts } from './utils/fileUtils.js'
+import { childProcesses, dockerNames, executeCmd } from './scriptExecutors/$cmd.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -90,7 +92,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         )
 
         // check for newer versions
-        verifyLocalRequiredTools.verifyLatestVersion(globalEnv, globalEnv)
+        await verifyLocalRequiredTools.verifyLatestVersion(globalEnv, globalEnv)
 
         // check for abi files?
         if (config.plugins?.abi) {
@@ -165,6 +167,27 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         process.exit(1)
       }
     })
+
+  nodeCleanup((exitCode, signal) => {
+    logger.debug('Shutting down...')
+    // kill child processes
+    logger.debug('Cleaning up child processes...')
+    for (const child of childProcesses) {
+      child.kill('SIGKILL') // SIGKILL 9 / SIGTERM 15
+    }
+    // kill docker containers
+    logger.debug('Cleaning up docker containers...')
+    Promise.all(dockerNames.map(async (dockerName) => {
+      return await executeCmd({ $cmd: `docker kill ${dockerName} || true` }, {}, {})
+    }))
+      .then(() => process.kill(process.pid, 'SIGKILL'))
+      .catch((err) => {
+        logger.error(err)
+        process.kill(process.pid, 'SIGKILL')
+      })
+    nodeCleanup.uninstall() // don't call cleanup handler again, allow promises to cleanup!
+    return false
+  })
 
   return await program.parseAsync(argv)
 }

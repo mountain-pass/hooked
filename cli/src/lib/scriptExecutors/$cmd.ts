@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process from 'child_process'
+import child_process, { type ChildProcess, type ExecException } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -50,6 +50,11 @@ const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv):
   fs.chmodSync(filepath, 0o755)
 }
 
+interface ExecResponse { error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer }
+
+export const childProcesses: ChildProcess[] = []
+export const dockerNames: string[] = []
+
 /**
  * Executes the provided multiline command, and returns the stdout as a string.
  * @param multilineCommand
@@ -57,45 +62,72 @@ const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv):
  * @param opts
  * @returns
  */
-export const executeCmd = (
+export const executeCmd = async (
   script: CmdScript,
   opts: any = undefined,
   env: ResolvedEnv,
   timeoutMs?: number // TODO implement?
-): string => {
+): Promise<string> => {
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
     const rand = randomString()
     const filepath = path.resolve(`.tmp-${rand}.sh`)
     const envfile = path.resolve(`.env-${rand}.txt`)
     const parent = path.dirname(filepath)
-    let output = '' as any
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
+    let callback: any
+    const promise = new Promise<ExecResponse>((resolve, reject) => {
+      callback = (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer): void => {
+        if (error !== null) {
+          reject(error)
+        } else {
+          resolve({ error, stdout, stderr })
+        }
+      }
+    })
+
     // run script based on underlying implementation
+    let child: ChildProcess
     if (isDockerCmdScript(script)) {
       // run on docker
       writeShellScript(filepath, script.$cmd)
       writeShellScript(envfile, envToDockerEnvfile(opts.env))
-      const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
+      const dockerName = rand
+      const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env
-      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage: script.$image, parent }, false)
-      output = child_process.execSync(cmd, { ...additionalOpts, ...opts })
+      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage: script.$image, dockerName, parent }, false)
+      child = child_process.exec(cmd, { ...additionalOpts, ...opts }, callback)
+      dockerNames.push(dockerName)
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
       writeShellScript(filepath, script.$cmd, opts.env)
       const DEFAULT_SSH_SCRIPT = 'ssh "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env
       const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath, user_at_server: script.$ssh, parent }, false)
-      output = child_process.execSync(cmd, { ...additionalOpts, ...opts })
+      child = child_process.exec(cmd, { ...additionalOpts, ...opts }, callback)
     } else {
       // otherwise fallback to local machine
       writeShellScript(filepath, script.$cmd, opts.env)
-      output = child_process.execSync(filepath, { ...additionalOpts, ...opts })
+      child = child_process.exec(filepath, { ...additionalOpts, ...opts }, callback)
     }
+    childProcesses.push(child)
+    // print stdout only [stdin, stdout, stderr]
+    if (Array.isArray(opts.stdio)) {
+      const [, stdout, stderr] = opts.stdio
+      if (stdout === 'inherit') {
+        child.stdout?.on('data', logger.info)
+      }
+      if (stderr === 'inherit') {
+        child.stderr?.on('data', logger.warn)
+      }
+    }
+    // all output streams are closed
+    // await new Promise((resolve) => child.on('close', resolve))
+    const { stdout } = await promise
     // deliberately do not delete files on cleanup - so user has visibility for debugging.
     // plus scripts are cleaned up on startup...
-    return output !== null ? output.toString() : ''
+    return stdout !== null ? stdout.toString() : ''
   } catch (err: any) {
     const status = err.status as string
     const message = err.message as string
