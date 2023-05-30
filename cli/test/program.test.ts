@@ -8,6 +8,7 @@ import YAML from 'yaml'
 import { CONFIG_PATH } from '../src/lib/defaults.js'
 import program from '../src/lib/program.js'
 import verifyLocalRequiredTools from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
+import exitHandler from '../src/lib/exitHandler.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -29,6 +30,7 @@ describe('wip program', () => {
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
+    sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
   })
 

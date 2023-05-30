@@ -5,7 +5,7 @@ import fs from 'fs'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import YAML from 'yaml'
-import { CONFIG_PATH } from '../src/lib/defaults.js'
+import exitHandler from '../src/lib/exitHandler.js'
 import program from '../src/lib/program.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -28,6 +28,7 @@ describe('wip program arguments', () => {
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
+    sinon.stub(exitHandler, 'onExit').returns()
   })
 
   afterEach(() => {
