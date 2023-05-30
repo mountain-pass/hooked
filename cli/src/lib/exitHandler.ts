@@ -4,10 +4,9 @@ import logger from './utils/logger.js'
 import { childProcesses, dockerNames, executeCmd } from './scriptExecutors/$cmd.js'
 
 const onExit = (): void => {
-  throw new Error('got here!')
   nodeCleanup((exitCode, signal) => {
-    logger.debug(`Shutting down... ${JSON.stringify({ exitCode, signal })}`)
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
+    logger.debug(`Shutting down with exit code ${newExitCode}...`)
     // kill child processes
     logger.debug('Cleaning up child processes...')
     for (const child of childProcesses) {
