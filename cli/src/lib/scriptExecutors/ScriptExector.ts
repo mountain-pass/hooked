@@ -110,10 +110,12 @@ export const resolveCmdScript = async (
     }
 
     // run the actual command
-    let newValue = await executeCmd(script, {
-      stdio: captureOutput ? ['ignore', 'ignore', 'ignore'] : ['inherit', 'inherit', 'inherit'],
-      env: onetimeEnvironment
-    }, env)
+    let newValue = await executeCmd(
+      script,
+      { env: onetimeEnvironment },
+      env,
+      { printStdio: true, captureStdout: captureOutput }
+    )
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
     if (typeof key === 'string') {

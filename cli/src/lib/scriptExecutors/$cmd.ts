@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process, { type ChildProcess, type ExecException } from 'child_process'
+import child_process, { type SpawnOptionsWithoutStdio, type ChildProcess, type ExecException } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -8,6 +8,7 @@ import { yellow } from '../colour.js'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type ResolvedEnv } from '../types.js'
 import { resolveResolveScript } from './ScriptExector.js'
 import logger from '../utils/logger.js'
+import { type StdioPipe } from 'child_process'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -51,10 +52,58 @@ const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv):
   fs.chmodSync(filepath, 0o755)
 }
 
-interface ExecResponse { error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer }
-
 export const childProcesses: ChildProcess[] = []
 export const dockerNames: string[] = []
+
+export interface CustomOptions {
+  captureStdout: boolean
+  printStdio: boolean
+}
+
+/**
+ * Internal function for running a process.
+ * @param cmd
+ * @param opts
+ * @param customOpts
+ * @returns
+ */
+export const createProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
+  // let callback: any
+  // const promise = new Promise<ExecResponse>((resolve, reject) => {
+  //   callback = (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer): void => {
+  //     if (error !== null) {
+  //       reject(error)
+  //     } else {
+  //       resolve({ error, stdout, stderr })
+  //     }
+  //   }
+  // })
+  const { env = {} } = opts
+  opts.env = { ...process.env, ...env } as any
+  // const path = opts.env?.PATH as string
+  // console.log(`cmd: ${cmd}, opts: ${JSON.stringify(opts)}, \n\npath: ${path}`)
+  const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: 'pipe' })
+  childProcesses.push(child)
+  // type StdioNull = 'inherit' | 'ignore' | Stream;
+  // type StdioPipeNamed = 'pipe' | 'overlapped';
+  // const [, stdout, stderr] = opts.stdio as StdioPipe[]
+
+  // print / capture stdout only [stdin, stdout, stderr]
+  let stdout = ''
+  child.stdout?.on('data', (data: string | Buffer) => {
+    if (customOpts.printStdio) logger.writeInfo(data.toString())
+    if (customOpts.captureStdout) stdout += data.toString()
+  })
+  if (customOpts.printStdio) child.stderr?.on('data', (data: string | Buffer) => { logger.writeDebug(data.toString()) })
+  // wait for process to finish
+  const exitCode = await new Promise(resolve => child.on('close', resolve))
+  if (exitCode !== 0) {
+    const error: any = new Error('Process exited with non-zero value')
+    error.status = exitCode
+    throw error
+  }
+  return stdout
+}
 
 /**
  * Executes the provided multiline command, and returns the stdout as a string.
@@ -67,6 +116,7 @@ export const executeCmd = async (
   script: CmdScript,
   opts: any = undefined,
   env: ResolvedEnv,
+  customOpts: CustomOptions,
   timeoutMs?: number // TODO implement?
 ): Promise<string> => {
   try {
@@ -77,58 +127,37 @@ export const executeCmd = async (
     const parent = path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
-    let callback: any
-    const promise = new Promise<ExecResponse>((resolve, reject) => {
-      callback = (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer): void => {
-        if (error !== null) {
-          reject(error)
-        } else {
-          resolve({ error, stdout, stderr })
-        }
-      }
-    })
-
-    // run script based on underlying implementation
-    let child: ChildProcess
+    // run script based on underlying implementations
     if (isDockerCmdScript(script)) {
       // run on docker
-      writeShellScript(filepath, script.$cmd)
+      const dockerfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
+      writeShellScript(dockerfilepath, script.$cmd)
       writeShellScript(envfile, envToDockerEnvfile(opts.env))
       const dockerName = rand
       const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env
-      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath, dockerImage: script.$image, dockerName, parent }, false)
-      child = child_process.exec(cmd, { ...additionalOpts, ...opts }, callback)
+      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }, false)
       dockerNames.push(dockerName)
+      writeShellScript(filepath, cmd, opts.env)
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
-      writeShellScript(filepath, script.$cmd, opts.env)
+      const sshfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
+      writeShellScript(sshfilepath, script.$cmd, opts.env)
       const DEFAULT_SSH_SCRIPT = 'ssh "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env
-      const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath, user_at_server: script.$ssh, parent }, false)
-      child = child_process.exec(cmd, { ...additionalOpts, ...opts }, callback)
+      const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
+      const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }, false)
+      writeShellScript(filepath, cmd, opts.env)
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      // end
     } else {
       // otherwise fallback to local machine
       writeShellScript(filepath, script.$cmd, opts.env)
-      child = child_process.exec(filepath, { ...additionalOpts, ...opts }, callback)
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      // end
     }
-    childProcesses.push(child)
-    // print stdout only [stdin, stdout, stderr]
-    if (Array.isArray(opts.stdio)) {
-      const [, stdout, stderr] = opts.stdio
-      if (stdout === 'inherit') {
-        child.stdout?.on('data', (data: string | Buffer) => { logger.writeInfo(data.toString()) })
-      }
-      if (stderr === 'inherit') {
-        child.stderr?.on('data', (data: string | Buffer) => { logger.writeDebug(data.toString()) })
-      }
-    }
-    // all output streams are closed
-    // await new Promise((resolve) => child.on('close', resolve))
-    const { stdout } = await promise
-    // deliberately do not delete files on cleanup - so user has visibility for debugging.
-    // plus scripts are cleaned up on startup...
-    return stdout !== null ? stdout.toString() : ''
   } catch (err: any) {
     const status = err.status as string
     const message = err.message as string

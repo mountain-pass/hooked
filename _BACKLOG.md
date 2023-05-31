@@ -63,6 +63,7 @@
 - [x] create an `$ssh` augment for `$cmd`, similar to `$image` (use a `SSH_SCRIPT` for overriding)
 - [x] when run, warn if not the latest version (check using `npm view @mountainpass/hooked-cli version`)
 - [x] teardown orphaned docker containers on SYSINT
+- [x] resolve `$ssh` hostname
 
 # Next
 

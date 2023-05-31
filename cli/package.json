@@ -12,6 +12,10 @@
     "script",
     "server-agnostic"
   ],
+  "engines": {
+    "node": "18",
+    "npm": "8"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -86,5 +90,5 @@
     "ts-node": "10.9.1",
     "typescript": "5.0.4"
   },
-  "gitHead": "18ad1d2c4d03ad7e5f223f34d4f3dc18123d627e"
+  "gitHead": "18b5c7d071153bf48c142c78970338c967c3af80"
 }

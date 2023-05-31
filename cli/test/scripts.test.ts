@@ -54,7 +54,7 @@ describe('scripts', () => {
 
   describe('$cmd - executes a shell command', () => {
 
-    it('$cmd - simple example', async () => {
+    it('$cmd - simple example #1', async () => {
       const result = await resolveCmdScript(undefined, {
         $cmd: 'echo "Hello"'
     }, {}, {}, CONFIG, OPTIONS, true)

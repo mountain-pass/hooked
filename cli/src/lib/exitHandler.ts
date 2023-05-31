@@ -15,7 +15,7 @@ const onExit = (): void => {
     // kill docker containers
     logger.debug('Cleaning up docker containers...')
     Promise.all(dockerNames.map(async (dockerName) => {
-      return await executeCmd({ $cmd: `docker kill ${dockerName} || true` }, {}, {})
+      return await executeCmd({ $cmd: `docker kill ${dockerName} || true` }, {}, {}, { printStdio: true, captureStdout: false }, 5000)
     }))
       .then(() => {
         process.exit(newExitCode)
