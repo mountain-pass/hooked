@@ -19,11 +19,11 @@ const onExit = (): void => {
       return await verifyLocalRequiredTools.verifyDockerKilled(dockerName)
     }))
       .then(() => {
-        process.kill(process.pid, signal === null ? newExitCode : signal)
+        process.kill(process.pid, newExitCode)
       })
       .catch((err) => {
         logger.error(err)
-        process.kill(process.pid, signal === null ? newExitCode : signal)
+        process.kill(process.pid, newExitCode)
       })
     nodeCleanup.uninstall() // don't call cleanup handler again, allow promises to cleanup!
     return false
