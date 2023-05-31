@@ -1,7 +1,8 @@
 
 import nodeCleanup from 'node-cleanup'
 import logger from './utils/logger.js'
-import { childProcesses, dockerNames, executeCmd } from './scriptExecutors/$cmd.js'
+import { childProcesses, dockerNames } from './scriptExecutors/$cmd.js'
+import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 
 const onExit = (): void => {
   nodeCleanup((exitCode, signal) => {
@@ -14,8 +15,8 @@ const onExit = (): void => {
     }
     // kill docker containers
     logger.debug('Cleaning up docker containers...')
-    Promise.all(dockerNames.map(async (dockerName) => {
-      return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {}, {}, { printStdio: false, captureStdout: false }, 5000)
+    Promise.all(dockerNames.map(async (dockerName): Promise<string> => {
+      return await verifyLocalRequiredTools.verifyDockerKilled(dockerName)
     }))
       .then(() => {
         process.kill(process.pid, signal === null ? newExitCode : signal)

@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process, { type SpawnOptionsWithoutStdio, type ChildProcess, type ExecException } from 'child_process'
+import child_process, { type SpawnOptionsWithoutStdio, type ChildProcess, type ExecException, type ExecSyncOptions, type IOType } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -67,21 +67,13 @@ export interface CustomOptions {
  * @param customOpts
  * @returns
  */
-export const createProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
-  // let callback: any
-  // const promise = new Promise<ExecResponse>((resolve, reject) => {
-  //   callback = (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer): void => {
-  //     if (error !== null) {
-  //       reject(error)
-  //     } else {
-  //       resolve({ error, stdout, stderr })
-  //     }
-  //   }
-  // })
-  // const { env = {} } = opts
-  // opts.env = { ...process.env, ...env } as any
-  // const path = opts.env?.PATH as string
-  // console.log(`cmd: ${cmd}, opts: ${JSON.stringify(opts)}, \n\npath: ${path}`)
+export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+  const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
+  const stdout = buffer !== null ? buffer.toString() : ''
+  return customOpts.captureStdout ? stdout : ''
+}
+
+export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
   const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
   childProcesses.push(child)
   // type StdioNull = 'inherit' | 'ignore' | Stream;
@@ -98,7 +90,7 @@ export const createProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio,
   // wait for process to finish
   const exitCode = await new Promise(resolve => child.on('close', resolve))
   if (exitCode !== 0) {
-    const error: any = new Error('Process exited with non-zero value')
+    const error: any = new Error(`Command failed: ${cmd}`)
     error.status = exitCode
     throw error
   }
@@ -145,7 +137,7 @@ export const executeCmd = async (
       // run on remote machine
       const sshfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
       writeShellScript(sshfilepath, script.$cmd, opts.env)
-      const DEFAULT_SSH_SCRIPT = 'ssh "${user_at_server}" < "${filepath}"'
+      const DEFAULT_SSH_SCRIPT = 'ssh -T "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env
       const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
       const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }, false)

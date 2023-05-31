@@ -15,11 +15,11 @@ const verifyLatestVersion = async (env: ResolvedEnv): Promise<void> => {
       logger.debug('Checking if latest version...')
       // eslint-disable-next-line max-len
       const latestPublishedVersion = (await executeCmd(
-        { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` },
+        { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
         { env: { ...env } },
         env,
         { printStdio: false, captureStdout: true },
-        1500
+        5000
       )).trim()
       if (latestPublishedVersion !== packageJson.version) {
         // eslint-disable-next-line max-len
@@ -60,7 +60,12 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
   }
 }
 
+const verifyDockerKilled = async (dockerName: string): Promise<string> => {
+  return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {}, {}, { printStdio: false, captureStdout: false }, 5000)
+}
+
 export default {
   verifyLatestVersion,
-  verifyDockerExists
+  verifyDockerExists,
+  verifyDockerKilled
 }

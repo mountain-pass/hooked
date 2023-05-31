@@ -232,7 +232,7 @@ Here is an example, using the default command as a baseline. Note: the `${...}` 
 ```yaml
 env:
   default:
-    SSH_SCRIPT: ssh "${user_at_server}" < "${filepath}"
+    SSH_SCRIPT: ssh -T "${user_at_server}" < "${filepath}"
 ```
 
 ## Custom NPM Command
