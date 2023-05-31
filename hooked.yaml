@@ -57,7 +57,10 @@ scripts:
   publish:
     $cmd: |
       #!/bin/sh -ve
-                             
+      if [[ `git status --porcelain` ]]; then
+        >&2 echo "Local git changes found, please commit before releasing."
+        exit 99
+      fi
       npx lerna exec --scope @mountainpass/* npm install
       npx lerna run --scope @mountainpass/* test
       rm cli/.tmp-*.sh || true

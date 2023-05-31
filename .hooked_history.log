@@ -78,3 +78,4 @@
 {"ts":1685509848275,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
 {"ts":1685509851431,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
 {"ts":1685520056258,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
+{"ts":1685529641073,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
