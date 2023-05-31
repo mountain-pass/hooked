@@ -15,16 +15,14 @@ const onExit = (): void => {
     // kill docker containers
     logger.debug('Cleaning up docker containers...')
     Promise.all(dockerNames.map(async (dockerName) => {
-      return await executeCmd({ $cmd: `docker kill ${dockerName} || true` }, {}, {}, { printStdio: true, captureStdout: false }, 5000)
+      return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {}, {}, { printStdio: false, captureStdout: false }, 5000)
     }))
       .then(() => {
-        process.exit(newExitCode)
-        // process.kill(process.pid, 'SIGINT')
+        process.kill(process.pid, signal === null ? newExitCode : signal)
       })
       .catch((err) => {
         logger.error(err)
-        process.exit(newExitCode)
-        // process.kill(process.pid, 'SIGINT')
+        process.kill(process.pid, signal === null ? newExitCode : signal)
       })
     nodeCleanup.uninstall() // don't call cleanup handler again, allow promises to cleanup!
     return false

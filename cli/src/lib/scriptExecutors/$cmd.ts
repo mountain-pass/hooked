@@ -78,11 +78,11 @@ export const createProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio,
   //     }
   //   }
   // })
-  const { env = {} } = opts
-  opts.env = { ...process.env, ...env } as any
+  // const { env = {} } = opts
+  // opts.env = { ...process.env, ...env } as any
   // const path = opts.env?.PATH as string
   // console.log(`cmd: ${cmd}, opts: ${JSON.stringify(opts)}, \n\npath: ${path}`)
-  const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: 'pipe' })
+  const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
   childProcesses.push(child)
   // type StdioNull = 'inherit' | 'ignore' | Stream;
   // type StdioPipeNamed = 'pipe' | 'overlapped';

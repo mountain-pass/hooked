@@ -91,7 +91,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         )
 
         // check for newer versions
-        await verifyLocalRequiredTools.verifyLatestVersion(globalEnv, globalEnv)
+        await verifyLocalRequiredTools.verifyLatestVersion(env)
 
         // check for abi files?
         if (config.plugins?.abi) {

@@ -8,15 +8,15 @@ let lazyCheckDockerExists: boolean | undefined
 
 const packageJson = loadRootPackageJsonSync()
 
-const verifyLatestVersion = async (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): Promise<void> => {
+const verifyLatestVersion = async (env: ResolvedEnv): Promise<void> => {
   try {
-    if (typeof process.env.CI === 'undefined') {
+    if (!isDefined(env.CI)) {
       // eslint-disable-next-line no-template-curly-in-string
       logger.debug('Checking if latest version...')
       // eslint-disable-next-line max-len
       const latestPublishedVersion = (await executeCmd(
         { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version` },
-        { env: onetimeEnvironment },
+        { env: { ...env } },
         env,
         { printStdio: false, captureStdout: true },
         1500
@@ -46,7 +46,7 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
         { printStdio: false, captureStdout: true },
         5000
       )
-      logger.debug(`Found docker: ${version}`)
+      logger.debug(`Found docker: ${version.trim()}`)
       lazyCheckDockerExists = true
     } catch (e: any) {
       // logger.warn(e.message)
