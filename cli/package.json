@@ -12,7 +12,7 @@
     "script",
     "server-agnostic"
   ],
-  "engines": {
+  "enginesxxx": {
     "node": "18",
     "npm": "8"
   },
