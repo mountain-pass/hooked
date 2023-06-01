@@ -9,12 +9,12 @@ const onExit = (): void => {
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
     logger.debug(`Shutting down with exit code ${newExitCode}...`)
     // kill child processes
-    logger.debug('Cleaning up child processes...')
+    // logger.debug('Cleaning up child processes...')
     for (const child of childProcesses) {
       child.kill('SIGKILL') // SIGKILL 9 / SIGTERM 15
     }
     // kill docker containers
-    logger.debug('Cleaning up docker containers...')
+    // logger.debug('Cleaning up docker containers...')
     Promise.all(dockerNames.map(async (dockerName): Promise<string> => {
       return await verifyLocalRequiredTools.verifyDockerKilled(dockerName)
     }))
