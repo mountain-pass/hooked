@@ -12,10 +12,10 @@
     "script",
     "server-agnostic"
   ],
-  "enginesxxx": {
-    "node": "18",
-    "npm": "8"
+  "engines": {
+    "node": ">=14"
   },
+  "engineStrict": false,
   "license": "MIT",
   "repository": {
     "type": "git",
