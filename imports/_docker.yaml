@@ -49,6 +49,7 @@ scripts:
 
     build platform image to local zip:
       $cmd: |
+        ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
         ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
@@ -58,6 +59,7 @@ scripts:
 
     buildAndPush platform image to registry:
       $cmd: |
+        ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
         ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
