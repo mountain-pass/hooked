@@ -40,7 +40,7 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
     try {
       const version = await executeCmd(
         // eslint-disable-next-line no-template-curly-in-string
-        { $cmd: 'which ${DOCKER_BIN=docker}' },
+        { $cmd: '${DOCKER_BIN=docker} -v' },
         { env: onetimeEnvironment },
         env,
         { printStdio: false, captureStdout: true },
@@ -53,7 +53,7 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
       // eslint-disable-next-line max-len
       throw new Error('Docker not found (required by `$image`). Please specify the location using `DOCKER_BIN`, or install: https://docs.docker.com/engine/install/')
     }
-  } else {
+  } else if (lazyCheckDockerExists !== true) {
     // I don't if the previous error will ever be ignored, but here it is again just in case!
     // eslint-disable-next-line max-len
     throw new Error('Docker not found (required by `$image`). Please specify the location using `DOCKER_BIN`, or install: https://docs.docker.com/engine/install/')
