@@ -40,7 +40,7 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
     try {
       const version = await executeCmd(
         // eslint-disable-next-line no-template-curly-in-string
-        { $cmd: '${DOCKER_BIN=docker} -v' },
+        { $cmd: 'which ${DOCKER_BIN=docker}' },
         { env: onetimeEnvironment },
         env,
         { printStdio: false, captureStdout: true },
