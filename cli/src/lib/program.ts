@@ -1,27 +1,27 @@
 import { Command } from 'commander'
 import fs from 'fs'
-import { cyan, red, yellow } from './colour.js'
+import HJSON from 'hjson'
+import { yellow } from './colour.js'
 import {
   findScript,
   internalResolveEnv,
   loadConfig,
-  resolveEnv,
-  stripProcessEnvs
+  resolveEnv
 } from './config.js'
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
+import exitHandler from './exitHandler.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
+import { generateAbiScripts } from './plugins/AbiPlugin.js'
+import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
+import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
-import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript } from './types.js'
-import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import { generateAbiScripts } from './plugins/AbiPlugin.js'
-import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import logger from './utils/logger.js'
-import HJSON from 'hjson'
-import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
+import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript, type SystemEnvironmentVariables } from './types.js'
 import { cleanUpOldScripts } from './utils/fileUtils.js'
-import exitHandler from './exitHandler.js'
+import logger from './utils/logger.js'
+import { loadRootPackageJsonSync } from './utils/packageJson.js'
+import { Environment } from './utils/Environment.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -36,7 +36,7 @@ export interface Options {
   pull?: boolean
 }
 
-export default async (argv: string[] = process.argv): Promise<Command> => {
+export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables): Command => {
   const program = new Command()
 
   program
@@ -50,12 +50,15 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
     .option('--listenvs', 'lists the available environments, and exits')
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
-    .option('-b, --batch', 'batch mode - errors if an interactive prompt is required')
+    .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: Options) => {
       // cleanup previous files
       cleanUpOldScripts()
+      const env = new Environment()
+      env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
+      env.putAllGlobal(systemProcessEnvs)
 
       if (options.init === true) {
         await init(options)
@@ -81,12 +84,11 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
         // use relaxed json to parse the stdin
         const stdin = HJSON.parse(options.stdin)
         // resolve environment variables...
-        const globalEnv = { ...process.env as any }
-        const [env, , resolvedEnvNames] = await resolveEnv(
+        const [, , resolvedEnvNames] = await resolveEnv(
           config,
           envNames,
           stdin,
-          globalEnv,
+          env,
           options
         )
 
@@ -132,7 +134,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
-          await internalResolveEnv(script.$env, stdin, env, config, options)
+          await internalResolveEnv(script.$env, stdin, env, config, options, false)
         }
 
         // generate rerun command
@@ -146,8 +148,7 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
 
         if (options.printenv === true) {
           // print environment variables
-          const envString = JSON.stringify(stripProcessEnvs(env, process.env as any))
-          logger.info(envString)
+          logger.info(JSON.stringify(env.resolved))
         } else {
           // execute script
           if (isCmdScript(script)) {
@@ -160,12 +161,23 @@ export default async (argv: string[] = process.argv): Promise<Command> => {
           if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         }
       } catch (err: any) {
-        logger.error(err)
-        // print the rerun command for easy re-execution
-        if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
-        process.exit(1)
+        try {
+          logger.error(err)
+          // print the rerun command for easy re-execution
+          if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
+        } catch (error) {
+          console.error(err)
+        } finally {
+          process.exit(1)
+        }
       }
     })
+
+  return program
+}
+
+export default async (argv: string[] = process.argv): Promise<Command> => {
+  const program = newProgram(process.env as SystemEnvironmentVariables)
 
   exitHandler.onExit()
 

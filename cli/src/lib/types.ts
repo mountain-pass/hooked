@@ -1,3 +1,5 @@
+import { type Environment } from './utils/Environment'
+
 export type Dictionary<ValueType> = Record<string, ValueType>
 
 export interface Plugins {
@@ -6,6 +8,10 @@ export interface Plugins {
   npm: boolean
   make: boolean
 }
+
+/** For the process.env */
+export type SystemEnvironmentVariables = Record<string, string>
+
 export type EnvironmentVariables = Record<string, Script>
 
 export type TopLevelImports = string[]
@@ -22,6 +28,9 @@ export interface Config {
 
 // export type EnvScripts = Record<string, Script>
 
+/**
+ * @deprecated Please use Environment
+ */
 export type ResolvedEnv = Record<string, string>
 
 export type StdinResponses = Record<string, string>
@@ -80,7 +89,7 @@ export interface StdinScript {
 
 export interface InternalScript {
   $env?: EnvironmentVariables
-  $internal: (options: { key: string, stdin: StdinResponses, env: ResolvedEnv }) => Promise<string>
+  $internal: (options: { key: string, stdin: StdinResponses, env: Environment }) => Promise<string>
 }
 
 export type Script = string | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript

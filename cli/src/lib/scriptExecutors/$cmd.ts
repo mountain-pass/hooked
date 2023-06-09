@@ -1,23 +1,22 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process, { type SpawnOptionsWithoutStdio, type ChildProcess, type ExecException, type ExecSyncOptions, type IOType } from 'child_process'
+import child_process, { type ChildProcess, type ExecSyncOptions, type SpawnOptionsWithoutStdio } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import { yellow } from '../colour.js'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type ResolvedEnv } from '../types.js'
-import { resolveResolveScript } from './ScriptExector.js'
 import logger from '../utils/logger.js'
-import { type StdioPipe } from 'child_process'
+import { resolveResolveScript } from './ScriptExector.js'
+import { Environment } from '../utils/Environment.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
-export const cleanupOldTmpFiles = (env: ResolvedEnv): void => {
+export const cleanupOldTmpFiles = (env: Environment): void => {
   // if the root, clean up old .tmp-*.sh files
-  const isRoot = env.HOOKED_ROOT !== 'false'
+  const isRoot = env.getResolved('HOOKED_ROOT') !== 'false'
   if (isRoot) {
     // set HOOKED_ROOT for child invocations
-    env.HOOKED_ROOT = 'false'
+    env.putResolved('HOOKED_ROOT', 'false')
     fs.readdirSync('.').forEach((file) => {
       if (file.startsWith('.tmp-') && file.endsWith('.sh')) {
         fs.unlinkSync(file)
@@ -107,7 +106,7 @@ export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, 
 export const executeCmd = async (
   script: CmdScript,
   opts: any = undefined,
-  env: ResolvedEnv,
+  env: Environment,
   customOpts: CustomOptions,
   timeoutMs?: number // TODO implement?
 ): Promise<string> => {
@@ -127,8 +126,8 @@ export const executeCmd = async (
       writeShellScript(envfile, envToDockerEnvfile(opts.env))
       const dockerName = rand
       const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
-      const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env
-      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, { envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }, false)
+      const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env.global
+      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment({ envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }), false)
       dockerNames.push(dockerName)
       writeShellScript(filepath, cmd, opts.env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
@@ -138,9 +137,9 @@ export const executeCmd = async (
       const sshfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
       writeShellScript(sshfilepath, script.$cmd, opts.env)
       const DEFAULT_SSH_SCRIPT = 'ssh -T "${user_at_server}" < "${filepath}"'
-      const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env
+      const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
       const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
-      const cmd = resolveResolveScript('-', { $resolve: sshScript }, { envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }, false)
+      const cmd = resolveResolveScript('-', { $resolve: sshScript }, new Environment({ envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }), false)
       writeShellScript(filepath, cmd, opts.env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end

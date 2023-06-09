@@ -67,9 +67,12 @@
 
 # Next
 
+- [ ] exclude host environment variables when running $script
 
 - [ ] `$cmd` > add ability to `$timeoutMs`
 - [ ] `$cmd` > add ability to `$retries` (retries on error, default `0`=disabled, `-1`=indefinite, additional `$retryDelayMs`)
+
+- [ ] ability to add `$env` at any sub level in scripts
 
 - [ ] show success / error messages after environment?
 - [ ] show success / error messages after scripts?

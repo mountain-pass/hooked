@@ -5,10 +5,12 @@ import fs from 'fs'
 import inquirer from 'inquirer'
 import { describe } from 'mocha'
 import sinon from 'sinon'
-import { findScript, getEnvVarRefs, resolveEnv, stripProcessEnvs } from '../src/lib/config.js'
+import { findScript, resolveEnv } from '../src/lib/config.js'
 import { resolveCmdScript } from '../src/lib/scriptExecutors/ScriptExector.js'
-import { type Config } from '../src/lib/types.js'
+import { StdinResponses, type Config } from '../src/lib/types.js'
+import { Environment, getEnvVarRefs } from '../src/lib/utils/Environment.js'
 import YAML from 'yaml'
+import child_process from 'child_process'
 chai.use(chaiAsPromised)
 const { expect } = chai
 import os from 'os'
@@ -55,7 +57,7 @@ describe('config', () => {
   it('a full envNames should resolve #1', async () => {
     const config: Config = { env: { dogs: { foo: 'fido' }, cats: { foo: 'ginger' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['dogs'], {}) // <- full envname
-    expect(env).to.eql({ foo: 'fido' })
+    expect(env.resolved).to.eql({ foo: 'fido' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['dogs'])
   })
@@ -63,7 +65,7 @@ describe('config', () => {
   it('a full envNames should resolve #2', async () => {
     const config: Config = { env: { default: { foo: 'fido' }, cats: { foo: 'ginger' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['cats'], {}) // <- full envname
-    expect(env).to.eql({ foo: 'ginger' })
+    expect(env.resolved).to.eql({ foo: 'ginger' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['cats'])
   })
@@ -71,7 +73,7 @@ describe('config', () => {
   it('a partial envNames should resolve', async () => {
     const config: Config = { env: { default: { foo: 'bar' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['def'], {}) // <- partial name
-    expect(env).to.eql({ foo: 'bar' })
+    expect(env.resolved).to.eql({ foo: 'bar' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
   })
@@ -81,7 +83,27 @@ describe('config', () => {
     await expect(resolveEnv(config, ['doesnotexist'], {})).to.be.rejectedWith('Environment not found: doesnotexist\nDid you mean?\n\t- default')
   })
 
-  it('specifying two envNames should load both', async () => {
+  it('specifying two envNames should load both - 2 env names', async () => {
+    const config: Config = {
+      env: {
+        aaa: { aaa: '111', bbb: '222' },
+        bbb: { aaa: '333', ccc: '444' },
+        ccc: { ddd: '555' }
+      },
+      scripts: {}
+    }
+    const [env, stdin, envNames] = await resolveEnv(config, ['aaa', 'bbb'], {}) // <- partial name
+    expect(env.global).to.eql({})
+    expect(env.resolved).to.eql({
+      aaa: '333',
+      bbb: '222',
+      ccc: '444'
+    })
+    expect(stdin).to.eql({})
+    expect(envNames).to.eql(['aaa', 'bbb'])
+  })
+
+  it('specifying two envNames should load both - 3 env names', async () => {
     const config: Config = {
       env: {
         aaa: { aaa: '111', bbb: '222' },
@@ -91,7 +113,8 @@ describe('config', () => {
       scripts: {}
     }
     const [env, stdin, envNames] = await resolveEnv(config, ['aaa', 'bbb', 'ccc'], {}) // <- partial name
-    expect(env).to.eql({
+    expect(env.global).to.eql({})
+    expect(env.resolved).to.eql({
       aaa: '333',
       bbb: '222',
       ccc: '444',
@@ -104,15 +127,15 @@ describe('config', () => {
   it('if not required, stdin placeholders should be ignored', async () => {
     const config: Config = { env: { default: { bbb: 'xxx', ddd: 'zzz' } }, scripts: {} }
     const [env, stdin, envNames] = await resolveEnv(config, ['default'], { aaa: '111' })
-    expect(env).to.eql({ bbb: 'xxx', ddd: 'zzz' })
+    expect(env.resolved).to.eql({ bbb: 'xxx', ddd: 'zzz' })
     expect(stdin).to.eql({ aaa: '111' })
     expect(envNames).to.eql(['default'])
   })
 
   it('defined env values should compliment and override global envs', async () => {
     const config: Config = { env: { default: { bbb: 'xxx', ddd: 'zzz' } }, scripts: {} }
-    const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, { aaa: '111', bbb: '222', ccc: '333' })
-    expect(env).to.eql({ aaa: '111', bbb: 'xxx', ccc: '333', ddd: 'zzz' })
+    const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment({ aaa: '111', bbb: '222', ccc: '333' }))
+    expect(env.resolved).to.eql({ bbb: 'xxx', ddd: 'zzz' })
     expect(stdin).to.eql({})
     expect(envNames).to.eql(['default'])
   })
@@ -122,29 +145,29 @@ describe('config', () => {
     it('env should resolve "string"', async () => {
       const config: Config = { env: { default: { foo: 'iamplainstring' } }, scripts: {} }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ foo: 'iamplainstring' })
+      expect(env.resolved).to.eql({ foo: 'iamplainstring' })
       expect(stdin).to.eql({})
       expect(envNames).to.eql(['default'])
     })
   
     it('$env - env should resolve $env', async () => {
       const config: Config = { env: { default: { username: '${USER}' } }, scripts: {} }
-      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, { USER: 'fred' })
-      expect(env).to.eql({ username: 'fred', USER: 'fred' })
+      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment({ USER: 'fred' }))
+      expect(env.resolved).to.eql({ username: 'fred' })
       expect(stdin).to.eql({})
       expect(envNames).to.eql(['default'])
     })
   
     it('$env - env should throw error if $env does not exist', async () => {
       const config: Config = { env: { default: { username: '${USER}' } }, scripts: {} }
-      await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(`Environment 'username' is missing required environment variables: ["USER"]`)
+      await expect(resolveEnv(config, ['default'], {}, new Environment())).to.be.rejectedWith(`Environment 'username' is missing required environment variables: ["USER"]`)
     })
 
     it('$resolve - env should resolve $resolve', async () => {
       // eslint-disable-next-line no-template-curly-in-string
       const config: Config = { env: { default: { foo: 'bar', username: 'i-like-${foo}' } }, scripts: {} }
-      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, {})
-      expect(env).to.eql({ foo: 'bar', username: 'i-like-bar' })
+      const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment())
+      expect(env.resolved).to.eql({ foo: 'bar', username: 'i-like-bar' })
       expect(stdin).to.eql({})
       expect(envNames).to.eql(['default'])
     })
@@ -166,7 +189,7 @@ describe('config', () => {
         },
         scripts: {}
       }
-      await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(`Environment 'seven' is missing required environment variables: ["eight"]`)
+      await expect(resolveEnv(config, ['default'], {}, new Environment())).to.be.rejectedWith(`Environment 'seven' is missing required environment variables: ["eight"]`)
     })
 
   })
@@ -189,29 +212,32 @@ describe('config', () => {
     }
 
     it('executing a $cmd with satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { HELLO: "Hello" }, CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ HELLO: "Hello" }), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a script with UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, { NOTHELLO: "Goodbye" }, CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
     })
     it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, {}, CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, new Environment(), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, {}, CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, new Environment(), CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
     })
 
     it('$cmd - env should resolve $cmd', async () => {
       const config: Config = { env: { default: { foo: { $cmd: 'echo "bar"' } } }, scripts: {} }
+      sinon.stub(child_process, 'execSync').returns('bar')
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ HOOKED_ROOT: "false", foo: 'bar' })
+      // check results
+      expect(env.global).to.eql({})
+      expect(env.resolved).to.eql({ HOOKED_ROOT: "false", foo: 'bar' })
       expect(stdin).to.eql({})
       expect(envNames).to.eql(['default'])
     })
 
     it('$cmd - env should throw error if $cmd exits with non-zero', async () => {
       const config: Config = { env: { default: { foo: { $cmd: 'notacommand' } } }, scripts: {} }
-      await expect(resolveEnv(config, ['default'], {}, {})).to.be.rejectedWith(Error)
+      await expect(resolveEnv(config, ['default'], {}, new Environment())).to.be.rejectedWith(Error)
     })
 
   })
@@ -224,7 +250,7 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ name: 'jack' })
+      expect(env.resolved).to.eql({ name: 'jack' })
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnce(inqspy)
@@ -235,7 +261,7 @@ describe('config', () => {
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
       const config: Config = { env: { default: { name: { $stdin: 'Is your name "${USER}"?' } } }, scripts: { } }
-      await resolveEnv(config, ['default'], {}, { USER: 'jill' })
+      await resolveEnv(config, ['default'], {}, new Environment({ USER: 'jill' }))
       sinon.assert.calledOnceWithExactly(inqspy, [ {
         type: 'text',
         name: 'name',
@@ -252,7 +278,7 @@ describe('config', () => {
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
       const config: Config = { env: { default: { name: { $stdin: 'Is your name ...?', $default: '${USER}' } } }, scripts: { } }
-      await resolveEnv(config, ['default'], {}, { USER: 'jill' })
+      await resolveEnv(config, ['default'], {}, new Environment({ USER: 'jill' }))
       sinon.assert.calledOnceWithExactly(inqspy, [ {
         type: 'text',
         name: 'name',
@@ -270,7 +296,7 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], { name: 'fred' })
-      expect(env).to.eql({ name: 'fred' })
+      expect(env.resolved).to.eql({ name: 'fred' })
       expect(stdin).to.eql({ name: 'fred' })
       expect(envNames).to.eql(['default'])
       sinon.assert.notCalled(inqspy)
@@ -282,7 +308,7 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: ['one', 'two'] } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ name: 'jack' })
+      expect(env.resolved).to.eql({ name: 'jack' })
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
@@ -305,7 +331,7 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: [true, false] } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ name: 'jack' })
+      expect(env.resolved).to.eql({ name: 'jack' })
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
@@ -328,7 +354,7 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: [1,2,3] } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ name: 'jack' })
+      expect(env.resolved).to.eql({ name: 'jack' })
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
@@ -352,7 +378,8 @@ describe('config', () => {
       // test
       const config: Config = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
       const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
-      expect(env).to.eql({ HOOKED_ROOT: "false", name: 'jack' })
+      expect(env.global).to.eql({  })
+      expect(env.resolved).to.eql({ HOOKED_ROOT: "false", name: 'jack' })
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
@@ -368,14 +395,14 @@ describe('config', () => {
 
   })
 
-  it('strip process envs', async () => {
-    // same key and value? remove
-    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '111' })).to.eql({ bbb: '222' })
-    // same key, diff value? keep
-    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '333' })).to.eql({ aaa: '111', bbb: '222' })
-    // diff key? keep
-    expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { ccc: '333' })).to.eql({ aaa: '111', bbb: '222' })
-  })
+  // it('strip process envs', async () => {
+  //   // same key and value? remove
+  //   expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '111' })).to.eql({ bbb: '222' })
+  //   // same key, diff value? keep
+  //   expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { aaa: '333' })).to.eql({ aaa: '111', bbb: '222' })
+  //   // diff key? keep
+  //   expect(stripProcessEnvs({ aaa: '111', bbb: '222' }, { ccc: '333' })).to.eql({ aaa: '111', bbb: '222' })
+  // })
 
   it('get env var refs', async () => {
     expect(getEnvVarRefs('')).to.eql([])
@@ -387,19 +414,23 @@ describe('config', () => {
   })
 
   it('base config with only scripts is valid', async () => {
-    await expect(resolveEnv({ } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, imports: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, imports: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, imports: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, env: null } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, env: {} } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, env: [] } as any, ['default'], {}, {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
-    await expect(resolveEnv({ scripts: null, env: { default: null } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
-    await expect(resolveEnv({ scripts: null, env: { default: {} } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
-    await expect(resolveEnv({ scripts: null, env: { default: [] } } as any, ['default'], {}, {})).to.eventually.eql([{}, {}, ['default']])
+    const tmp = async (config: Config, envNames: string[], stdin: StdinResponses) => {
+      const [env, stdinOut, envNamesOut] = await resolveEnv(config, envNames, stdin, new Environment())
+      return [env.resolved, stdinOut, envNamesOut]
+    }
+    await expect(tmp({ } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: {} } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: [] } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, imports: null } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, imports: {} } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, imports: [] } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, env: null } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, env: {} } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, env: [] } as any, ['default'], {})).to.be.rejectedWith('Environment not found: default\nDid you mean?')
+    await expect(tmp({ scripts: null, env: { default: null } } as any, ['default'], {})).to.eventually.eql([{}, {}, ['default']])
+    await expect(tmp({ scripts: null, env: { default: {} } } as any, ['default'], {})).to.eventually.eql([{}, {}, ['default']])
+    await expect(tmp({ scripts: null, env: { default: [] } } as any, ['default'], {})).to.eventually.eql([{}, {}, ['default']])
   })
 
   describe('yaml config', () => {
@@ -422,7 +453,8 @@ describe('config', () => {
           goodbye: { $cmd: 'echo "Goodbye"' }
         }
       } as Config
-      await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
+      const [env, stdin, envs] = await resolveEnv(rootConfig, ['default'], {}, new Environment())
+      expect([env.resolved, stdin, envs]).to.eql([{
         aaa: 'zzz',
         bbb: '123',
         ccc: 'true',
@@ -462,11 +494,15 @@ describe('config', () => {
           goodbye: { $cmd: 'echo "Goodbye"' }
         },
       } as Config
-      await expect(resolveEnv(rootConfig, ['default'], {}, {})).to.eventually.eql([{
+      const [env, stdin, envs] = await resolveEnv(rootConfig, ['default'], {}, new Environment())
+      expect(env.global).to.eql({})
+      expect(env.resolved).to.eql({
         HOOKED_ROOT: "false",
         bbb: '222',
         aaa: '111'
-      }, {}, ['default']])
+      })
+      expect(stdin).to.eql({})
+      expect(envs).to.eql(['default'])
       // assert
       expect(rootConfig.scripts).to.eql({
         hello: { $cmd: 'echo "Hello"' },

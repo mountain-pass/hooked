@@ -1,5 +1,6 @@
 import inquirer from 'inquirer'
-import { getEnvVarRefs, internalResolveEnv, resolveEnv } from '../config.js'
+import { internalResolveEnv, resolveEnv } from '../config.js'
+import { type Environment } from '../utils/Environment.js'
 import {
   isCmdScript,
   isDefined,
@@ -44,19 +45,19 @@ export const resolveInternalScript = async (
   key: string,
   script: InternalScript,
   stdin: StdinResponses,
-  env: ResolvedEnv,
+  env: Environment,
   config: Config,
   options: Options
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env, config, options)
+    await internalResolveEnv(script.$env, stdin, env, config, options, false)
   }
 
   const result = await script.$internal({ key, stdin, env })
   if (typeof result === 'string') {
-    env[key] = result
+    env.putResolved(key, result)
   }
   return result
 }
@@ -65,37 +66,44 @@ export const resolveCmdScript = async (
   key: string | undefined,
   script: CmdScript | DockerCmdScript | SSHCmdScript,
   stdin: StdinResponses,
-  env: ResolvedEnv,
+  env: Environment,
   config: Config,
   options: Options,
   captureOutput = true
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
-    await internalResolveEnv(script.$env, stdin, env, config, options)
+    await internalResolveEnv(script.$env, stdin, env, config, options, false)
   }
 
-  let onetimeEnvironment: ResolvedEnv = { ...env }
+  // let onetimeEnvironment: ResolvedEnv = { ...env }
 
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
-    const globalEnv = { ...env, ...process.env as any }
-    const [newEnv] = await resolveEnv(
+    await resolveEnv(
       config,
       script.$envNames,
       stdin,
-      globalEnv,
+      env,
       options
     )
-    onetimeEnvironment = { ...newEnv }
+    // onetimeEnvironment = { ...newEnv }
   }
 
-  // check for missing environment variables
-  const requiredKeys = getEnvVarRefs(script.$cmd)
-  const missingKeys = requiredKeys.filter(key => typeof onetimeEnvironment[key] === 'undefined')
+  const missingKeys = env.getMissingRequiredKeys(script.$cmd)
   if (missingKeys.length > 0) {
     throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
   }
+
+  // throws error if not resolvable
+  // env.resolve(script.$cmd, key)
+
+  // check for missing environment variables
+  // const requiredKeys = getEnvVarRefs(script.$cmd)
+  // const missingKeys = requiredKeys.filter(key => typeof onetimeEnvironment[key] === 'undefined')
+  // if (missingKeys.length > 0) {
+  //   throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+  // }
 
   // cleanup old tmp files
   cleanupOldTmpFiles(env)
@@ -106,20 +114,20 @@ export const resolveCmdScript = async (
     // if running an image, verify docker is installed
     const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
-      await verifyLocalRequiredTools.verifyDockerExists(onetimeEnvironment, env)
+      await verifyLocalRequiredTools.verifyDockerExists(env)
     }
 
     // run the actual command
     let newValue = await executeCmd(
       script,
-      { env: onetimeEnvironment },
+      { env: env.resolved },
       env,
       { printStdio: true, captureStdout: captureOutput }
     )
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
     if (typeof key === 'string') {
-      env[key] = newValue
+      env.putResolved(key, newValue)
     }
     return newValue
   } catch (e: any) {
@@ -152,21 +160,21 @@ export const resolveStdinScript = async (
   key: string,
   script: StdinScript,
   stdin: StdinResponses,
-  env: ResolvedEnv,
+  env: Environment,
   config: Config,
   options: Options
 ): Promise<void> => {
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
-    env[key] = stdin[key]
-  } else if (isDefined(env[key])) {
+    env.putResolved(key, stdin[key])
+  } else if (env.hasResolved(key)) {
     // else if we already have a value in the environment, use that
-    stdin[key] = env[key]
+    stdin[key] = env.getResolved(key)
   } else {
     let choices
     // resolve choices if they are a script
     if (isScript(script.$choices)) {
-      const result = await resolveScript(key, script.$choices, stdin, env, config, options)
+      const result = await resolveScript(key, script.$choices, stdin, env, config, options, false)
       if (typeof result === 'string') {
         try {
           // try (strict) json to parse input...
@@ -278,7 +286,7 @@ export const resolveStdinScript = async (
       ])
       .then((answers) => {
         const value = answers[key]
-        env[key] = value
+        env.putResolved(key, value)
         stdin[key] = value
       })
   }
@@ -291,62 +299,70 @@ export const resolveStdinScript = async (
  * @param script - the script to resolve (the value of $resolve)
  * @param env - environment variables to use for resolving
  */
-export const resolveResolveScript = (key: string, script: ResolveScript, env: ResolvedEnv, insertInEnvironment: boolean = true): string => {
-  // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
-  if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key)) return script.$resolve
+export const resolveResolveScript = (key: string, script: ResolveScript, env: Environment, insertInEnvironment: boolean = true): string => {
+  // // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
+  // if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key)) return script.$resolve
 
-  // check for missing environment variables
-  const requiredKeys = getEnvVarRefs(script.$resolve)
-  const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
-  if (missingKeys.length > 0) {
-    throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
-  }
+  // // check for missing environment variables
+  // const requiredKeys = getEnvVarRefs(script.$resolve)
+  // const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
+  // if (missingKeys.length > 0) {
+  //   throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+  // }
 
-  // use string replacement to resolve from the resolvedEnv
-  const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => env[p1])
+  // // use string replacement to resolve from the resolvedEnv
+  // const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => env[p1])
+  // if (insertInEnvironment) {
+  //   env[key] = newValue
+  // }
+  // return newValue
   if (insertInEnvironment) {
-    env[key] = newValue
+    return env.resolvePutResolved(key, script.$resolve)
+  } else {
+    return env.resolve(script.$resolve, key)
   }
-  return newValue
 }
 
 export const resolveScript = async (
   key: string,
   script: Script,
   stdin: StdinResponses = {},
-  env: ResolvedEnv = {},
+  env: Environment,
   config: Config,
-  options: Options
+  options: Options,
+  storeAsSecrets: boolean
 ): Promise<string> => {
   if (typeof script === 'number' || typeof script === 'boolean') {
     script = String(script)
   }
+  // N.B. any "secrets" resolved in this script, will only be kept for the context of this script!
+  const tmpEnv = env.clone()
+  // perform environment variable resolution
   if (isInternalScript(script)) {
-    // script is an internal function, invoke with args
-    await resolveInternalScript(key, script, stdin, env, config, options)
+    await resolveInternalScript(key, script, stdin, tmpEnv, config, options)
   } else if (isCmdScript(script)) {
-    // $cmd
-    await resolveCmdScript(key, script, stdin, env, config, options)
-  // } else if (isEnvScript(script)) {
-  //   // $env
-  //   resolveEnvScript(key, script, env)
+    await resolveCmdScript(key, script, stdin, tmpEnv, config, options)
   } else if (isStdinScript(script)) {
-    // $stdin
-    await resolveStdinScript(key, script, stdin, env, config, options)
-  // } else if (isResolveScript(script)) {
-  //   // $resolve
-  //   resolveResolveScript(key, script, env)
-  } else if (typeof script === 'string') {
+    await resolveStdinScript(key, script, stdin, tmpEnv, config, options)
+  } else if (isString(script)) {
     // NOTE if it's a string, treat it like a "resolve"
-    resolveResolveScript(key, { $resolve: script }, env)
-    // env[key] = script
+    resolveResolveScript(key, { $resolve: script }, tmpEnv)
   }
-  if (typeof env[key] === 'string') {
-    return env[key]
+
+  // only keep the resolved values from executing this script... (i.e. not the secrets)
+  if (storeAsSecrets) {
+    env.putAllSecrets(tmpEnv.resolved)
+  } else {
+    env.putAllResolved(tmpEnv.resolved)
   }
-  // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
+
+  // if it's resolved, move on...
+  if (env.hasResolved(key)) {
+    return env.getResolved(key)
+  }
+  // else, check if it's exempt (i.e. internally resolved)!
   if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key) && isString(script)) {
-    env[key] = script
+    env.putResolved(key, script)
     return script
   }
   throw new Error(`Unknown script type: ${JSON.stringify(script)} at path: ${key}`)

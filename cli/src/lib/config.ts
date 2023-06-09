@@ -1,10 +1,8 @@
 
 import fs from 'fs'
 import inquirer from 'inquirer'
-import path from 'path'
 import YAML from 'yaml'
-import { cyan } from './colour.js'
-import { LOGS_MENU_OPTION, PAGE_SIZE, getLocalImportsCachePath } from './defaults.js'
+import { LOGS_MENU_OPTION, PAGE_SIZE } from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type Options } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
@@ -13,13 +11,14 @@ import {
   type CmdScript,
   type Config,
   type EnvironmentVariables,
-  type ResolvedEnv, type Script, type StdinResponses,
+  type Script, type StdinResponses,
   type TopLevelEnvironments,
   type TopLevelScripts
 } from './types.js'
 import fileUtils from './utils/fileUtils.js'
-import logger from './utils/logger.js'
 import { fetchImports } from './utils/imports.js'
+import logger from './utils/logger.js'
+import { Environment } from './utils/Environment.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -28,33 +27,35 @@ const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
  * @param env
  * @param processEnv
  * @returns
+ * @deprecated use Environment.resolved instead!
  */
-export const stripProcessEnvs = (env: ResolvedEnv, processEnv: ResolvedEnv = process.env as any): ResolvedEnv => {
-  const envCopy = Object.fromEntries(Object.entries(env).filter(([key, value]) => {
-    // if value is the same, delete it
-    return env[key] !== processEnv[key]
-  }))
-  return envCopy
-}
+// export const stripProcessEnvs = (env: ResolvedEnv, processEnv: ResolvedEnv): ResolvedEnv => {
+//   const envCopy = Object.fromEntries(Object.entries(env).filter(([key, value]) => {
+//     // if value is the same, delete it
+//     return env[key] !== processEnv[key]
+//   }))
+//   return envCopy
+// }
 
-/**
- * Retrieves all ${...} references from a string.
- * @param str e.g. 'hello ${name}'
- * @returns e.g. ['name']
- */
-export const getEnvVarRefs = (str: string): string[] => {
-  const regex = /\${([^}]+)}/g
-  return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
-    // allow environment variable defaults (shell & bash syntax)
-    const envvar = curr[1]
-    // exclude env vars that have a fallback default value
-    const hasDefault = envvar.includes(':') || envvar.includes('=')
-    if (!hasDefault) {
-      prev[envvar] = 1
-    }
-    return prev
-  }, {}))
-}
+// /**
+//  * Retrieves all ${...} references from a string.
+//  * @param str e.g. 'hello ${name}'
+//  * @returns e.g. ['name']
+//  * @deprecated use Environment
+//  */
+// export const getEnvVarRefs = (str: string): string[] => {
+//   const regex = /\${([^}]+)}/g
+//   return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
+//     // allow environment variable defaults (shell & bash syntax)
+//     const envvar = curr[1]
+//     // exclude env vars that have a fallback default value
+//     const hasDefault = envvar.includes(':') || envvar.includes('=')
+//     if (!hasDefault) {
+//       prev[envvar] = 1
+//     }
+//     return prev
+//   }, {}))
+// }
 
 export const stripLeadingEmojiSpace = (str: string): string => {
   return str.replace(/^\p{Extended_Pictographic}\s+/u, '')
@@ -237,13 +238,14 @@ export const internalFindEnv = (
 export const internalResolveEnv = async (
   environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
-  resolvedEnv: ResolvedEnv = {},
+  resolvedEnv: Environment,
   config: Config,
-  options: Options
+  options: Options,
+  storeAsSecrets: boolean
 ): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
-    await resolveScript(key, script, stdin, resolvedEnv, config, options)
+    await resolveScript(key, script, stdin, resolvedEnv, config, options, storeAsSecrets)
   }
 }
 
@@ -257,9 +259,9 @@ export const resolveEnv = async (
   config: Config = {} as any,
   environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
-  env: ResolvedEnv = {},
+  env: Environment = new Environment(),
   options: Options = {} as any
-): Promise<[ResolvedEnv, StdinResponses, string[]]> => {
+): Promise<[Environment, StdinResponses, string[]]> => {
   // load and apply imports
   const envs: TopLevelEnvironments = {}
   const scripts: TopLevelScripts = {}
@@ -306,7 +308,8 @@ export const resolveEnv = async (
   const allEnvNames: string[] = []
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
-    await internalResolveEnv(foundEnv, stdin, env, config, options)
+    const storeAsSecrets = env.isSecret(resolvedEnvName)
+    await internalResolveEnv(foundEnv, stdin, env, config, options, storeAsSecrets)
     allEnvNames.push(resolvedEnvName)
   }
   return [env, stdin, allEnvNames]

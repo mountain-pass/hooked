@@ -1,4 +1,4 @@
-import { yellow, cyan, red, grey } from '../colour.js'
+import { grey, red, yellow } from '../colour.js'
 import { isString } from '../types.js'
 
 type LogLevel = 'error' | 'warn' | 'info' | 'debug'
@@ -54,7 +54,16 @@ const writeDebug = (str: any): void => {
   if (logDebug) process.stderr.write(grey(str))
 }
 
-const logger = {
+export interface Logger {
+  info: (str: any) => void
+  debug: (str: any) => void
+  warn: (str: any) => void
+  error: (str: string | Error) => void
+  writeInfo: (str: any) => void
+  writeDebug: (str: any) => void
+}
+
+const logger: Logger = {
   error,
   warn,
   debug,

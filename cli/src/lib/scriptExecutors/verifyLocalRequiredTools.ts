@@ -1,4 +1,5 @@
 import { isDefined, type ResolvedEnv } from '../types.js'
+import { Environment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import { loadRootPackageJsonSync } from '../utils/packageJson.js'
 import { executeCmd } from './$cmd.js'
@@ -8,15 +9,15 @@ let lazyCheckDockerExists: boolean | undefined
 
 const packageJson = loadRootPackageJsonSync()
 
-const verifyLatestVersion = async (env: ResolvedEnv): Promise<void> => {
+const verifyLatestVersion = async (env: Environment): Promise<void> => {
   try {
-    if (!isDefined(env.CI)) {
+    if (!isDefined(env.global.CI)) {
       // eslint-disable-next-line no-template-curly-in-string
       logger.debug('Checking if latest version...')
       // eslint-disable-next-line max-len
       const latestPublishedVersion = (await executeCmd(
         { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
-        { env: { ...env } },
+        { env: env.resolved },
         env,
         { printStdio: false, captureStdout: true },
         5000
@@ -35,13 +36,13 @@ const verifyLatestVersion = async (env: ResolvedEnv): Promise<void> => {
   }
 }
 
-const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: ResolvedEnv): Promise<void> => {
+const verifyDockerExists = async (env: Environment): Promise<void> => {
   if (!isDefined(lazyCheckDockerExists)) {
     try {
       const version = await executeCmd(
         // eslint-disable-next-line no-template-curly-in-string
         { $cmd: '${DOCKER_BIN=docker} -v' },
-        { env: onetimeEnvironment },
+        { env: env.resolved },
         env,
         { printStdio: false, captureStdout: true },
         5000
@@ -61,7 +62,8 @@ const verifyDockerExists = async (onetimeEnvironment: ResolvedEnv, env: Resolved
 }
 
 const verifyDockerKilled = async (dockerName: string): Promise<string> => {
-  return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {}, {}, { printStdio: false, captureStdout: false }, 5000)
+  return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {},
+    new Environment(), { printStdio: false, captureStdout: false }, 5000)
 }
 
 export default {
