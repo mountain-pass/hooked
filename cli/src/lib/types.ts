@@ -19,7 +19,7 @@ export type TopLevelEnvironments = Record<string, EnvironmentVariables>
 // because this is a circular reference... any could be Script | TopLevelScripts again...
 export type TopLevelScripts = Record<string, any>
 
-export interface Config {
+export interface YamlConfig {
   plugins?: Plugins
   imports?: TopLevelImports
   env: TopLevelEnvironments

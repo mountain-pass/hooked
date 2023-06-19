@@ -12,7 +12,7 @@ import verifyLocalRequiredTools from '../src/lib/scriptExecutors/verifyLocalRequ
 import child_process from 'child_process'
 import { Command } from 'commander'
 import logger, { Logger } from '../src/lib/utils/logger.js'
-import { Config } from '../src/lib/types.js'
+import { YamlConfig } from '../src/lib/types.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -160,7 +160,7 @@ describe('program', () => {
   })
 
   it.skip('WIP order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
-    const config: Config = {
+    const config: YamlConfig = {
       env: {
         default: {
           seven: '${eight}-7',

@@ -6,7 +6,8 @@ import {
   findScript,
   internalResolveEnv,
   loadConfig,
-  resolveEnv
+  resolveEnv,
+  resolveEnvironmentVariables
 } from './config.js'
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import exitHandler from './exitHandler.js'
@@ -25,7 +26,7 @@ import { Environment } from './utils/Environment.js'
 
 const packageJson = loadRootPackageJsonSync()
 
-export interface Options {
+export interface ProgramOptions {
   env: string
   stdin: string
   printenv?: boolean
@@ -53,7 +54,7 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
-    .action(async (scriptPath: string[], options: Options) => {
+    .action(async (scriptPath: string[], options: ProgramOptions) => {
       // cleanup previous files
       cleanUpOldScripts()
       const env = new Environment()
@@ -75,22 +76,11 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
       }
       let successfulScript: SuccessfulScript | undefined
       try {
+        // load imports and consolidate configuration...
         const config = await loadConfig(CONFIG_PATH, options.pull)
 
-        // setup defaults...
+        // setup default plugins...
         config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
-
-        const envNames = options.env.split(',')
-        // use relaxed json to parse the stdin
-        const stdin = HJSON.parse(options.stdin)
-        // resolve environment variables...
-        const [, , resolvedEnvNames] = await resolveEnv(
-          config,
-          envNames,
-          stdin,
-          env,
-          options
-        )
 
         // check for newer versions
         await verifyLocalRequiredTools.verifyLatestVersion(env)
@@ -131,6 +121,18 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         if (!isCmdScript(script) && !isInternalScript(script)) {
           throw new Error(`Unknown script type : ${JSON.stringify(script)}`)
         }
+
+        // use relaxed json to parse the stdin
+        const stdin = HJSON.parse(options.stdin)
+        // resolve environment variables...
+        const [envVars, resolvedEnvNames] = await resolveEnv(
+          config,
+          options.env.split(','),
+          HJSON.parse(options.stdin),
+          env,
+          options
+        )
+        await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {

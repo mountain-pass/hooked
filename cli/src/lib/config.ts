@@ -4,21 +4,21 @@ import inquirer from 'inquirer'
 import YAML from 'yaml'
 import { LOGS_MENU_OPTION, PAGE_SIZE } from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
-import { type Options } from './program.js'
+import { type ProgramOptions } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExector.js'
 import {
   isScript,
   type CmdScript,
-  type Config,
   type EnvironmentVariables,
   type Script, type StdinResponses,
   type TopLevelEnvironments,
-  type TopLevelScripts
+  type TopLevelScripts,
+  type YamlConfig
 } from './types.js'
+import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
-import { Environment } from './utils/Environment.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -77,9 +77,9 @@ export const normaliseString = (str: string): string => {
  * Finds a script, given a path.
  */
 export const findScript = async (
-  config: Config,
+  config: YamlConfig,
   scriptPath: string[],
-  options: Options
+  options: ProgramOptions
 ): Promise<[Script, string[]]> => {
   let script = config.scripts
 
@@ -180,7 +180,7 @@ export const findScript = async (
 /**
  * Gets a list of executable scripts.
  */
-export const stringifyScripts = (config: Config): string[] => {
+export const stringifyScripts = (config: YamlConfig): string[] => {
   const scripts: string[] = []
   const walk = (obj: any, path: string[] = []): void => {
     for (const key in obj) {
@@ -202,12 +202,12 @@ export const stringifyScripts = (config: Config): string[] => {
  * @returns
  */
 export const internalFindEnv = (
-  config: Config,
+  config: YamlConfig,
   envName = 'default',
-  options: Options
+  options: ProgramOptions
 ): [EnvironmentVariables, string] => {
   if (!isDefined(config) || !isDefined(config.env)) {
-    throw new Error('No environments found in config. Must have at least one environment.') // config='${JSON.stringify(config)}'`)
+    throw new Error('No environments found in config. Must have at least one environment.')
   }
 
   // look for exact match
@@ -243,8 +243,8 @@ export const internalResolveEnv = async (
   environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
   resolvedEnv: Environment,
-  config: Config,
-  options: Options
+  config: YamlConfig,
+  options: ProgramOptions
 ): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
@@ -253,7 +253,7 @@ export const internalResolveEnv = async (
 }
 
 /* Aggregator function, for merging imported configs. */
-const _mergeEnvAndScripts = (tmp: Config, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
+const _mergeEnvAndScripts = (tmp: YamlConfig, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
   // merge scripts - easy, they should all have unique top level names!
   Object.assign(aggrScripts, tmp.scripts)
   // merge envs - harder, they can have the same top level names...
@@ -269,7 +269,7 @@ const _mergeEnvAndScripts = (tmp: Config, aggrEnvs: TopLevelEnvironments, aggrSc
   }
 }
 
-export const _resolveAndMergeConfigurationWithImports = async (config: Config, pullLatestFlag: boolean = false): Promise<void> => {
+export const _resolveAndMergeConfigurationWithImports = async (config: YamlConfig, pullLatestFlag: boolean = false): Promise<void> => {
   // load and apply imports
   const envs: TopLevelEnvironments = {}
   const scripts: TopLevelScripts = {}
@@ -300,12 +300,12 @@ export const _resolveAndMergeConfigurationWithImports = async (config: Config, p
  * @returns
  */
 export const resolveEnv = async (
-  config: Config = {} as any,
+  config: YamlConfig = {} as any,
   environmentNames: string[] = ['default'],
   stdin: StdinResponses = {},
   env: Environment = new Environment(),
-  options: Options = {} as any
-): Promise<[Environment, StdinResponses, string[]]> => {
+  options: ProgramOptions = {} as any
+): Promise<[EnvironmentVariables, string[]]> => {
   // look for and apply all matching environments
   const allEnvNames: string[] = []
   const allEnvVars: EnvironmentVariables = {}
@@ -318,10 +318,19 @@ export const resolveEnv = async (
     allEnvNames.push(resolvedEnvName)
   }
 
+  return [allEnvVars, allEnvNames]
+}
+
+export const resolveEnvironmentVariables = async (
+  config: YamlConfig = {} as any,
+  envVars: EnvironmentVariables,
+  stdin: StdinResponses = {},
+  env: Environment = new Environment(),
+  options: ProgramOptions = {} as any): Promise<void> => {
   // TODO resolve scripts, regardless of order (option 1 - dumb brute force resolution, option 2 - resolve in order)
 
   // OPTION 1 - brute force, up to 5 attempts...
-  let remainingAttempts: Array<[string, Script]> = Object.entries(allEnvVars)
+  let remainingAttempts: Array<[string, Script]> = Object.entries(envVars)
   let errors: Error[] = []
   while (remainingAttempts.length > 0) {
     const retry: Array<[string, Script]> = []
@@ -356,10 +365,9 @@ export const resolveEnv = async (
   // for (const [key, script] of keyScriptPairs) {
   //   await resolveScript(key, script, stdin, env, config, options)
   // }
-  return [env, stdin, allEnvNames]
 }
 
-export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<Config> => {
+export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<YamlConfig> => {
   const fileExists = fs.existsSync(configFile)
   // file exists
   if (fileExists) {

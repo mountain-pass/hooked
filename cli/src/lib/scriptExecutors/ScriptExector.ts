@@ -1,32 +1,33 @@
 import inquirer from 'inquirer'
-import { internalResolveEnv, resolveEnv } from '../config.js'
-import { type Environment } from '../utils/Environment.js'
+import jp from 'jsonpath'
+import { internalResolveEnv, resolveEnv, resolveEnvironmentVariables } from '../config.js'
+import { PAGE_SIZE } from '../defaults.js'
+import { type ProgramOptions } from '../program.js'
 import {
   isCmdScript,
   isDefined,
+  isDockerCmdScript,
+  isInternalScript,
+  isObject,
   isScript,
   isStdinScript,
-  type CmdScript, type EnvScript,
+  isStdinScriptFieldsMapping,
+  isString,
+  type CmdScript,
+  type DockerCmdScript,
+  type EnvScript,
+  type InternalScript,
   type ResolveScript,
   type ResolvedEnv,
+  type SSHCmdScript,
   type Script,
   type StdinResponses,
   type StdinScript,
-  isInternalScript,
-  type InternalScript,
-  type Config,
-  isStdinScriptFieldsMapping,
-  isString,
-  isObject,
-  isDockerCmdScript,
-  type DockerCmdScript,
-  type SSHCmdScript
+  type YamlConfig
 } from '../types.js'
-import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
-import { PAGE_SIZE } from '../defaults.js'
-import { type Options } from '../program.js'
+import { type Environment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
-import jp from 'jsonpath'
+import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 
 // Environment variable names that are exempt from being resolved
@@ -46,8 +47,8 @@ export const resolveInternalScript = async (
   script: InternalScript,
   stdin: StdinResponses,
   env: Environment,
-  config: Config,
-  options: Options
+  config: YamlConfig,
+  options: ProgramOptions
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
@@ -67,8 +68,8 @@ export const resolveCmdScript = async (
   script: CmdScript | DockerCmdScript | SSHCmdScript,
   stdin: StdinResponses,
   env: Environment,
-  config: Config,
-  options: Options,
+  config: YamlConfig,
+  options: ProgramOptions,
   captureOutput = true
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
@@ -80,13 +81,14 @@ export const resolveCmdScript = async (
 
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
-    await resolveEnv(
+    const [envVars] = await resolveEnv(
       config,
       script.$envNames,
       stdin,
       env,
       options
     )
+    await resolveEnvironmentVariables(config, envVars, stdin, env, options)
     // onetimeEnvironment = { ...newEnv }
   }
 
@@ -161,8 +163,8 @@ export const resolveStdinScript = async (
   script: StdinScript,
   stdin: StdinResponses,
   env: Environment,
-  config: Config,
-  options: Options
+  config: YamlConfig,
+  options: ProgramOptions
 ): Promise<void> => {
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
@@ -331,8 +333,8 @@ export const resolveScript = async (
   script: Script,
   stdin: StdinResponses = {},
   env: Environment,
-  config: Config,
-  options: Options
+  config: YamlConfig,
+  options: ProgramOptions
 ): Promise<string> => {
   // ensure we're only dealing with strings... (from the yaml config)
   if (typeof script === 'number' || typeof script === 'boolean') {

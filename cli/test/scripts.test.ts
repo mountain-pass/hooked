@@ -3,16 +3,16 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { describe } from 'mocha'
 import sinon from 'sinon'
-import { Options } from '../src/lib/program.js'
+import { ProgramOptions } from '../src/lib/program.js'
 import { resolveCmdScript, resolveInternalScript } from '../src/lib/scriptExecutors/ScriptExector.js'
 import docker from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
-import { Config, ResolvedEnv } from '../src/lib/types.js'
-import logger from '../src/lib/utils/logger.js'
+import { YamlConfig } from '../src/lib/types.js'
 import { Environment } from '../src/lib/utils/Environment.js'
+import logger from '../src/lib/utils/logger.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-const CONFIG: Config = {
+const CONFIG: YamlConfig = {
   env: {
     default: {},
     secret: {
@@ -22,7 +22,7 @@ const CONFIG: Config = {
   scripts: {}
 }
 
-const OPTIONS: Options = {
+const OPTIONS: ProgramOptions = {
   env: 'default',
   stdin: '{}',
 }

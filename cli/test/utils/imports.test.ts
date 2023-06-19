@@ -1,16 +1,13 @@
 /* eslint-disable no-template-curly-in-string */
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { describe } from 'mocha'
-import sinon from 'sinon'
-import { Options } from '../../src/lib/program.js'
-import { resolveCmdScript, resolveInternalScript } from '../../src/lib/scriptExecutors/ScriptExector.js'
-import { Config, ResolvedEnv, StdinResponses } from '../../src/lib/types.js'
-import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
 import fs from 'fs'
+import { describe } from 'mocha'
 import path from 'path'
-import { fetchImports } from '../../src/lib/utils/imports.js'
+import sinon from 'sinon'
+import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
 import fileUtils from '../../src/lib/utils/fileUtils.js'
+import { fetchImports } from '../../src/lib/utils/imports.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 

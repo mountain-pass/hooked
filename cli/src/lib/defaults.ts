@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
 import os from 'os'
 import path from 'path'
-import { type Config } from './types.js'
+import { type YamlConfig } from './types.js'
 
 export const HISTORY_PATH = path.resolve('.hooked_history.log')
 export const CONFIG_PATH = path.resolve('hooked.yaml')
@@ -13,7 +13,7 @@ export const LOCAL_CACHE_PATH = path.join(os.homedir(), '.hooked', 'imports')
 
 export const getLocalImportsCachePath = (filename: string): string => path.join(LOCAL_CACHE_PATH, filename)
 
-export const CONFIG_BLANK = (): Config => {
+export const CONFIG_BLANK = (): YamlConfig => {
   return {
     env: { default: { HELLO: 'Hola' } },
     scripts: {
@@ -24,7 +24,7 @@ export const CONFIG_BLANK = (): Config => {
   }
 }
 
-export const DEFAULT_CONFIG_2: Config = {
+export const DEFAULT_CONFIG_2: YamlConfig = {
   env: {
     default: {
       username: { $env: 'USER' },
