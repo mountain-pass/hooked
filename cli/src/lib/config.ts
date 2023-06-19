@@ -150,7 +150,10 @@ export const findScript = async (
     } else {
       choices = Object.keys(script)
     }
-    if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+    if (options.batch === true) {
+      throw new Error('Interactive prompts not supported in batch mode. ' +
+        `Could not determine a script to run. scriptPath='${scriptPath.join(' ')}'`)
+    }
     // ask user for the next script
     await inquirer
       .prompt([
@@ -204,7 +207,7 @@ export const internalFindEnv = (
   options: Options
 ): [EnvironmentVariables, string] => {
   if (!isDefined(config) || !isDefined(config.env)) {
-    throw new Error('No environments found in config. Must have at least one environment.')
+    throw new Error('No environments found in config. Must have at least one environment.') // config='${JSON.stringify(config)}'`)
   }
 
   // look for exact match
@@ -234,19 +237,60 @@ export const internalFindEnv = (
  * Resolves environment variables in order of $stdin & $env, then $cmd, then $resolve.
  * @param environment
  * @returns
+ * @deprecated we no longer resolve environments in isolation - try `resolveEnv()` instead
  */
 export const internalResolveEnv = async (
   environment: EnvironmentVariables = {},
   stdin: StdinResponses = {},
   resolvedEnv: Environment,
   config: Config,
-  options: Options,
-  storeAsSecrets: boolean
+  options: Options
 ): Promise<void> => {
   // resolve environment variables **IN ORDER**
   for (const [key, script] of Object.entries(environment)) {
-    await resolveScript(key, script, stdin, resolvedEnv, config, options, storeAsSecrets)
+    await resolveScript(key, script, stdin, resolvedEnv, config, options)
   }
+}
+
+/* Aggregator function, for merging imported configs. */
+const _mergeEnvAndScripts = (tmp: Config, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
+  // merge scripts - easy, they should all have unique top level names!
+  Object.assign(aggrScripts, tmp.scripts)
+  // merge envs - harder, they can have the same top level names...
+  if (isDefined(tmp.env)) {
+    Object.entries(tmp.env).forEach(([key, envVars]) => {
+      // if they have the same top level name, then merge them...
+      if (isDefined(aggrEnvs[key])) {
+        aggrEnvs[key] = { ...aggrEnvs[key], ...envVars }
+      } else {
+        aggrEnvs[key] = envVars
+      }
+    })
+  }
+}
+
+export const _resolveAndMergeConfigurationWithImports = async (config: Config, pullLatestFlag: boolean = false): Promise<void> => {
+  // load and apply imports
+  const envs: TopLevelEnvironments = {}
+  const scripts: TopLevelScripts = {}
+
+  // resolve external imports
+  const allLocal = await fetchImports(config.imports, pullLatestFlag)
+
+  // load imports from local
+  for (const importPath of allLocal) {
+    const filepath = fileUtils.resolvePath(importPath)
+    logger.debug(`Importing: ${filepath}`)
+    const tmp = await loadConfig(filepath, pullLatestFlag)
+    _mergeEnvAndScripts(tmp, envs, scripts)
+  }
+
+  // do final top level merge
+  _mergeEnvAndScripts(config, envs, scripts)
+
+  // overwrite the existing config object!
+  config.env = envs
+  config.scripts = scripts
 }
 
 /**
@@ -262,69 +306,72 @@ export const resolveEnv = async (
   env: Environment = new Environment(),
   options: Options = {} as any
 ): Promise<[Environment, StdinResponses, string[]]> => {
-  // load and apply imports
-  const envs: TopLevelEnvironments = {}
-  const scripts: TopLevelScripts = {}
-
-  /* Aggregator function, for merging imported configs. */
-  const mergeEnvAndScripts = (tmp: Config, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
-    // merge scripts
-    Object.assign(aggrScripts, tmp.scripts)
-    // merge envs
-    if (isDefined(tmp.env)) {
-      Object.entries(tmp.env).forEach(([key, envVars]) => {
-        // merge environments
-        if (!isDefined(env)) {
-          throw new Error(`Environment ${key} is null.`)
-        }
-        if (isDefined(aggrEnvs[key])) {
-          aggrEnvs[key] = { ...aggrEnvs[key], ...envVars }
-        } else {
-          aggrEnvs[key] = envVars
-        }
-      })
-    }
-  }
-
-  // resolve external imports
-  const allLocal = await fetchImports(config.imports, options.pull)
-
-  // load imports from local
-  for (const importPath of allLocal) {
-    const filepath = fileUtils.resolvePath(importPath)
-    logger.debug(`Importing: ${filepath}`)
-    const tmp = loadConfig(filepath)
-    mergeEnvAndScripts(tmp, envs, scripts)
-  }
-
-  // do final top level merge
-  mergeEnvAndScripts(config, envs, scripts)
-  config.scripts = scripts
-  config.env = envs
-
-  // END IMPORTS
-
   // look for and apply all matching environments
   const allEnvNames: string[] = []
+  const allEnvVars: EnvironmentVariables = {}
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
-    const storeAsSecrets = env.isSecret(resolvedEnvName)
-    await internalResolveEnv(foundEnv, stdin, env, config, options, storeAsSecrets)
+    // collect ALL environment variables (in no particular order!)
+    for (const [key, script] of Object.entries(foundEnv)) {
+      allEnvVars[key] = script
+    }
     allEnvNames.push(resolvedEnvName)
   }
+
+  // TODO resolve scripts, regardless of order (option 1 - dumb brute force resolution, option 2 - resolve in order)
+
+  // OPTION 1 - brute force, up to 5 attempts...
+  let remainingAttempts: Array<[string, Script]> = Object.entries(allEnvVars)
+  let errors: Error[] = []
+  while (remainingAttempts.length > 0) {
+    const retry: Array<[string, Script]> = []
+    errors = []
+    // attempt to resolve variables in sequence
+    for (const [key, script] of remainingAttempts) {
+      try {
+        await resolveScript(key, script, stdin, env, config, options)
+      } catch (err: any) {
+        // could not resolve, add to retry list
+        errors.push(err)
+        retry.push([key, script])
+      }
+    }
+    // no progress made, abort!
+    if (retry.length === remainingAttempts.length) {
+      throw new Error(`Could not resolve environment variables: ${errors.map((err) => err.message).join(', ')}`)
+    }
+    // some progress made, log and retry
+    if (retry.length > 0) {
+      logger.debug(`Retrying ${retry.length} unresolved environment variable(s)...`)
+    }
+    // update remaining attempts
+    remainingAttempts = retry
+  }
+  // if there are still remaining attempts...
+  if (errors.length > 0) {
+    throw new Error(`Could not resolve environment variables: ${errors.map((err) => err.message).join(', ')}`)
+  }
+
+  // OLD WAY - assumes env vars can be resolved in order...
+  // for (const [key, script] of keyScriptPairs) {
+  //   await resolveScript(key, script, stdin, env, config, options)
+  // }
   return [env, stdin, allEnvNames]
 }
 
-export const loadConfig = (configFile: string): Config => {
+export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<Config> => {
   const fileExists = fs.existsSync(configFile)
   // file exists
   if (fileExists) {
     const yamlStr = fs.readFileSync(configFile, 'utf-8')
-    const yaml = YAML.parse(yamlStr)
-    if (yaml === null) {
+    const config = YAML.parse(yamlStr)
+    if (config === null) {
       throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
     }
-    return yaml
+
+    // merge imports with current configuration
+    await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
+    return config
   } else {
     throw new Error(`No ${configFile} file found.`)
   }

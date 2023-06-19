@@ -10,7 +10,7 @@ import logger from './utils/logger.js'
  * Facilitates creating configuration files.
  */
 export const init = async (options: Options): Promise<void> => {
-  if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+  if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
   // ask user which hooked.yaml template to use
   await inquirer.prompt([
     {

@@ -4,7 +4,7 @@ import child_process, { type ChildProcess, type ExecSyncOptions, type SpawnOptio
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type ResolvedEnv } from '../types.js'
+import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript } from '../types.js'
 import logger from '../utils/logger.js'
 import { resolveResolveScript } from './ScriptExector.js'
 import { Environment } from '../utils/Environment.js'
@@ -13,7 +13,7 @@ export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
 export const cleanupOldTmpFiles = (env: Environment): void => {
   // if the root, clean up old .tmp-*.sh files
-  const isRoot = env.getResolved('HOOKED_ROOT') !== 'false'
+  const isRoot = env.isResolvableByKey('HOOKED_ROOT') ? env.resolveByKey('HOOKED_ROOT') !== 'false' : true
   if (isRoot) {
     // set HOOKED_ROOT for child invocations
     env.putResolved('HOOKED_ROOT', 'false')
@@ -25,24 +25,21 @@ export const cleanupOldTmpFiles = (env: Environment): void => {
   }
 }
 
-const envToDockerEnvfile = (env: ResolvedEnv): string => {
-  // TODO make this configurable via ENVIRONMENT?
-  return Object.entries(env).map(([k, v]) => `${k}=${v}\n`).join('')
-}
-
-const envToShellExports = (env: ResolvedEnv): string => {
-  // TODO make this configurable via ENVIRONMENT?
-  return '\n' + Object.entries(env).map(([k, v]) => `export ${k}="${v}"\n`).join('') + '\n'
-}
-
-const writeShellScript = (filepath: string, content: string, env?: ResolvedEnv): void => {
-  // inject environment exports into content
+/**
+ * Writes an executable file. Optional injects environment variables into the file.
+ * @param filepath
+ * @param content
+ * @param env - optional
+ */
+const writeScript = (filepath: string, content: string, env?: Environment): void => {
+  // inject environment exports into content, IF provided
   if (isDefined(env)) {
-    const patt = /^#[^\n]+\n/gm
-    const envexports = envToShellExports(env)
-    const match = patt.exec(content)
+    const REGEX_HAS_HASHBANG_LEADINGLINE = /^#[^\n]+\n/gm
+    const envexports = env.envToShellExports()
+    // inject environment variables at the head of the file...
+    const match = REGEX_HAS_HASHBANG_LEADINGLINE.exec(content)
     if (match != null) {
-      content = content.substring(0, patt.lastIndex) + envexports + content.substring(patt.lastIndex)
+      content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
     } else {
       content = envexports + content
     }
@@ -120,32 +117,34 @@ export const executeCmd = async (
 
     // run script based on underlying implementations
     if (isDockerCmdScript(script)) {
-      // run on docker
+      // write a docker file, and an env file...
       const dockerfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
-      writeShellScript(dockerfilepath, script.$cmd)
-      writeShellScript(envfile, envToDockerEnvfile(opts.env))
+      writeScript(dockerfilepath, script.$cmd)
+      writeScript(envfile, env.envToDockerEnvfile())
       const dockerName = rand
       const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env.global
       const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment({ envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }), false)
       dockerNames.push(dockerName)
-      writeShellScript(filepath, cmd, opts.env)
+      // write a script to run the docker...
+      writeScript(filepath, cmd, env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
       const sshfilepath = path.resolve(`.tmp-docker-${rand}.sh`)
-      writeShellScript(sshfilepath, script.$cmd, opts.env)
+      writeScript(sshfilepath, script.$cmd, env)
       const DEFAULT_SSH_SCRIPT = 'ssh -T "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
       const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
       const cmd = resolveResolveScript('-', { $resolve: sshScript }, new Environment({ envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }), false)
-      writeShellScript(filepath, cmd, opts.env)
+      // write a script to execute the shell script on the remote machine...
+      writeScript(filepath, cmd, env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else {
-      // otherwise fallback to local machine
-      writeShellScript(filepath, script.$cmd, opts.env)
+      // otherwise fallback to running a script on the local machine
+      writeScript(filepath, script.$cmd, env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     }

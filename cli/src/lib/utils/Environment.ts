@@ -36,17 +36,22 @@ export class Environment {
     this.secrets = {}
   }
 
+  /**
+   * Returns all environment variables, excluding secret variables.
+   * @returns
+   */
   getAll (): Record<string, string> {
     // N.B. order is important, because resolved variables should override global variables
-    return { ...this.global, ...this.resolved, ...this.secrets }
+    return { ...this.global, ...this.resolved }
+    // N.B. secrets go in... but secrets should not come out!
   }
 
-  getResolved (key: string): string {
-    return this.getAll()[key]
+  setDoNotResolve (keys: string[]): void {
+    this.doNotResolveList = [...keys]
   }
 
-  hasResolved (key: string): boolean {
-    return typeof this.getResolved(key) === 'string'
+  hasSecret (key: string): boolean {
+    return typeof this.secrets[key] === 'string'
   }
 
   isSecret (key: string): boolean {
@@ -100,13 +105,39 @@ export class Environment {
   }
 
   getMissingRequiredKeys (resolveMe: string): string[] {
+    if (typeof resolveMe !== 'string') throw new Error(`resolveMe must be a string, but was ${typeof resolveMe}`)
     const requiredKeys = getEnvVarRefs(resolveMe)
-    const all = this.getAll()
+    const all = { ...this.global, ...this.resolved, ...this.secrets }
     const missingKeys = requiredKeys.filter(key => typeof all[key] === 'undefined')
     return missingKeys
   }
 
+  // RESOLVING VARIABLES
+
+  isResolvableByKey (key: string): boolean {
+    const value = { ...this.global, ...this.resolved, ...this.secrets }[key]
+    return typeof value === 'string'
+  }
+
+  resolveByKey (key: string): string {
+    // OLD return this.getAll()[key] - we want to resolve JUST IN TIME now... not before!
+    if (this.isResolvableByKey(key)) {
+      const value = { ...this.global, ...this.resolved, ...this.secrets }[key]
+      return this.resolve(value, key)
+    } else {
+      throw new Error(`Environment key '${key}' is not present.`)
+    }
+  }
+
+  /**
+   * Resolve the value of a string, using the current environment.
+   * @param resolveMe
+   * @param key
+   * @returns
+   */
   resolve (resolveMe: string, key: string = 'NOT_DEFINED'): string {
+    if (typeof resolveMe !== 'string') throw new Error(`resolveMe must be a string, but was ${typeof resolveMe}`)
+
     // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
     if (this.willNotBeResolved(key)) return resolveMe
 
@@ -119,17 +150,27 @@ export class Environment {
     }
 
     // use string replacement to resolve from the resolvedEnv
-    const all = this.getAll()
+    const all = { ...this.global, ...this.resolved, ...this.secrets }
     const newValue = resolveMe.replace(/\${([^}]+)}/g, (match, p1) => all[p1])
     return newValue
   }
 
-  resolvePutResolved (key: string, resolveMe: string): string {
+  /**
+   * Resolve the value, and put it in the resolved environment.
+   * @param key
+   * @param resolveMe
+   * @returns
+   */
+  resolveAndPutResolved (key: string, resolveMe: string): string {
     const value = this.resolve(resolveMe, key)
     this.putResolved(key, value)
     return value
   }
 
+  /**
+   * Clones this object to a new instance. Includes secrets.
+   * @returns
+   */
   clone (): Environment {
     const env = new Environment()
     env.global = { ...this.global }
@@ -137,5 +178,32 @@ export class Environment {
     env.secrets = { ...this.secrets }
     env.doNotResolveList = [...this.doNotResolveList]
     return env
+  }
+
+  /**
+   * Replaces the provided environment variables with this instance. Excludes secrets.
+   * @param env
+   */
+  replace (env: Environment): void {
+    this.global = { ...env.global }
+    this.resolved = { ...env.resolved }
+    // this.secrets = { ...env.secrets }
+    this.doNotResolveList = [...env.doNotResolveList]
+  }
+
+  /**
+   * Converts the resolved environment variables to a docker .env file string.
+   * @returns
+   */
+  envToDockerEnvfile (): string {
+    return Object.entries(this.resolved).map(([k, v]) => `${k}=${v}\n`).sort().join('')
+  }
+
+  /**
+   * Converts the resolved environment variables to a shell exports string.
+   * @returns
+   */
+  envToShellExports (): string {
+    return '\n' + Object.entries(this.resolved).map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`).sort().join('') + '\n'
   }
 }

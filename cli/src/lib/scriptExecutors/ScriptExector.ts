@@ -52,7 +52,7 @@ export const resolveInternalScript = async (
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env, config, options, false)
+    await internalResolveEnv(script.$env, stdin, env, config, options)
   }
 
   const result = await script.$internal({ key, stdin, env })
@@ -73,7 +73,7 @@ export const resolveCmdScript = async (
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
-    await internalResolveEnv(script.$env, stdin, env, config, options, false)
+    await internalResolveEnv(script.$env, stdin, env, config, options)
   }
 
   // let onetimeEnvironment: ResolvedEnv = { ...env }
@@ -167,14 +167,14 @@ export const resolveStdinScript = async (
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
     env.putResolved(key, stdin[key])
-  } else if (env.hasResolved(key)) {
+  } else if (env.isResolvableByKey(key)) {
     // else if we already have a value in the environment, use that
-    stdin[key] = env.getResolved(key)
+    stdin[key] = env.resolveByKey(key)
   } else {
     let choices
     // resolve choices if they are a script
     if (isScript(script.$choices)) {
-      const result = await resolveScript(key, script.$choices, stdin, env, config, options, false)
+      const result = await resolveScript(key, script.$choices, stdin, env, config, options)
       if (typeof result === 'string') {
         try {
           // try (strict) json to parse input...
@@ -265,7 +265,10 @@ export const resolveStdinScript = async (
         choices = script.$choices.map((choice: string | boolean | number) => ({ name: String(choice), value: String(choice) }))
       }
     }
-    if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode.')
+    if (options.batch === true) {
+      throw new Error('Interactive prompts not supported in batch mode. ' +
+        `Could not retrieve stdin for key '${key}'.`)
+    }
     // resolve env vars in name and default...
     const newMessage = resolveResolveScript('', { $resolve: script.$stdin }, env, false)
     const newDefault = isString(script.$default)
@@ -317,7 +320,7 @@ export const resolveResolveScript = (key: string, script: ResolveScript, env: En
   // }
   // return newValue
   if (insertInEnvironment) {
-    return env.resolvePutResolved(key, script.$resolve)
+    return env.resolveAndPutResolved(key, script.$resolve)
   } else {
     return env.resolve(script.$resolve, key)
   }
@@ -329,36 +332,27 @@ export const resolveScript = async (
   stdin: StdinResponses = {},
   env: Environment,
   config: Config,
-  options: Options,
-  storeAsSecrets: boolean
+  options: Options
 ): Promise<string> => {
+  // ensure we're only dealing with strings... (from the yaml config)
   if (typeof script === 'number' || typeof script === 'boolean') {
     script = String(script)
   }
-  // N.B. any "secrets" resolved in this script, will only be kept for the context of this script!
-  const tmpEnv = env.clone()
   // perform environment variable resolution
   if (isInternalScript(script)) {
-    await resolveInternalScript(key, script, stdin, tmpEnv, config, options)
+    await resolveInternalScript(key, script, stdin, env, config, options)
   } else if (isCmdScript(script)) {
-    await resolveCmdScript(key, script, stdin, tmpEnv, config, options)
+    await resolveCmdScript(key, script, stdin, env, config, options)
   } else if (isStdinScript(script)) {
-    await resolveStdinScript(key, script, stdin, tmpEnv, config, options)
+    await resolveStdinScript(key, script, stdin, env, config, options)
   } else if (isString(script)) {
     // NOTE if it's a string, treat it like a "resolve"
-    resolveResolveScript(key, { $resolve: script }, tmpEnv)
+    resolveResolveScript(key, { $resolve: script }, env)
   }
 
-  // only keep the resolved values from executing this script... (i.e. not the secrets)
-  if (storeAsSecrets) {
-    env.putAllSecrets(tmpEnv.resolved)
-  } else {
-    env.putAllResolved(tmpEnv.resolved)
-  }
-
-  // if it's resolved, move on...
-  if (env.hasResolved(key)) {
-    return env.getResolved(key)
+  // if it's resolvable, resolve it...
+  if (env.isResolvableByKey(key)) {
+    return env.resolveByKey(key)
   }
   // else, check if it's exempt (i.e. internally resolved)!
   if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key) && isString(script)) {

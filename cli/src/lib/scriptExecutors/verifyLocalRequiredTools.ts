@@ -1,4 +1,4 @@
-import { isDefined, type ResolvedEnv } from '../types.js'
+import { isDefined } from '../types.js'
 import { Environment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import { loadRootPackageJsonSync } from '../utils/packageJson.js'

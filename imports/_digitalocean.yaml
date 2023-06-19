@@ -114,6 +114,7 @@ scripts:
                 $cmd: ls -1t ${HOME}/.ssh
             COPYFILE:
               $cmd: |
+                #!/bin/sh -ve
                 echo Copying ssh pub key to local .tmp folder
                 mkdir .tmp || true
                 cp -f "${HOME}/.ssh/${PUBKEYFILE}" .tmp/id_rsa.pub

@@ -12,6 +12,7 @@ import verifyLocalRequiredTools from '../src/lib/scriptExecutors/verifyLocalRequ
 import child_process from 'child_process'
 import { Command } from 'commander'
 import logger, { Logger } from '../src/lib/utils/logger.js'
+import { Config } from '../src/lib/types.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -68,7 +69,7 @@ const writeConfig =(config: any) => {
   fs.writeFileSync('hooked.yaml', YAML.stringify(config), 'utf-8')
 }
 
-describe('wip program', () => {
+describe('program', () => {
 
   let program: Command
   let spylog: any
@@ -79,7 +80,7 @@ describe('wip program', () => {
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
     spylog = sinon.spy(logger, 'info')
-    program = newProgram({HOSTVAR: 'HOST_VAR_RESOLVED', OTHER_HOST_VAR: 'SHOULD_NOT_BE_PASSED'})
+    program = newProgram({HOSTVAR: 'HOST_VAR_RESOLVED', OTHER_HOST_VAR: 'SHOULD_NOT_BE_PASSED'}, false)
   })
 
   afterEach(() => {
@@ -136,17 +137,66 @@ describe('wip program', () => {
     sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'dog'}))
   })
 
-  it('should throw error, if no config file exists and run in batch mode', async () => {
-    await expect(program.parseAsync(["node", "index.ts","-b","test"])).to.be.rejectedWith('Interactive prompts not supported in batch mode.')
+  it('should throw error, if no config file exists (and run in batch mode)', async () => {
+    await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
+  })
+
+  it('should throw error, if script cannot be found (and run in batch mode)', async () => {
+    writeConfig(BASE_CONFIG)
+    await expect(program.parseAsync('node index.ts -b notavalidscript'.split(' '))).to.be.rejectedWith(`Interactive prompts not supported in batch mode. Could not determine a script to run. scriptPath='notavalidscript'`)
   })
 
 
-  it.skip('host environment variables should not be passed to script when executed', async () => {
+  it('host environment variables should not be passed to script when executed', async () => {
     writeConfig(BASE_CONFIG)
     const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
-    await program.parseAsync(["node", "index.ts","-b","test"])
+    await program.parseAsync('node index.ts -b test'.split(' '))
     sinon.assert.calledOnce(execSpy)
-    expect(execSpy.getCall(0).args[1]?.env).to.eql({ FOO: 'barHOST_VAR_RESOLVED' }) // but other HOST VARS should not be present!
+    // the environment provided to the script should be the one defined in the config ONLY (not system!)
+    expect(execSpy.getCall(0).args[1]?.env).to.eql({
+      FOO: 'barHOST_VAR_RESOLVED',
+      HOOKED_ROOT: 'false'
+    })
+  })
+
+  it.skip('WIP order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
+    const config: Config = {
+      env: {
+        default: {
+          seven: '${eight}-7',
+          eight: '8',
+        },
+        custom: {
+          foo: '${BAR}'
+        }
+      },
+      scripts: {
+        test: {
+          $envNames: ['custom'],
+          $env: {
+            SCRIPT: {
+              $cmd: 'echo "${foo}"'
+            },
+            BAR: 'bar'
+          },
+          $cmd: 'echo "${SCRIPT}"'
+        }
+      }
+    }
+    writeConfig(config)
+    const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
+    await program.parseAsync('node index.ts -b test'.split(' '))
+
+    // verify that the script was called with the correct environment
+    sinon.assert.calledOnce(execSpy)
+    expect(execSpy.getCall(0).args[1]?.env).to.eql({
+      SCRIPT: 'echo "bar"',
+      BAR: 'bar',
+      foo: 'bar',
+      seven: '8-7',
+      eight: '8',
+      HOOKED_ROOT: 'false'
+    })
   })
   
   // TODO check HOSTVAR, that is defined in $env, DOES come through

@@ -67,7 +67,9 @@
 
 # Next
 
+- [ ] ensure local env is resolved, BEFORE imports (esp -> DOCKER_ARCHIVE)
 - [ ] exclude host environment variables when running $script
+- [ ] add "->" arrow to list select (sometimes colours aren't present)
 
 - [ ] `$cmd` > add ability to `$timeoutMs`
 - [ ] `$cmd` > add ability to `$retries` (retries on error, default `0`=disabled, `-1`=indefinite, additional `$retryDelayMs`)

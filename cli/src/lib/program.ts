@@ -36,7 +36,7 @@ export interface Options {
   pull?: boolean
 }
 
-export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables): Command => {
+export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOnError = true): Command => {
   const program = new Command()
 
   program
@@ -75,7 +75,7 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables): Comma
       }
       let successfulScript: SuccessfulScript | undefined
       try {
-        const config = loadConfig(CONFIG_PATH)
+        const config = await loadConfig(CONFIG_PATH, options.pull)
 
         // setup defaults...
         config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
@@ -134,7 +134,7 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables): Comma
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
-          await internalResolveEnv(script.$env, stdin, env, config, options, false)
+          await internalResolveEnv(script.$env, stdin, env, config, options)
         }
 
         // generate rerun command
@@ -161,15 +161,17 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables): Comma
           if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         }
       } catch (err: any) {
-        try {
-          logger.error(err)
-          // print the rerun command for easy re-execution
-          if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
-        } catch (error) {
-          console.error(err)
-        } finally {
-          process.exit(1)
-        }
+        // try {
+        // logger.error(err)
+        // print the rerun command (even on error) for easy re-execution
+        if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
+        throw err
+        // } catch (error) {
+        //   console.error(err)
+        // } finally {
+        //   // only bypassed for testing...
+        //   process.exit(1)
+        // }
       }
     })
 

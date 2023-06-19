@@ -46,7 +46,7 @@ describe('scripts', () => {
         $env: {
           USER: 'bob'
         },
-        $internal: async ({ key, stdin, env }) => `Hello ${env.getResolved('USER')}`
+        $internal: async ({ key, stdin, env }) => `Hello ${env.resolveByKey('USER')}`
     }, {}, new Environment(), CONFIG, OPTIONS)
       expect(result).to.eql('Hello bob')
     })
@@ -90,7 +90,7 @@ describe('scripts', () => {
       }, {}, env, CONFIG, OPTIONS, true)
       expect(result).to.eql('Hello bob')
       // global environment should be updated
-      expect(env.getResolved('USER')).to.eql('bob')
+      expect(env.resolveByKey('USER')).to.eql('bob')
     })
 
     it('$cmd - with unknown $envNames', async () => {
@@ -104,7 +104,7 @@ describe('scripts', () => {
     })
 
     // skipped: I'm not sure what we're testing here - Nick
-    it.skip('$cmd - with known $envNames', async () => {
+    it('$cmd - with known $envNames', async () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
       // when we resolve the script...
@@ -114,8 +114,9 @@ describe('scripts', () => {
       }, {}, env, CONFIG, OPTIONS, true)
       // then the output should be "Hello bob"...
       expect(result).to.eql('Hello bob')
-      // and the global environment should NOT have the secret env "USER"
-      expect(env.global.USER).to.not.eql('bob')
+      // and the global environment should have the env "USER" (defined in the "secret" environment)
+      expect(env.global).to.eql({})
+      // expect(env.global.USER).to.eql('bob')
     })
 
     it('$cmd - with $image and docker does exist', async () => {
@@ -148,8 +149,15 @@ describe('scripts', () => {
       expect(result).to.eql('Hello bob')
     })
 
+    /**
+     * Problem - we should move the secret capture/replace inside the "resolveCmdScript" function.
+     * 
+     * To test... subsequent $cmd scripts should not have access to eachothers secrets.
+     * 
+     */
+
     // Environment names that have the word "secret" in them, shall be treated as secrets...
-    it.skip('$cmd - with $image and $env and $envNames', async () => {
+    it('$cmd - with $image and $env and $envNames', async () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
       // when we resolve the script...
@@ -159,7 +167,7 @@ describe('scripts', () => {
           GREETING: 'Hola'
         },
         $image: 'alpine',
-        $cmd: 'echo "${GREETING} ${USER}"'
+        $cmd: 'echo "${GREETING} ${USER}"' // <-- !!! USER IS A SECRET, ONLY SHOULD ONLY BE USED TEMPORARILY !!!
       }, {}, env, CONFIG, OPTIONS, true)
 
       // then the output should be "Hola bob"...
@@ -167,9 +175,14 @@ describe('scripts', () => {
 
       console.log('env', env)
       // and the global environment should now have "GREETING"
-      expect(env.getAll().GREETING).to.eql('Hola')
-      // and the global environment should NOT have the secret env "USER"
-      expect(env.getAll().USER).to.eql(false)
+      // and the global environment should have the secret env "USER" defined in the "secret" environment
+      expect(env.global).to.eql({})
+      expect(env.resolved).to.eql({
+        "GREETING": "Hola",
+        "HOOKED_ROOT": "false",
+        "USER": "bob"
+      })
+      expect(env.secrets).to.eql({})
     })
   })
 
