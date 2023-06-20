@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 import jp from 'jsonpath'
-import { internalResolveEnv, resolveEnv, resolveEnvironmentVariables } from '../config.js'
+import { internalResolveEnv, fetchGlobalEnvVars, resolveEnvironmentVariables } from '../config.js'
 import { PAGE_SIZE } from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
 import {
@@ -72,6 +72,8 @@ export const resolveCmdScript = async (
   options: ProgramOptions,
   captureOutput = true
 ): Promise<string> => {
+  // TODONICK capture envvars, and merge with global parent envs
+
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     await internalResolveEnv(script.$env, stdin, env, config, options)
@@ -81,11 +83,9 @@ export const resolveCmdScript = async (
 
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
-    const [envVars] = await resolveEnv(
+    const [envVars] = await fetchGlobalEnvVars(
       config,
       script.$envNames,
-      stdin,
-      env,
       options
     )
     await resolveEnvironmentVariables(config, envVars, stdin, env, options)

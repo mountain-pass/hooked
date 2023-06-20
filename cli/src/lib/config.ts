@@ -299,11 +299,9 @@ export const _resolveAndMergeConfigurationWithImports = async (config: YamlConfi
  * @param environment
  * @returns
  */
-export const resolveEnv = async (
+export const fetchGlobalEnvVars = async (
   config: YamlConfig = {} as any,
   environmentNames: string[] = ['default'],
-  stdin: StdinResponses = {},
-  env: Environment = new Environment(),
   options: ProgramOptions = {} as any
 ): Promise<[EnvironmentVariables, string[]]> => {
   // look for and apply all matching environments

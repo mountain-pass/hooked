@@ -6,7 +6,7 @@ import {
   findScript,
   internalResolveEnv,
   loadConfig,
-  resolveEnv,
+  fetchGlobalEnvVars,
   resolveEnvironmentVariables
 } from './config.js'
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
@@ -124,18 +124,22 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
 
         // use relaxed json to parse the stdin
         const stdin = HJSON.parse(options.stdin)
-        // resolve environment variables...
-        const [envVars, resolvedEnvNames] = await resolveEnv(
+
+        // fetch the environment variables...
+        const [envVars, resolvedEnvNames] = await fetchGlobalEnvVars(
           config,
           options.env.split(','),
-          HJSON.parse(options.stdin),
-          env,
           options
         )
+
+        // actually resolve the environment variables...
         await resolveEnvironmentVariables(config, envVars, stdin, env, options)
+
+        // TODONICK accumulate envVars
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
+          // execute script...
           await internalResolveEnv(script.$env, stdin, env, config, options)
         }
 
@@ -149,6 +153,8 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
 
         if (options.printenv === true) {
+          // actually resolve the environment variables...
+          await resolveEnvironmentVariables(config, envVars, stdin, env, options)
           // print environment variables
           logger.info(JSON.stringify(env.resolved))
         } else {
