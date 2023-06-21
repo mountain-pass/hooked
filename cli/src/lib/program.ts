@@ -15,7 +15,7 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
+import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
   isCmdScript,
@@ -23,7 +23,9 @@ import {
   isInternalScript,
   type EnvironmentVariables,
   type SuccessfulScript,
-  type SystemEnvironmentVariables
+  type SystemEnvironmentVariables,
+  isSSHCmdScript,
+  isDockerCmdScript
 } from './types.js'
 import { Environment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
@@ -160,6 +162,11 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         // execute script
         if (isCmdScript(script)) {
           // run cmd
+          // TODO document this
+          if (!isSSHCmdScript(script) && !isDockerCmdScript(script) && !isDefined(script.$envFromHost)) {
+            logger.debug('Defaulting $envFromHost to "true" for local script.')
+            script.$envFromHost = true
+          }
           await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
         } else if (isInternalScript(script)) {
           // run internal script

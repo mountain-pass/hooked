@@ -21,6 +21,8 @@ env:
 
 # This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
 scripts:
+  which:
+    $cmd: which npx
   🌞 echo:
     $cmd: echo Hello there!
     # $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}

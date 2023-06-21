@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript } from '../types.js'
 import logger from '../utils/logger.js'
-import { resolveResolveScript } from './ScriptExector.js'
+import { resolveResolveScript } from './ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')

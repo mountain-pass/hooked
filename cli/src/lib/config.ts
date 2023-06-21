@@ -5,7 +5,7 @@ import YAML from 'yaml'
 import { LOGS_MENU_OPTION, PAGE_SIZE } from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type ProgramOptions } from './program.js'
-import { resolveScript } from './scriptExecutors/ScriptExector.js'
+import { resolveScript } from './scriptExecutors/ScriptExecutor.js'
 import {
   isScript,
   type CmdScript,

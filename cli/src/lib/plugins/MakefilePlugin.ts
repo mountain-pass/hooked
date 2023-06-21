@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 import fs from 'fs'
-import { resolveResolveScript } from '../scriptExecutors/ScriptExector.js'
+import { resolveResolveScript } from '../scriptExecutors/ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
 
 export const generateMakefileScripts = (env: Environment): any => {

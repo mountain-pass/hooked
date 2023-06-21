@@ -145,6 +145,11 @@ export const resolveCmdScript = async (
   // cleanup old tmp files
   cleanupOldTmpFiles(env)
 
+  // include environment variables from host
+  if (script.$envFromHost === true) {
+    env.resolved = { ...process.env, ...env.resolved } as any
+  }
+
   // execute the command, capture the output
   try {
     // if running an image, verify docker is installed

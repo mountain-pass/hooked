@@ -24,6 +24,7 @@ const BASE_CONFIG = {
   },
   scripts: {
     test: {
+      $envFromHost: false,
       $cmd: 'echo $FOO'
     }
   }
@@ -176,6 +177,7 @@ describe('program', () => {
       },
       scripts: {
         test: {
+          $envFromHost: false,
           $cmd: 'echo "${cat}"'
         }
       }
@@ -249,6 +251,7 @@ describe('program', () => {
             SCRIPT: 'echo "${foo}"',
             BAR: 'bar'
           },
+          $envFromHost: false,
           $cmd: 'echo "${SCRIPT}"'
         }
       }

@@ -49,6 +49,8 @@ export interface CmdScript {
   $env?: EnvironmentVariables
   /** Additional environment group names to resolve ONLY when executing command. Resolved after $env. */
   $envNames?: string[]
+  /** If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands (i.e. local). */
+  $envFromHost?: boolean
   /** The command to execute. Supports multiline. */
   $cmd: string
   /** The message to show, if an error occurs. */
