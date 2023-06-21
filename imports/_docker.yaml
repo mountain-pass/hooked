@@ -15,8 +15,6 @@ env:
 
     DOCKER_FILE: Dockerfile
     PLATFORM: linux/amd64,linux/arm64/v8
-    DOCKER_IMAGE:
-      $cmd: echo "${DOCKER_IMAGE=DOCKER_IMAGE_NOT_OVERRIDDEN}"
     DOCKER_CONTAINER:
       $cmd: echo "${DOCKER_IMAGE}" | sed s/[^a-zA-Z0-9]/-/g
     DOCKER_ARCHIVE: ${DOCKER_CONTAINER}.zip
