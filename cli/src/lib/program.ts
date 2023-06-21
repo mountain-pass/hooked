@@ -126,7 +126,7 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
 
         // check script is executable...
         if (!isCmdScript(script) && !isInternalScript(script)) {
-          throw new Error(`Unknown script type : ${JSON.stringify(script)}`)
+          throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
         }
 
         // use relaxed json to parse the stdin
@@ -141,8 +141,6 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
           options,
           envVars
         )
-
-        // TODONICK accumulate envVars
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
@@ -159,23 +157,20 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         }
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
 
-        if (options.printenv === true) {
-          // actually resolve the environment variables...
-          await resolveEnvironmentVariables(config, envVars, stdin, env, options)
-          // print environment variables
-          logger.info(JSON.stringify(env.resolved))
-        } else {
-          // execute script
-          if (isCmdScript(script)) {
-            await resolveCmdScript(undefined, script, stdin, env, config, options, false, envVars)
-          } else if (isInternalScript(script)) {
-            // TODONICK does this need to resolve environment variables? probably
-            await resolveInternalScript('-', script, stdin, env, config, options, envVars)
-          }
-
-          // store in history (if successful and not the _logs_ option!)
-          if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
+        // execute script
+        if (isCmdScript(script)) {
+          // run cmd
+          await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
+        } else if (isInternalScript(script)) {
+          // run internal script
+          await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
+        } else if (options.printenv === true) {
+          throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
         }
+
+        // store in history (if successful and not the _logs_ option!)
+        if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
+        // }
       } catch (err: any) {
         // try {
         // logger.error(err)

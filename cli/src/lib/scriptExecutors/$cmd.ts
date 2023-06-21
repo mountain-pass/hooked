@@ -44,7 +44,7 @@ const writeScript = (filepath: string, content: string, env?: Environment): void
       content = envexports + content
     }
   }
-  fs.writeFileSync(filepath, content, 'utf-8')
+  fs.writeFileSync(filepath, content + '\n', 'utf-8')
   fs.chmodSync(filepath, 0o755)
 }
 

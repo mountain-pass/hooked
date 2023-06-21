@@ -291,7 +291,7 @@ export const resolveEnvironmentVariables = async (
     }
     // no progress made, abort!
     if (retry.length === remainingAttempts.length) {
-      throw new Error(`Could not resolve environment variables: ${errors.map((err) => err.message).join(', ')}`)
+      break
     }
     // some progress made, log and retry
     if (retry.length > 0) {
@@ -302,7 +302,7 @@ export const resolveEnvironmentVariables = async (
   }
   // if there are still remaining attempts...
   if (errors.length > 0) {
-    throw new Error(`Could not resolve environment variables: ${errors.map((err) => err.message).join(', ')}`)
+    throw new Error(`Could not resolve environment variables:\n- ${errors.map((err) => err.message).join('\n- ')}`)
   }
 
   // OLD WAY - assumes env vars can be resolved in order...

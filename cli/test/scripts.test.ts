@@ -61,48 +61,48 @@ describe('scripts', () => {
   describe('$cmd - executes a shell command', () => {
 
     it('$cmd - simple example #1', async () => {
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $cmd: 'echo "Hello"'
-    }, {}, new Environment(), CONFIG, OPTIONS, true)
+    }, {}, new Environment(), CONFIG, OPTIONS)
       expect(result).to.eql('Hello')
     })
 
     it('$cmd - simple example with error', async () => {
-      const promise = resolveCmdScript(undefined, {
+      const promise = resolveCmdScript('-', {
         $cmd: 'exit 1'
-    }, {}, new Environment(), CONFIG, OPTIONS, true)
+    }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(promise).to.eventually.be.rejected
     })
 
     it('$cmd - simple example with error and errorMessage', async () => {
       const loggerSpy = sinon.spy(logger, 'warn')
       const errorMessage = 'Error occurred, perhaps try some remediation steps, then try again?'
-      const promise = resolveCmdScript(undefined, {
+      const promise = resolveCmdScript('-', {
         $cmd: 'exit 1',
         $errorMessage: errorMessage
-    }, {}, new Environment(), CONFIG, OPTIONS, true)
+    }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(promise).to.eventually.be.rejected
       sinon.assert.calledWith(loggerSpy, errorMessage)
     })
 
     it('$cmd - with $env resolution', async () => {
       const env = new Environment()
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $env: {
           USER: 'bob'
         },
         $cmd: 'echo "Hello ${USER}"'
-      }, {}, env, CONFIG, OPTIONS, true)
+      }, {}, env, CONFIG, OPTIONS)
       expect(result).to.eql('Hello bob')
       // global environment should be updated
       expect(env.resolveByKey('USER')).to.eql('bob')
     })
 
     it('$cmd - with unknown $envNames', async () => {
-      await expect(resolveCmdScript(undefined, {
+      await expect(resolveCmdScript('-', {
         $envNames: ['secretxxx'],
         $cmd: 'echo "Hello ${USER}"'
-      }, {}, new Environment(), CONFIG, OPTIONS, true))
+      }, {}, new Environment(), CONFIG, OPTIONS))
       .to
       .be
       .rejectedWith('Environment not found: secretxxx\nDid you mean?\n\t- default\n\t- secret')
@@ -113,10 +113,10 @@ describe('scripts', () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
       // when we resolve the script...
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $envNames: ['secr'],
         $cmd: 'echo "Hello ${USER}"'
-      }, {}, env, CONFIG, OPTIONS, true)
+      }, {}, env, CONFIG, OPTIONS)
       // then the output should be "Hello bob"...
       expect(result).to.eql('Hello bob')
       // and the global environment should have the env "USER" (defined in the "secret" environment)
@@ -126,31 +126,31 @@ describe('scripts', () => {
 
     it('$cmd - with $image and docker does exist', async () => {
       sinon.stub(docker, 'verifyDockerExists').resolves()
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $image: 'node:16-alpine',
         $cmd: 'node -v'
-      }, {}, new Environment(), CONFIG, OPTIONS, true)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       expect(result).to.eql('v16.18.1')
     })
 
     it('$cmd - with $image and docker does NOT exist', async () => {
       sinon.stub(docker, 'verifyDockerExists').rejects(new Error('Docker does not exist!'))
-      const result = resolveCmdScript(undefined, {
+      const result = resolveCmdScript('-', {
         $image: 'node:16-alpine',
         $cmd: 'node -v'
-      }, {}, new Environment(), CONFIG, OPTIONS, true)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(result).to.eventually.be.rejectedWith('Docker does not exist!')
     })
 
     it('$cmd - with $image and $env', async () => {
       sinon.stub(docker, 'verifyDockerExists').resolves()
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $env: {
           USER: 'bob'
         },
         $image: 'alpine',
         $cmd: 'echo "Hello ${USER}"'
-      }, {}, new Environment(), CONFIG, OPTIONS, true)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       expect(result).to.eql('Hello bob')
     })
 
@@ -166,14 +166,14 @@ describe('scripts', () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
       // when we resolve the script...
-      const result = await resolveCmdScript(undefined, {
+      const result = await resolveCmdScript('-', {
         $envNames: ['secr'],
         $env: {
           GREETING: 'Hola'
         },
         $image: 'alpine',
         $cmd: 'echo "${GREETING} ${USER}"' // <-- !!! USER IS A SECRET, ONLY SHOULD ONLY BE USED TEMPORARILY !!!
-      }, {}, env, CONFIG, OPTIONS, true)
+      }, {}, env, CONFIG, OPTIONS, {}, true)
 
       // then the output should be "Hola bob"...
       expect(result).to.eql('Hola bob')

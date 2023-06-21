@@ -281,16 +281,16 @@ describe('config', () => {
     }
 
     it('executing a $cmd with satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ HELLO: "Hello" }), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ HELLO: "Hello" }), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a script with UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith(`Script '-' is missing required environment variables: ["HELLO"]`)
     })
     it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, new Environment(), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, new Environment(), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript(undefined, { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, new Environment(), CONFIG, OPTIONS)).to.be.rejectedWith('Script is missing required environment variables: ["HELLO"]')
+      await expect(resolveCmdScript('MYSCRIPT', { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, new Environment(), CONFIG, OPTIONS)).to.be.rejectedWith(`Script 'MYSCRIPT' is missing required environment variables: ["HELLO"]`)
     })
 
     it('$cmd - env should resolve $cmd', async () => {

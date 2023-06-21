@@ -44,6 +44,18 @@ export const isScriptExectorResponse = (o: any): o is ScriptExecutorResponse => 
   return typeof o === 'object' && typeof o.value === 'string'
 }
 
+/**
+ *
+ * @param key
+ * @param script
+ * @param stdin
+ * @param env
+ * @param config
+ * @param options
+ * @param envVars
+ * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
+ * @returns
+ */
 export const resolveInternalScript = async (
   key: string,
   script: InternalScript,
@@ -51,36 +63,54 @@ export const resolveInternalScript = async (
   env: Environment,
   config: YamlConfig,
   options: ProgramOptions,
-  envVars: EnvironmentVariables
+  envVars: EnvironmentVariables,
+  isFinalScript = false
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
     mergeEnvVars(envVars, script.$env)
   }
 
-  // TODO should this be resolved here?
-
-  // actually resolve the environment variables...
+  // actually resolve the environment variables... (internal script)
   await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
+  // print environment variables, and exit.
+  if (isFinalScript && options.printenv === true) {
+    logger.info(JSON.stringify(env.resolved))
+    return ''
+  }
+
+  // execute the script
   const result = await script.$internal({ key, stdin, env })
 
-  // TODO should this be added to envVars instead?
-  if (typeof result === 'string') {
+  if (!isFinalScript && isString(result)) {
+    // envVars[key] = result
     env.putResolved(key, result)
   }
   return result
 }
 
+/**
+ *
+ * @param key
+ * @param script
+ * @param stdin
+ * @param env
+ * @param config
+ * @param options
+ * @param envVars
+ * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
+ * @returns
+ */
 export const resolveCmdScript = async (
-  key: string | undefined,
+  key: string,
   script: CmdScript | DockerCmdScript | SSHCmdScript,
   stdin: StdinResponses,
   env: Environment,
   config: YamlConfig,
   options: ProgramOptions,
-  captureOutput = true,
-  envVars: EnvironmentVariables = {}
+  envVars: EnvironmentVariables = {},
+  isFinalScript = false
 ): Promise<string> => {
   // if "step" $env is defined, merge environment variables
   if (isDefined(script.$env)) {
@@ -97,30 +127,26 @@ export const resolveCmdScript = async (
     )
   }
 
-  // actually resolve the environment variables...
+  // actually resolve the environment variables... (cmd script)
   await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
   const missingKeys = env.getMissingRequiredKeys(script.$cmd)
   if (missingKeys.length > 0) {
-    throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+    // eslint-disable-next-line max-len
+    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
   }
 
-  // throws error if not resolvable
-  // env.resolve(script.$cmd, key)
-
-  // check for missing environment variables
-  // const requiredKeys = getEnvVarRefs(script.$cmd)
-  // const missingKeys = requiredKeys.filter(key => typeof onetimeEnvironment[key] === 'undefined')
-  // if (missingKeys.length > 0) {
-  //   throw new Error(`Script is missing required environment variables: ${JSON.stringify(missingKeys)}`)
-  // }
+  // print environment variables, and exit.
+  if (isFinalScript && options.printenv === true) {
+    logger.info(JSON.stringify(env.resolved))
+    return ''
+  }
 
   // cleanup old tmp files
   cleanupOldTmpFiles(env)
 
   // execute the command, capture the output
   try {
-    // TODO move inside execute cmd!
     // if running an image, verify docker is installed
     const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
@@ -132,11 +158,12 @@ export const resolveCmdScript = async (
       script,
       { env: env.resolved },
       env,
-      { printStdio: true, captureStdout: captureOutput }
+      { printStdio: true, captureStdout: true }
     )
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
-    if (typeof key === 'string') {
+    if (!isFinalScript && isString(newValue)) {
+      // envVars[key] = newValue
       env.putResolved(key, newValue)
     }
     return newValue
@@ -314,22 +341,6 @@ export const resolveStdinScript = async (
  * @param env - environment variables to use for resolving
  */
 export const resolveResolveScript = (key: string, script: ResolveScript, env: Environment, insertInEnvironment: boolean = true): string => {
-  // // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
-  // if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key)) return script.$resolve
-
-  // // check for missing environment variables
-  // const requiredKeys = getEnvVarRefs(script.$resolve)
-  // const missingKeys = requiredKeys.filter(key => typeof env[key] === 'undefined')
-  // if (missingKeys.length > 0) {
-  //   throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
-  // }
-
-  // // use string replacement to resolve from the resolvedEnv
-  // const newValue = script.$resolve.replace(/\${([^}]+)}/g, (match, p1) => env[p1])
-  // if (insertInEnvironment) {
-  //   env[key] = newValue
-  // }
-  // return newValue
   if (insertInEnvironment) {
     return env.resolveAndPutResolved(key, script.$resolve)
   } else {
@@ -365,11 +376,12 @@ export const resolveScript = async (
   // if it's resolvable, resolve it...
   if (env.isResolvableByKey(key)) {
     return env.resolveByKey(key)
-  }
-  // else, check if it's exempt (i.e. internally resolved)!
-  if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key) && isString(script)) {
+  } else if (EXEMPT_ENVIRONMENT_KEYWORDS.includes(key) && isString(script)) {
+    // else, check if it's exempt (i.e. internally resolved)!
     env.putResolved(key, script)
     return script
+  } else {
+    // otherwise... it wasn't resolvable
+    throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)} at path: ${key}`)
   }
-  throw new Error(`Unknown script type: ${JSON.stringify(script)} at path: ${key}`)
 }
