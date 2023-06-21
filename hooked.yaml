@@ -1,7 +1,6 @@
 
 env:
   default:
-    PATH: ${PATH}
     # username: ${USER}
     # GIT_COMMIT:
     #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"

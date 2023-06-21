@@ -165,6 +165,8 @@ describe('scripts', () => {
     it('$cmd - with $image and $env and $envNames', async () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
+      // N.B. we do not want to treat this as a "Final" script - so that we can capture the output (otherwise it is streamed to stdout)
+      const IS_FINAL_SCRIPT = false
       // when we resolve the script...
       const result = await resolveCmdScript('-', {
         $envNames: ['secr'],
@@ -173,7 +175,7 @@ describe('scripts', () => {
         },
         $image: 'alpine',
         $cmd: 'echo "${GREETING} ${USER}"' // <-- !!! USER IS A SECRET, ONLY SHOULD ONLY BE USED TEMPORARILY !!!
-      }, {}, env, CONFIG, OPTIONS, {}, true)
+      }, {}, env, CONFIG, OPTIONS, {}, IS_FINAL_SCRIPT)
 
       // then the output should be "Hola bob"...
       expect(result).to.eql('Hola bob')
@@ -183,6 +185,7 @@ describe('scripts', () => {
       // and the global environment should have the secret env "USER" defined in the "secret" environment
       expect(env.global).to.eql({})
       expect(env.resolved).to.eql({
+        "-": "Hola bob",
         "GREETING": "Hola",
         "HOOKED_ROOT": "false",
         "USER": "bob"

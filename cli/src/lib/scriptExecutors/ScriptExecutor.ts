@@ -163,7 +163,8 @@ export const resolveCmdScript = async (
       script,
       { env: env.resolved },
       env,
-      { printStdio: true, captureStdout: true }
+      // N.B. we do NOT want to capture output if this is the final script, we want it to be streamed to stdout!
+      { printStdio: true, captureStdout: !isFinalScript }
     )
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
