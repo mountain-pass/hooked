@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 import jp from 'jsonpath'
-import { internalResolveEnv, fetchGlobalEnvVars, resolveEnvironmentVariables } from '../config.js'
+import { fetchGlobalEnvVars, resolveEnvironmentVariables } from '../config.js'
 import { PAGE_SIZE } from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
 import {
@@ -16,6 +16,7 @@ import {
   type CmdScript,
   type DockerCmdScript,
   type EnvScript,
+  type EnvironmentVariables,
   type InternalScript,
   type ResolveScript,
   type ResolvedEnv,
@@ -26,6 +27,7 @@ import {
   type YamlConfig
 } from '../types.js'
 import { type Environment } from '../utils/Environment.js'
+import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
 import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
@@ -48,15 +50,22 @@ export const resolveInternalScript = async (
   stdin: StdinResponses,
   env: Environment,
   config: YamlConfig,
-  options: ProgramOptions
+  options: ProgramOptions,
+  envVars: EnvironmentVariables
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
-    // TODO provide stdin
-    await internalResolveEnv(script.$env, stdin, env, config, options)
+    mergeEnvVars(envVars, script.$env)
   }
 
+  // TODO should this be resolved here?
+
+  // actually resolve the environment variables...
+  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
+
   const result = await script.$internal({ key, stdin, env })
+
+  // TODO should this be added to envVars instead?
   if (typeof result === 'string') {
     env.putResolved(key, result)
   }
@@ -70,27 +79,26 @@ export const resolveCmdScript = async (
   env: Environment,
   config: YamlConfig,
   options: ProgramOptions,
-  captureOutput = true
+  captureOutput = true,
+  envVars: EnvironmentVariables = {}
 ): Promise<string> => {
-  // TODONICK capture envvars, and merge with global parent envs
-
-  // if "step" env is defined, resolve environment variables
+  // if "step" $env is defined, merge environment variables
   if (isDefined(script.$env)) {
-    await internalResolveEnv(script.$env, stdin, env, config, options)
+    mergeEnvVars(envVars, script.$env)
   }
-
-  // let onetimeEnvironment: ResolvedEnv = { ...env }
 
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
-    const [envVars] = await fetchGlobalEnvVars(
+    await fetchGlobalEnvVars(
       config,
       script.$envNames,
-      options
+      options,
+      envVars
     )
-    await resolveEnvironmentVariables(config, envVars, stdin, env, options)
-    // onetimeEnvironment = { ...newEnv }
   }
+
+  // actually resolve the environment variables...
+  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
   const missingKeys = env.getMissingRequiredKeys(script.$cmd)
   if (missingKeys.length > 0) {
@@ -164,7 +172,8 @@ export const resolveStdinScript = async (
   stdin: StdinResponses,
   env: Environment,
   config: YamlConfig,
-  options: ProgramOptions
+  options: ProgramOptions,
+  envVars: EnvironmentVariables
 ): Promise<void> => {
   if (isDefined(stdin[key])) {
     // if we already have a response, use that
@@ -176,7 +185,7 @@ export const resolveStdinScript = async (
     let choices
     // resolve choices if they are a script
     if (isScript(script.$choices)) {
-      const result = await resolveScript(key, script.$choices, stdin, env, config, options)
+      const result = await resolveScript(key, script.$choices, stdin, env, config, options, envVars)
       if (typeof result === 'string') {
         try {
           // try (strict) json to parse input...
@@ -280,7 +289,7 @@ export const resolveStdinScript = async (
     await inquirer
       .prompt([
         {
-          type: isDefined(choices) ? 'rawlist' : 'text',
+          type: isDefined(choices) ? 'list' : 'text',
           name: key,
           message: newMessage,
           pageSize: PAGE_SIZE,
@@ -334,7 +343,8 @@ export const resolveScript = async (
   stdin: StdinResponses = {},
   env: Environment,
   config: YamlConfig,
-  options: ProgramOptions
+  options: ProgramOptions,
+  envVars: EnvironmentVariables
 ): Promise<string> => {
   // ensure we're only dealing with strings... (from the yaml config)
   if (typeof script === 'number' || typeof script === 'boolean') {
@@ -342,11 +352,11 @@ export const resolveScript = async (
   }
   // perform environment variable resolution
   if (isInternalScript(script)) {
-    await resolveInternalScript(key, script, stdin, env, config, options)
+    await resolveInternalScript(key, script, stdin, env, config, options, envVars)
   } else if (isCmdScript(script)) {
     await resolveCmdScript(key, script, stdin, env, config, options)
   } else if (isStdinScript(script)) {
-    await resolveStdinScript(key, script, stdin, env, config, options)
+    await resolveStdinScript(key, script, stdin, env, config, options, envVars)
   } else if (isString(script)) {
     // NOTE if it's a string, treat it like a "resolve"
     resolveResolveScript(key, { $resolve: script }, env)

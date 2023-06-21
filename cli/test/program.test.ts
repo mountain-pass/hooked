@@ -74,13 +74,18 @@ describe('program', () => {
   let program: Command
   let spylog: any
 
+  const SYSTEM_ENVIRONMENT_VARIABLES = {
+    HOSTVAR: 'HOST_VAR_RESOLVED',
+    OTHER_HOST_VAR: 'SHOULD_NOT_BE_PASSED'
+  }
+
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
     sinon.restore()
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
     spylog = sinon.spy(logger, 'info')
-    program = newProgram({HOSTVAR: 'HOST_VAR_RESOLVED', OTHER_HOST_VAR: 'SHOULD_NOT_BE_PASSED'}, false)
+    program = newProgram(SYSTEM_ENVIRONMENT_VARIABLES, false)
   })
 
   afterEach(() => {
@@ -159,7 +164,36 @@ describe('program', () => {
     })
   })
 
-  it.skip('WIP order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
+  it('order should not matter when resolving - part2 - multiple environment resolution', async () => {
+    const config: YamlConfig = {
+      env: {
+        default: {
+          cat: '${foo}',
+        },
+        custom: {
+          foo: 'bar'
+        }
+      },
+      scripts: {
+        test: {
+          $cmd: 'echo "${cat}"'
+        }
+      }
+    }
+    writeConfig(config)
+    const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
+    await program.parseAsync('node index.ts -b test --env default,custom'.split(' '))
+
+    // verify that the script was called with the correct environment
+    sinon.assert.calledOnce(execSpy)
+    expect(execSpy.getCall(0).args[1]?.env).to.eql({
+      cat: 'bar',
+      foo: 'bar',
+      HOOKED_ROOT: 'false'
+    })
+  })
+
+  it('order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
     const config: YamlConfig = {
       env: {
         default: {
@@ -174,9 +208,7 @@ describe('program', () => {
         test: {
           $envNames: ['custom'],
           $env: {
-            SCRIPT: {
-              $cmd: 'echo "${foo}"'
-            },
+            SCRIPT: 'echo "${foo}"',
             BAR: 'bar'
           },
           $cmd: 'echo "${SCRIPT}"'

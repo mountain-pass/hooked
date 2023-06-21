@@ -22,41 +22,6 @@ import logger from './utils/logger.js'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
-/**
- * Remove env vars that are the same as the global env.
- * @param env
- * @param processEnv
- * @returns
- * @deprecated use Environment.resolved instead!
- */
-// export const stripProcessEnvs = (env: ResolvedEnv, processEnv: ResolvedEnv): ResolvedEnv => {
-//   const envCopy = Object.fromEntries(Object.entries(env).filter(([key, value]) => {
-//     // if value is the same, delete it
-//     return env[key] !== processEnv[key]
-//   }))
-//   return envCopy
-// }
-
-// /**
-//  * Retrieves all ${...} references from a string.
-//  * @param str e.g. 'hello ${name}'
-//  * @returns e.g. ['name']
-//  * @deprecated use Environment
-//  */
-// export const getEnvVarRefs = (str: string): string[] => {
-//   const regex = /\${([^}]+)}/g
-//   return Object.keys([...str.matchAll(regex)].reduce((prev: any, curr: string[]) => {
-//     // allow environment variable defaults (shell & bash syntax)
-//     const envvar = curr[1]
-//     // exclude env vars that have a fallback default value
-//     const hasDefault = envvar.includes(':') || envvar.includes('=')
-//     if (!hasDefault) {
-//       prev[envvar] = 1
-//     }
-//     return prev
-//   }, {}))
-// }
-
 export const stripLeadingEmojiSpace = (str: string): string => {
   return str.replace(/^\p{Extended_Pictographic}\s+/u, '')
 }
@@ -158,7 +123,7 @@ export const findScript = async (
     await inquirer
       .prompt([
         {
-          type: 'rawlist',
+          type: 'list',
           name: 'next',
           message: 'Please select an option:',
           pageSize: PAGE_SIZE,
@@ -233,25 +198,6 @@ export const internalFindEnv = (
   throw new Error(`Environment not found: ${envName}\nDid you mean?\n${availableEnvs}`)
 }
 
-/**
- * Resolves environment variables in order of $stdin & $env, then $cmd, then $resolve.
- * @param environment
- * @returns
- * @deprecated we no longer resolve environments in isolation - try `resolveEnv()` instead
- */
-export const internalResolveEnv = async (
-  environment: EnvironmentVariables = {},
-  stdin: StdinResponses = {},
-  resolvedEnv: Environment,
-  config: YamlConfig,
-  options: ProgramOptions
-): Promise<void> => {
-  // resolve environment variables **IN ORDER**
-  for (const [key, script] of Object.entries(environment)) {
-    await resolveScript(key, script, stdin, resolvedEnv, config, options)
-  }
-}
-
 /* Aggregator function, for merging imported configs. */
 const _mergeEnvAndScripts = (tmp: YamlConfig, aggrEnvs: TopLevelEnvironments, aggrScripts: TopLevelScripts): void => {
   // merge scripts - easy, they should all have unique top level names!
@@ -302,21 +248,21 @@ export const _resolveAndMergeConfigurationWithImports = async (config: YamlConfi
 export const fetchGlobalEnvVars = async (
   config: YamlConfig = {} as any,
   environmentNames: string[] = ['default'],
-  options: ProgramOptions = {} as any
+  options: ProgramOptions = {} as any,
+  envVars: EnvironmentVariables = {}
 ): Promise<[EnvironmentVariables, string[]]> => {
   // look for and apply all matching environments
   const allEnvNames: string[] = []
-  const allEnvVars: EnvironmentVariables = {}
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
     // collect ALL environment variables (in no particular order!)
     for (const [key, script] of Object.entries(foundEnv)) {
-      allEnvVars[key] = script
+      envVars[key] = script
     }
     allEnvNames.push(resolvedEnvName)
   }
 
-  return [allEnvVars, allEnvNames]
+  return [envVars, allEnvNames]
 }
 
 export const resolveEnvironmentVariables = async (
@@ -336,7 +282,7 @@ export const resolveEnvironmentVariables = async (
     // attempt to resolve variables in sequence
     for (const [key, script] of remainingAttempts) {
       try {
-        await resolveScript(key, script, stdin, env, config, options)
+        await resolveScript(key, script, stdin, env, config, options, envVars)
       } catch (err: any) {
         // could not resolve, add to retry list
         errors.push(err)

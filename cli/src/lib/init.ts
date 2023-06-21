@@ -14,7 +14,7 @@ export const init = async (options: ProgramOptions): Promise<void> => {
   // ask user which hooked.yaml template to use
   await inquirer.prompt([
     {
-      type: 'rawlist',
+      type: 'list',
       name: 'init',
       message: 'Create new config from:',
       pageSize: PAGE_SIZE,

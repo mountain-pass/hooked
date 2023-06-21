@@ -3,10 +3,9 @@ import fs from 'fs'
 import HJSON from 'hjson'
 import { yellow } from './colour.js'
 import {
-  findScript,
-  internalResolveEnv,
-  loadConfig,
   fetchGlobalEnvVars,
+  findScript,
+  loadConfig,
   resolveEnvironmentVariables
 } from './config.js'
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
@@ -18,11 +17,19 @@ import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExector.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
-import { isCmdScript, isDefined, isInternalScript, type SuccessfulScript, type SystemEnvironmentVariables } from './types.js'
+import {
+  isCmdScript,
+  isDefined,
+  isInternalScript,
+  type EnvironmentVariables,
+  type SuccessfulScript,
+  type SystemEnvironmentVariables
+} from './types.js'
+import { Environment } from './utils/Environment.js'
+import { mergeEnvVars } from './utils/envVarUtils.js'
 import { cleanUpOldScripts } from './utils/fileUtils.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import { Environment } from './utils/Environment.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -125,22 +132,22 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         // use relaxed json to parse the stdin
         const stdin = HJSON.parse(options.stdin)
 
+        const envVars: EnvironmentVariables = {}
+
         // fetch the environment variables...
-        const [envVars, resolvedEnvNames] = await fetchGlobalEnvVars(
+        const [, resolvedEnvNames] = await fetchGlobalEnvVars(
           config,
           options.env.split(','),
-          options
+          options,
+          envVars
         )
-
-        // actually resolve the environment variables...
-        await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
         // TODONICK accumulate envVars
 
         // resolve script env vars (if any)
         if (isCmdScript(script) && isDefined(script.$env)) {
           // execute script...
-          await internalResolveEnv(script.$env, stdin, env, config, options)
+          mergeEnvVars(envVars, script.$env)
         }
 
         // generate rerun command
@@ -160,9 +167,10 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
         } else {
           // execute script
           if (isCmdScript(script)) {
-            await resolveCmdScript(undefined, script, stdin, env, config, options, false)
+            await resolveCmdScript(undefined, script, stdin, env, config, options, false, envVars)
           } else if (isInternalScript(script)) {
-            await resolveInternalScript('-', script, stdin, env, config, options)
+            // TODONICK does this need to resolve environment variables? probably
+            await resolveInternalScript('-', script, stdin, env, config, options, envVars)
           }
 
           // store in history (if successful and not the _logs_ option!)

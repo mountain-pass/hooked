@@ -43,7 +43,7 @@ describe('config', () => {
 
     sinon.assert.calledOnceWithExactly(inqspy, [
       {
-        type: 'rawlist',
+        type: 'list',
         name: 'next',
         message: 'Please select an option:',
         pageSize: PAGE_SIZE,
@@ -261,8 +261,6 @@ describe('config', () => {
       // previously was be.rejectedWith(`Environment 'seven' is missing required environment variables: ["eight"]`)
     })
 
-    it.skip('order should not matter when resolving - part2 - multiple environment resolution', () => {})
-
   })
 
   describe('$cmd', () => {
@@ -407,7 +405,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'rawlist',
+        type: 'list',
         name: 'name',
         message: 'what is your name?',
         pageSize: PAGE_SIZE,
@@ -434,7 +432,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'rawlist',
+        type: 'list',
         name: 'name',
         message: 'what is your name?',
         pageSize: PAGE_SIZE,
@@ -461,7 +459,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'rawlist',
+        type: 'list',
         name: 'name',
         message: 'what is your name?',
         pageSize: PAGE_SIZE,
@@ -490,7 +488,7 @@ describe('config', () => {
       expect(stdin).to.eql({ name: 'jack' })
       expect(envNames).to.eql(['default'])
       sinon.assert.calledOnceWithExactly(inqspy, [{
-        type: 'rawlist',
+        type: 'list',
         name: 'name',
         message: 'what is your name?',
         pageSize: PAGE_SIZE,

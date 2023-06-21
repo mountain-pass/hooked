@@ -64,12 +64,11 @@
 - [x] when run, warn if not the latest version (check using `npm view @mountainpass/hooked-cli version`)
 - [x] teardown orphaned docker containers on SYSINT
 - [x] resolve `$ssh` hostname
+- [x] ensure local env is resolved, BEFORE imports (esp -> DOCKER_ARCHIVE)
+- [x] exclude host environment variables when running $script
+- [x] use "->" arrow to list select (because sometimes colours aren't present) (i.e. use `list` instead of `rawlist`)
 
 # Next
-
-- [ ] ensure local env is resolved, BEFORE imports (esp -> DOCKER_ARCHIVE)
-- [ ] exclude host environment variables when running $script
-- [ ] add "->" arrow to list select (sometimes colours aren't present)
 
 - [ ] `$cmd` > add ability to `$timeoutMs`
 - [ ] `$cmd` > add ability to `$retries` (retries on error, default `0`=disabled, `-1`=indefinite, additional `$retryDelayMs`)

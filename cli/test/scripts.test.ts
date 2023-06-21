@@ -6,7 +6,7 @@ import sinon from 'sinon'
 import { ProgramOptions } from '../src/lib/program.js'
 import { resolveCmdScript, resolveInternalScript } from '../src/lib/scriptExecutors/ScriptExector.js'
 import docker from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
-import { YamlConfig } from '../src/lib/types.js'
+import { EnvironmentVariables, YamlConfig } from '../src/lib/types.js'
 import { Environment } from '../src/lib/utils/Environment.js'
 import logger from '../src/lib/utils/logger.js'
 chai.use(chaiAsPromised)
@@ -28,6 +28,11 @@ const OPTIONS: ProgramOptions = {
 }
 
 describe('scripts', () => {
+
+  let envVars: EnvironmentVariables = {}
+  beforeEach(() => {
+    envVars = {}
+  })
   afterEach(() => {
     sinon.restore()
   })
@@ -37,7 +42,7 @@ describe('scripts', () => {
     it('$internal - base', async () => {
       const result = await resolveInternalScript('-', {
         $internal: async () => 'Hello'
-    }, {}, new Environment(), CONFIG, OPTIONS)
+    }, {}, new Environment(), CONFIG, OPTIONS, envVars)
       expect(result).to.eql('Hello')
     })
 
@@ -47,7 +52,7 @@ describe('scripts', () => {
           USER: 'bob'
         },
         $internal: async ({ key, stdin, env }) => `Hello ${env.resolveByKey('USER')}`
-    }, {}, new Environment(), CONFIG, OPTIONS)
+    }, {}, new Environment(), CONFIG, OPTIONS, envVars)
       expect(result).to.eql('Hello bob')
     })
 
