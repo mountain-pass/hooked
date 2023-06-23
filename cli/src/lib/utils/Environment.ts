@@ -1,3 +1,4 @@
+import { isDefined } from '../types.js'
 
 /**
  * Retrieves all ${...} references from a string.
@@ -65,44 +66,60 @@ export class Environment {
 
   // put
 
-  putGlobal (key: string, value: string): void {
+  putGlobal (key: string, value: string): Environment {
     if (this.isSecret(key)) {
       this.secrets[key] = value
     } else {
       this.global[key] = value
     }
+    return this
   }
 
-  putResolved (key: string, value: string): void {
+  putResolved (key: string, value: string): Environment {
     if (this.isSecret(key)) {
       this.secrets[key] = value
     } else {
       this.resolved[key] = value
     }
+    return this
   }
 
-  putSecret (key: string, value: string): void {
+  putSecret (key: string, value: string): Environment {
     this.secrets[key] = value
+    return this
   }
 
   // putAll
 
-  putAllGlobal (env: RawEnvironment): void {
+  putAllGlobal (env: RawEnvironment): Environment {
     Object.entries(env).forEach(([key, value]) => {
       this.putGlobal(key, value)
     })
+    return this
   }
 
-  putAllResolved (env: RawEnvironment): void {
+  /**
+   * Put's all values into the resolved environment.
+   * @param env
+   * @param overwrite if true, then overwrite existing values. if false, then keep existing values. (default = true)
+   * @returns
+   */
+  putAllResolved (env: RawEnvironment, overwrite: boolean = true): Environment {
     Object.entries(env).forEach(([key, value]) => {
-      this.putResolved(key, value)
+      if (isDefined(this.resolved[key]) && !overwrite) {
+        // do nothing... keep existing value
+      } else {
+        this.putResolved(key, value)
+      }
     })
+    return this
   }
 
-  putAllSecrets (env: RawEnvironment): void {
+  putAllSecrets (env: RawEnvironment): Environment {
     Object.entries(env).forEach(([key, value]) => {
       this.putSecret(key, value)
     })
+    return this
   }
 
   willNotBeResolved (key: string): boolean {

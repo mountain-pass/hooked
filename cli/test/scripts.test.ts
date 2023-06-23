@@ -127,16 +127,16 @@ describe('scripts', () => {
     it('$cmd - with $image and docker does exist', async () => {
       sinon.stub(docker, 'verifyDockerExists').resolves()
       const result = await resolveCmdScript('-', {
-        $image: 'node:16-alpine',
+        $image: 'node@sha256:6c381d5dc2a11dcdb693f0301e8587e43f440c90cdb8933eaaaabb905d44cdb9', // node:16-alpine
         $cmd: 'node -v'
       }, {}, new Environment(), CONFIG, OPTIONS)
-      expect(result).to.eql('v16.18.1')
+      expect(result).to.eql('v16.20.1')
     })
 
     it('$cmd - with $image and docker does NOT exist', async () => {
       sinon.stub(docker, 'verifyDockerExists').rejects(new Error('Docker does not exist!'))
       const result = resolveCmdScript('-', {
-        $image: 'node:16-alpine',
+        $image: 'node@sha256:6c381d5dc2a11dcdb693f0301e8587e43f440c90cdb8933eaaaabb905d44cdb9', // node:16-alpine
         $cmd: 'node -v'
       }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(result).to.eventually.be.rejectedWith('Docker does not exist!')

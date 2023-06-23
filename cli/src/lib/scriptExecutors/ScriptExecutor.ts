@@ -147,7 +147,7 @@ export const resolveCmdScript = async (
 
   // include environment variables from host
   if (script.$envFromHost === true) {
-    env.resolved = { ...process.env, ...env.resolved } as any
+    env.putAllResolved(process.env as any, false)
   }
 
   // execute the command, capture the output

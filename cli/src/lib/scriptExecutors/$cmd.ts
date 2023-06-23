@@ -126,8 +126,10 @@ export const executeCmd = async (
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env.global
       const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment({ envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }), false)
       dockerNames.push(dockerName)
-      // write a script to run the docker...
-      writeScript(filepath, cmd, env)
+
+      // write a script to run the docker (include system env vars - these may be required e.g. DOCKER_HOST)...
+      const tmp = env.clone().putAllResolved(process.env as any, false)
+      writeScript(filepath, cmd, tmp)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else if (isSSHCmdScript(script)) {
@@ -143,8 +145,9 @@ export const executeCmd = async (
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else {
-      // otherwise fallback to running a script on the local machine
-      writeScript(filepath, script.$cmd, env)
+      // otherwise fallback to running a script on the local machine (include system env vars - these may be required e.g. DOCKER_HOST)...
+      const tmp = env.clone().putAllResolved(process.env as any, false)
+      writeScript(filepath, script.$cmd, tmp)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     }
