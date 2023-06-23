@@ -27,19 +27,26 @@ scripts:
   docker:
 
     list images:
-      $cmd: ${DOCKER_BIN} image ls
+      $cmd: |
+        #!/bin/sh -ve
+        ${DOCKER_BIN} image ls
 
     list processes:
-      $cmd: ${DOCKER_BIN} ps
+      $cmd: |
+        #!/bin/sh -ve
+        ${DOCKER_BIN} ps
 
     system prune (volumes & all):
-      $cmd: ${DOCKER_BIN} system prune --volumes --all
+      $cmd: |
+        #!/bin/sh -ve
+        ${DOCKER_BIN} system prune --volumes --all
 
     login:
       $cmd: echo ${DOCKER_PASSWORD} | ${DOCKER_BIN} login ghcr.io -u ${DOCKER_USERNAME} --password-stdin
 
     build local:
       $cmd: |
+        #!/bin/sh -ve
         ${DOCKER_BIN} build \
           --tag ${DOCKER_IMAGE} \
           --file ${DOCKER_FILE} \
@@ -47,6 +54,7 @@ scripts:
 
     build platform image to local zip:
       $cmd: |
+        #!/bin/sh -ve
         ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
         ${DOCKER_BIN} buildx build \
           --no-cache \
@@ -58,6 +66,7 @@ scripts:
 
     buildAndPush platform image to registry:
       $cmd: |
+        #!/bin/sh -ve
         ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
         ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
@@ -67,4 +76,6 @@ scripts:
           .
 
     load local zip into local images:
-      $cmd: ${DOCKER_BIN} load --input ${DOCKER_ARCHIVE}
+      $cmd: |
+        #!/bin/sh -ve
+        ${DOCKER_BIN} load --input ${DOCKER_ARCHIVE}
