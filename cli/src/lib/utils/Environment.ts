@@ -226,7 +226,9 @@ export class Environment {
    * @returns
    */
   envToShellExports (): string {
-    return '\n' + Object.entries(this.resolved).map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`).sort().join('') + '\n'
+    const entries = Object.entries(this.resolved)
+    if (entries.length === 0) return ''
+    return '\n' + entries.map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`).sort().join('') + '\n'
   }
 
   toJsonStringResolved (pretty: boolean = false): string {

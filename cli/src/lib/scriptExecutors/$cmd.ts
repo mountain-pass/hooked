@@ -25,16 +25,10 @@ export const cleanupOldTmpFiles = (env: Environment): void => {
   }
 }
 
-/**
- * Writes an executable file. Optional injects environment variables into the file.
- * @param filepath
- * @param content
- * @param env - optional
- */
-const writeScript = (filepath: string, content: string, env?: Environment): void => {
+export const injectEnvironmentInScript = (content: string, env?: Environment): string => {
   // inject environment exports into content, IF provided
   if (isDefined(env)) {
-    const REGEX_HAS_HASHBANG_LEADINGLINE = /^#[^\n]+\n/gm
+    const REGEX_HAS_HASHBANG_LEADINGLINE = /^#![^\n]+\n/gm
     const envexports = env.envToShellExports()
     // inject environment variables at the head of the file...
     const match = REGEX_HAS_HASHBANG_LEADINGLINE.exec(content)
@@ -44,7 +38,18 @@ const writeScript = (filepath: string, content: string, env?: Environment): void
       content = envexports + content
     }
   }
-  fs.writeFileSync(filepath, content + '\n', 'utf-8')
+  return content.endsWith('\n') ? content : (content + '\n')
+}
+
+/**
+ * Writes an executable file. Optional injects environment variables into the file.
+ * @param filepath
+ * @param content
+ * @param env - optional
+ */
+const writeScript = (filepath: string, content: string, env?: Environment): void => {
+  const newContent = injectEnvironmentInScript(content, env)
+  fs.writeFileSync(filepath, newContent, 'utf-8')
   fs.chmodSync(filepath, 0o755)
 }
 

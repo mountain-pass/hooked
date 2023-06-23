@@ -3,7 +3,7 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { describe } from 'mocha'
 import sinon from 'sinon'
-import { createProcess, executeCmd } from '../src/lib/scriptExecutors/$cmd.js'
+import { createProcess, executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
 import { Environment } from '../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -18,6 +18,33 @@ describe('$cmd', () => {
   })
   afterEach(() => {
     sinon.restore()
+  })
+
+  describe('injectEnvironmentInScript', () => {
+
+    it('injectEnvironmentInScript should append a new line if missing', async () => {
+      const env = new Environment({ FOO: 'bar' })
+      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`echo "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`echo "hello"\n`)
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
+    })
+
+    it('injectEnvironmentInScript injects "resolved" environment variables only', async () => {
+      const env = new Environment().putAllResolved({ FOO: 'bar' })
+      // should inject in header
+      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n`)
+      // ... but after hash bang
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
+      // ... and not accidently pickup comments
+      expect(injectEnvironmentInScript(`echo "hello"\n# comment`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n# comment\n`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
+      // ... and not accidently pickup other hash bangs
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n#!/comment`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n#!/comment\n`)
+      expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n#!/comment\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n#!/comment\n`)
+    })
   })
 
   describe('.executeCmd()', () => {
