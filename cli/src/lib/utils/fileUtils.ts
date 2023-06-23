@@ -47,6 +47,7 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
       request.setTimeout(timeoutMs, function () {
         request.destroy()
       })
+      fs.unlinkSync(destination)
       const fileStream = fs.createWriteStream(destination)
       res.pipe(fileStream)
 
