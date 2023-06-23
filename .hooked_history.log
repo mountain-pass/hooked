@@ -103,3 +103,5 @@
 {"ts":1687501952938,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
 {"ts":1687502053270,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
 {"ts":1687502251120,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1687504304017,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1687504618711,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}

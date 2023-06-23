@@ -130,7 +130,11 @@ export class Environment {
     if (typeof resolveMe !== 'string') throw new Error(`resolveMe must be a string, but was ${typeof resolveMe}`)
     const requiredKeys = getEnvVarRefs(resolveMe)
     const all = { ...this.global, ...this.resolved, ...this.secrets }
-    const missingKeys = requiredKeys.filter(key => typeof all[key] === 'undefined')
+    const missingKeys = requiredKeys.filter(key =>
+      typeof all[key] === 'undefined' ||
+      all[key] === null ||
+      (typeof all[key] === 'string' && all[key] === '')
+    )
     return missingKeys
   }
 

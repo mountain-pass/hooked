@@ -207,6 +207,33 @@ describe('config', () => {
       // await resolveEnvironmentVariables(config, envVars, stdin, env)
       await expect(resolveEnvironmentVariables(config, envVars, stdin, env)).to.be.rejectedWith(`Environment 'username' is missing required environment variables: ["USER"]`)
     })
+  
+    it('$env - env should throw error if $env is blank', async () => {
+      const config: YamlConfig = { env: { default: { USER: '', username: '${USER}' } }, scripts: {} }
+      const stdin = {}
+      const env = new Environment()
+      const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
+      // await resolveEnvironmentVariables(config, envVars, stdin, env)
+      await expect(resolveEnvironmentVariables(config, envVars, stdin, env)).to.be.rejectedWith(`Environment 'username' is missing required environment variables: ["USER"]`)
+    })
+  
+    it('$env - env should NOT throw error if $env is NOT blank', async () => {
+      const config: YamlConfig = { env: { default: { USER: 'X', username: '${USER}' } }, scripts: {} }
+      const stdin = {}
+      const env = new Environment()
+      const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
+      expect(envVars).to.eql({
+        USER: 'X',
+        username: '${USER}'
+      })
+      await resolveEnvironmentVariables(config, envVars, stdin, env)
+      expect(env.resolved).to.eql({
+        USER: 'X',
+        username: 'X'
+      })
+      expect(stdin).to.eql({})
+      expect(envNames).to.eql(['default'])
+    })
 
     it('$resolve - env should resolve $resolve', async () => {
       // eslint-disable-next-line no-template-curly-in-string

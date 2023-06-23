@@ -72,6 +72,7 @@
 
 - [ ] Scripts that run scripts, should inherit the system's environment variables.
 - [ ] if calling self... don't exit the environment! call within system.
+- [ ] limit history to last 1000x
 
 - [ ] `$cmd` > add ability to `$timeoutMs`
 - [ ] `$cmd` > add ability to `$retries` (retries on error, default `0`=disabled, `-1`=indefinite, additional `$retryDelayMs`)
