@@ -5,7 +5,7 @@ import fs from 'fs'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
-import { Environment } from '../../src/lib/utils/Environment.js'
+import { Environment, toJsonStringResolved } from '../../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -20,6 +20,23 @@ describe('Environment', () => {
 
     afterEach(() => {
         sinon.restore()
+    })
+
+    describe('toJsonString', () => {
+
+        it('should work', () => {
+            expect(toJsonStringResolved({})).to.eql('{}')
+        })
+        it('can be pretty printed', () => {
+            expect(toJsonStringResolved({}, true)).to.eql('{}')
+            expect(toJsonStringResolved({zzz:'foo',aaa:'bar'}, true)).to.eql('{\n  "aaa": "bar",\n  "zzz": "foo"\n}')
+        })
+        it('should be alphabetical', () => {
+            expect(toJsonStringResolved({zzz:'foo',aaa:'bar'})).to.eql('{"aaa":"bar","zzz":"foo"}')
+        })
+        it('should accept scripts', () => {
+            expect(toJsonStringResolved({zzz:'foo',aaa:{$cmd: 'echo "Foobar"'}})).to.eql('{"aaa":{"$cmd":"echo \\"Foobar\\""},"zzz":"foo"}')
+        })
     })
 
     // crud - put

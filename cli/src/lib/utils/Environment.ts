@@ -1,4 +1,4 @@
-import { isDefined } from '../types.js'
+import { type EnvironmentVariables, isDefined } from '../types.js'
 
 /**
  * Retrieves all ${...} references from a string.
@@ -17,6 +17,11 @@ export const getEnvVarRefs = (str: string): string[] => {
     }
     return prev
   }, {}))
+}
+
+export function toJsonStringResolved (env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
+  const sorted = Object.fromEntries(Object.entries(env).sort((a, b) => a[0].localeCompare(b[0])))
+  return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
 }
 
 /**
@@ -236,7 +241,6 @@ export class Environment {
   }
 
   toJsonStringResolved (pretty: boolean = false): string {
-    const sorted = Object.fromEntries(Object.entries(this.resolved).sort((a, b) => a[0].localeCompare(b[0])))
-    return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
+    return toJsonStringResolved(this.resolved, pretty)
   }
 }
