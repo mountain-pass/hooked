@@ -3,11 +3,16 @@ import nodeCleanup from 'node-cleanup'
 import logger from './utils/logger.js'
 import { childProcesses, dockerNames } from './scriptExecutors/$cmd.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
+import { cleanupOldTmpFiles } from './utils/fileUtils.js'
 
 const onExit = (): void => {
   nodeCleanup((exitCode, signal) => {
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
     logger.debug(`Shutting down with exit code ${newExitCode}...`)
+    // delete tmp files...
+    if (process.env.SKIPCLEANUP !== 'true') {
+      cleanupOldTmpFiles()
+    }
     // kill child processes
     // logger.debug('Cleaning up child processes...')
     for (const child of childProcesses) {

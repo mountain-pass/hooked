@@ -20,7 +20,7 @@ export const generateNpmScripts = (env: Environment): any => {
         'clean install production': { $cmd: 'npm ci --production' }
       }
       const npm = Object.keys(packageJson.scripts).reduce((prev: any, curr: string) => {
-        const cmd = resolveResolveScript('-', { $resolve: npmScript }, new Environment({ NPM_COMMAND: curr }), false)
+        const cmd = resolveResolveScript('-', { $resolve: npmScript }, new Environment().putAllGlobal({ NPM_COMMAND: curr }), false)
         prev[curr] = { $cmd: cmd }
         return prev
       }, npmScripts)

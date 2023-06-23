@@ -164,7 +164,7 @@ describe('config', () => {
     const config: YamlConfig = { env: { default: { bbb: 'xxx', ddd: 'zzz' } }, scripts: {} }
     // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment({ aaa: '111', bbb: '222', ccc: '333' }))
     const stdin = {}
-    const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+    const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
     const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
     await resolveEnvironmentVariables(config, envVars, stdin, env)
     expect(env.resolved).to.eql({ bbb: 'xxx', ddd: 'zzz' })
@@ -178,7 +178,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { foo: 'iamplainstring' } }, scripts: {} }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
-      const env = new Environment({})
+      const env = new Environment().putAllGlobal({})
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ foo: 'iamplainstring' })
@@ -191,7 +191,7 @@ describe('config', () => {
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment({ USER: 'fred' }))
 
     const stdin = {}
-    const env = new Environment({ USER: 'fred' })
+    const env = new Environment().putAllGlobal({ USER: 'fred' })
     const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
     await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ username: 'fred' })
@@ -240,7 +240,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { foo: 'bar', username: 'i-like-${foo}' } }, scripts: {} }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment())
       const stdin = {}
-      const env = new Environment({})
+      const env = new Environment().putAllGlobal({})
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ foo: 'bar', username: 'i-like-bar' })
@@ -271,7 +271,7 @@ describe('config', () => {
       }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {}, new Environment())
       const stdin = {}
-      const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+      const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(envNames).to.eql(['default'])
@@ -308,10 +308,10 @@ describe('config', () => {
     }
 
     it('executing a $cmd with satisfied env should succeed', async () => {
-      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ HELLO: "Hello" }), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment().putAllGlobal({ HELLO: "Hello" }), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a script with UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith(`Script '-' is missing required environment variables: ["HELLO"]`)
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment().putAllGlobal({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith(`Script '-' is missing required environment variables: ["HELLO"]`)
     })
     it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
       await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, new Environment(), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
@@ -353,7 +353,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
-      const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+      const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ name: 'jack' })
@@ -367,7 +367,7 @@ describe('config', () => {
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
       const config: YamlConfig = { env: { default: { name: { $stdin: 'Is your name "${USER}"?' } } }, scripts: { } }
-      const env = new Environment({ USER: 'jill' })
+      const env = new Environment().putAllGlobal({ USER: 'jill' })
       const stdin = {}
       const [envVars] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
@@ -388,7 +388,7 @@ describe('config', () => {
       // test
       const config: YamlConfig = { env: { default: { name: { $stdin: 'Is your name ...?', $default: '${USER}' } } }, scripts: { } }
       const stdin = {}
-      const env = new Environment({ USER: 'jill' })
+      const env = new Environment().putAllGlobal({ USER: 'jill' })
       const [envVars] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       sinon.assert.calledOnceWithExactly(inqspy, [ {
@@ -409,7 +409,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], { name: 'fred' })
     const stdin = { name: 'fred' }
-    const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+    const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
     const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
     await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ name: 'fred' })
@@ -425,7 +425,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: ['one', 'two'] } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
-      const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+      const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ name: 'jack' })
@@ -452,7 +452,7 @@ describe('config', () => {
       const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: [true, false] } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
-      const env = new Environment({ aaa: '111', bbb: '222', ccc: '333' })
+      const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       expect(env.resolved).to.eql({ name: 'jack' })

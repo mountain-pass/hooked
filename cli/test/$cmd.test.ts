@@ -23,7 +23,7 @@ describe('$cmd', () => {
   describe('injectEnvironmentInScript', () => {
 
     it('injectEnvironmentInScript should append a new line if missing', async () => {
-      const env = new Environment({ FOO: 'bar' })
+      const env = new Environment().putAllGlobal({ FOO: 'bar' })
       expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`echo "hello"\n`)
       expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`echo "hello"\n`)
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)

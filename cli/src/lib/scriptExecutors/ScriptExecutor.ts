@@ -26,10 +26,10 @@ import {
   type StdinScript,
   type YamlConfig
 } from '../types.js'
-import { type Environment } from '../utils/Environment.js'
+import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
-import { cleanupOldTmpFiles, executeCmd } from './$cmd.js'
+import { executeCmd } from './$cmd.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 
 // Environment variable names that are exempt from being resolved
@@ -133,7 +133,10 @@ export const resolveCmdScript = async (
   const missingKeys = env.getMissingRequiredKeys(script.$cmd)
   if (missingKeys.length > 0) {
     // eslint-disable-next-line max-len
-    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}`)
+    const foundString = toJsonString(env.getAll(), true)
+    // const envVarsString = toJsonString(envVars, true)
+    // eslint-disable-next-line max-len
+    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}\nFound: ${foundString}`)
   }
 
   // print environment variables, and exit.
@@ -141,9 +144,6 @@ export const resolveCmdScript = async (
     logger.info(env.toJsonStringResolved(options.pretty))
     return ''
   }
-
-  // cleanup old tmp files
-  cleanupOldTmpFiles(env)
 
   // include environment variables from host
   if (script.$envFromHost === true) {

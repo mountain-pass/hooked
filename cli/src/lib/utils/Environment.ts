@@ -1,4 +1,5 @@
-import { isDefined, type EnvironmentVariables } from '../types.js'
+import { isDefined, type EnvironmentVariables, isString } from '../types.js'
+import logger from './logger.js'
 
 /**
  * Retrieves all ${...} references from a string.
@@ -39,10 +40,6 @@ export class Environment {
   /** All keys defined here, should be excluded from resolution. */
   doNotResolveList: string[] = []
 
-  constructor (global: RawEnvironment = {}) {
-    this.global = global
-  }
-
   purgeSecrets (): void {
     this.secrets = {}
   }
@@ -72,6 +69,13 @@ export class Environment {
   // put
 
   putGlobal (key: string, value: string): Environment {
+    if (key === 'DOCKER_CONTAINER' && value === '') {
+      throw new Error(`Received invalid global value '${value}' for key '${key}'`)
+    }
+    // reject invalid values
+    if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
+      logger.debug(`Received invalid global value '${value}' for key '${key}', ignoring...`)
+    }
     if (this.isSecret(key)) {
       this.secrets[key] = value
     } else {
@@ -81,8 +85,15 @@ export class Environment {
   }
 
   putResolved (key: string, value: string): Environment {
+    if (key === 'DOCKER_CONTAINER' && value === '') {
+      throw new Error(`Received invalid global value '${value}' for key '${key}'`)
+    }
+    // reject invalid values
+    if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
+      logger.debug(`Received invalid resolved value '${value}' for key '${key}', ignoring...`)
+    }
     if (this.isSecret(key)) {
-      this.secrets[key] = value
+      this.putSecret(key, value)
     } else {
       this.resolved[key] = value
     }
@@ -90,6 +101,10 @@ export class Environment {
   }
 
   putSecret (key: string, value: string): Environment {
+    // reject invalid values
+    if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
+      logger.debug(`Received invalid secret value '${value}' for key '${key}', ignoring...`)
+    }
     this.secrets[key] = value
     return this
   }
@@ -177,7 +192,8 @@ export class Environment {
     const missingKeys = this.getMissingRequiredKeys(resolveMe)
     if (missingKeys.length > 0) {
       // eslint-disable-next-line max-len
-      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\nFound: ${toJsonString(this.getAll(), true)}`)
+      const foundString = `Found: ${toJsonString(this.getAll(), true)}`
+      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\n${foundString}`)
     }
 
     // use string replacement to resolve from the resolvedEnv

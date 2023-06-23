@@ -14,7 +14,8 @@ export const generateMakefileScripts = (env: Environment): any => {
     const scriptNames = fs.readFileSync(makefile, 'utf8').match(/^\w[^:]+/gm)
     if (scriptNames !== null && Array.isArray(scriptNames) && scriptNames.length > 0) {
       const makefileScripts = scriptNames.reduce((prev: any, curr: string) => {
-        const cmd = resolveResolveScript('-', { $resolve: makeScript }, new Environment({ MAKE_FILE: makefile, MAKE_COMMAND: curr }), false)
+        const env = new Environment().putAllGlobal({ MAKE_FILE: makefile, MAKE_COMMAND: curr })
+        const cmd = resolveResolveScript('-', { $resolve: makeScript }, env, false)
         prev[curr] = { $cmd: cmd }
         return prev
       }, {})

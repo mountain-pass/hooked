@@ -27,7 +27,6 @@ import {
 } from './types.js'
 import { Environment, type RawEnvironment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
-import { cleanUpOldScripts } from './utils/fileUtils.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 
@@ -43,7 +42,6 @@ export interface ProgramOptions {
   log?: boolean
   batch?: boolean
   pull?: boolean
-  nocleanup?: boolean
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
@@ -62,14 +60,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required')
-    .option('--nocleanup', 'will skip deleting temporary script files at startup')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
-      // cleanup previous files
-      if (options.nocleanup !== true) {
-        cleanUpOldScripts()
-      }
       const env = new Environment()
       env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
       env.putAllGlobal(systemProcessEnvs)
@@ -141,10 +134,11 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         const stdin: RawEnvironment = HJSON.parse(options.stdin)
         mergeEnvVars(envVars, stdin)
 
+        const providedEnvNames = options.env.split(',')
         // fetch the environment variables...
         const [, resolvedEnvNames] = await fetchGlobalEnvVars(
           config,
-          options.env.split(','),
+          ['default', ...providedEnvNames],
           options,
           envVars
         )
@@ -183,11 +177,6 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         // store in history (if successful and not the _logs_ option!)
         if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         // }
-
-        // cleanup previous files
-        if (options.nocleanup !== true) {
-          cleanUpOldScripts()
-        }
       } catch (err: any) {
         // try {
         // logger.error(err)

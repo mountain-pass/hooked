@@ -252,17 +252,17 @@ export const fetchGlobalEnvVars = async (
   envVars: EnvironmentVariables = {}
 ): Promise<[EnvironmentVariables, string[]]> => {
   // look for and apply all matching environments
-  const allEnvNames: string[] = []
+  const allEnvNames = new Set<string>()
   for (const envName of environmentNames) {
     const [foundEnv = {}, resolvedEnvName] = internalFindEnv(config, envName, options)
     // collect ALL environment variables (in no particular order!)
     for (const [key, script] of Object.entries(foundEnv)) {
       envVars[key] = script
     }
-    allEnvNames.push(resolvedEnvName)
+    allEnvNames.add(resolvedEnvName)
   }
 
-  return [envVars, allEnvNames]
+  return [envVars, [...allEnvNames]]
 }
 
 export const resolveEnvironmentVariables = async (
@@ -279,7 +279,7 @@ export const resolveEnvironmentVariables = async (
   while (remainingAttempts.length > 0) {
     const retry: Array<[string, Script]> = []
     errors = []
-    // attempt to resolve variables in sequence
+    // attempt to resolve variables, sequentially...
     for (const [key, script] of remainingAttempts) {
       try {
         await resolveScript(key, script, stdin, env, config, options, envVars)
