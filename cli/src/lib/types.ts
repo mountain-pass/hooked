@@ -10,8 +10,6 @@ export interface Plugins {
 }
 
 /** For the process.env */
-export type SystemEnvironmentVariables = Record<string, string>
-
 export type EnvironmentVariables = Record<string, Script>
 
 export type TopLevelImports = string[]

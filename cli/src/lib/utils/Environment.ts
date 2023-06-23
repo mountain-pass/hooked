@@ -18,17 +18,22 @@ export const getEnvVarRefs = (str: string): string[] => {
   }, {}))
 }
 
+/**
+ * Raw Key->Value (string -> string) environment object.
+ */
+export type RawEnvironment = Record<string, string>
+
 export class Environment {
   /** Used for resolving variables, but not intended to be "kept". */
-  global: Record<string, string> = {}
+  global: RawEnvironment = {}
   /** Used for resolved variables, intended to be "kept". */
-  resolved: Record<string, string> = {}
+  resolved: RawEnvironment = {}
   /** Transient variables, that can be explicitly purged. */
-  secrets: Record<string, string> = {}
+  secrets: RawEnvironment = {}
   /** All keys defined here, should be excluded from resolution. */
   doNotResolveList: string[] = []
 
-  constructor (global: Record<string, string> = {}) {
+  constructor (global: RawEnvironment = {}) {
     this.global = global
   }
 
@@ -40,7 +45,7 @@ export class Environment {
    * Returns all environment variables, excluding secret variables.
    * @returns
    */
-  getAll (): Record<string, string> {
+  getAll (): RawEnvironment {
     // N.B. order is important, because resolved variables should override global variables
     return { ...this.global, ...this.resolved }
     // N.B. secrets go in... but secrets should not come out!
@@ -82,19 +87,19 @@ export class Environment {
 
   // putAll
 
-  putAllGlobal (env: Record<string, string>): void {
+  putAllGlobal (env: RawEnvironment): void {
     Object.entries(env).forEach(([key, value]) => {
       this.putGlobal(key, value)
     })
   }
 
-  putAllResolved (env: Record<string, string>): void {
+  putAllResolved (env: RawEnvironment): void {
     Object.entries(env).forEach(([key, value]) => {
       this.putResolved(key, value)
     })
   }
 
-  putAllSecrets (env: Record<string, string>): void {
+  putAllSecrets (env: RawEnvironment): void {
     Object.entries(env).forEach(([key, value]) => {
       this.putSecret(key, value)
     })
@@ -146,7 +151,7 @@ export class Environment {
     const missingKeys = this.getMissingRequiredKeys(resolveMe)
     if (missingKeys.length > 0) {
       // eslint-disable-next-line max-len
-      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}. Found ${JSON.stringify(Object.keys(this.getAll()))}`)
+      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}. Found ${JSON.stringify(Object.keys(this.getAll()).sort())}`)
     }
 
     // use string replacement to resolve from the resolvedEnv

@@ -5,8 +5,7 @@ import { yellow } from './colour.js'
 import {
   fetchGlobalEnvVars,
   findScript,
-  loadConfig,
-  resolveEnvironmentVariables
+  loadConfig
 } from './config.js'
 import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
 import exitHandler from './exitHandler.js'
@@ -20,14 +19,13 @@ import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools
 import {
   isCmdScript,
   isDefined,
+  isDockerCmdScript,
   isInternalScript,
-  type EnvironmentVariables,
-  type SuccessfulScript,
-  type SystemEnvironmentVariables,
   isSSHCmdScript,
-  isDockerCmdScript
+  type EnvironmentVariables,
+  type SuccessfulScript
 } from './types.js'
-import { Environment } from './utils/Environment.js'
+import { Environment, type RawEnvironment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
 import { cleanUpOldScripts } from './utils/fileUtils.js'
 import logger from './utils/logger.js'
@@ -46,7 +44,7 @@ export interface ProgramOptions {
   pull?: boolean
 }
 
-export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOnError = true): Command => {
+export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
   const program = new Command()
 
   program
@@ -131,10 +129,11 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
           throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
         }
 
-        // use relaxed json to parse the stdin
-        const stdin = HJSON.parse(options.stdin)
-
         const envVars: EnvironmentVariables = {}
+
+        // use relaxed json to parse the stdin
+        const stdin: RawEnvironment = HJSON.parse(options.stdin)
+        mergeEnvVars(envVars, stdin)
 
         // fetch the environment variables...
         const [, resolvedEnvNames] = await fetchGlobalEnvVars(
@@ -197,7 +196,7 @@ export const newProgram = (systemProcessEnvs: SystemEnvironmentVariables, exitOn
 }
 
 export default async (argv: string[] = process.argv): Promise<Command> => {
-  const program = newProgram(process.env as SystemEnvironmentVariables)
+  const program = newProgram(process.env as RawEnvironment)
 
   exitHandler.onExit()
 

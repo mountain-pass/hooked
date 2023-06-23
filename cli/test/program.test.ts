@@ -195,6 +195,33 @@ describe('program', () => {
     })
   })
 
+  it('command line provided stdin, should be added to the resolvable envvars', async () => {
+    const config: YamlConfig = {
+      env: {
+        default: {
+          connectTo: 'root@${IPADDR}',
+        }
+      },
+      scripts: {
+        test: {
+          $envFromHost: false,
+          $cmd: 'echo "${connectTo}"'
+        }
+      }
+    }
+    writeConfig(config)
+    const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
+    await program.parseAsync(`node index.ts -b test --stdin {"IPADDR":"192.168.0.1"}`.split(' '))
+
+    // verify that the script was called with the correct environment
+    sinon.assert.calledOnce(execSpy)
+    expect(execSpy.getCall(0).args[1]?.env).to.eql({
+      connectTo: 'root@192.168.0.1',
+      IPADDR: "192.168.0.1",
+      HOOKED_ROOT: 'false'
+    })
+  })
+
   it('order should not matter when resolving - part2b - use "--printenv" with multiple environment resolution', async () => {
     const config: YamlConfig = {
       imports: ['https://raw.githubusercontent.com/mountain-pass/hooked/main/imports/_docker.yaml'],

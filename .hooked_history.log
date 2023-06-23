@@ -90,3 +90,5 @@
 {"ts":1687358113354,"scriptPath":["which"],"envNames":["default"],"stdin":{}}
 {"ts":1687358995778,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
 {"ts":1687359049967,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
+{"ts":1687359623462,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1687359657933,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}

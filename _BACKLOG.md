@@ -100,6 +100,8 @@
 
 # create files at given location (even remotely or in docker image)
 
+- [ ] make `$envFromHost` overridable from the top level (feature flag)
+
 - [x] allow overriding default docker run script
   - [x] build
   - [x] document

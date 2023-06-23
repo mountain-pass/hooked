@@ -154,7 +154,7 @@ describe('Environment', () => {
             env.putResolved('MISSING1', '111')
             env.putResolved('FOO', 'bar')
             expect(() => env.resolve('this ${MISSING1} $IGNORED1 ${MISSING2}'))
-                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING2"]. Found ["MISSING1","FOO"]`)
+                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING2"]. Found ["FOO","MISSING1"]`)
         })
 
         it('should resolve all variables', async () => {

@@ -133,7 +133,7 @@ export const resolveCmdScript = async (
   const missingKeys = env.getMissingRequiredKeys(script.$cmd)
   if (missingKeys.length > 0) {
     // eslint-disable-next-line max-len
-    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys)}`)
+    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}`)
   }
 
   // print environment variables, and exit.
