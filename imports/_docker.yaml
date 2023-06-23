@@ -57,6 +57,17 @@ scripts:
         #!/bin/sh -ve
         ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
         ${DOCKER_BIN} buildx build \
+          --platform ${PLATFORM} \
+          --tag ${DOCKER_IMAGE} \
+          --file ${DOCKER_FILE} \
+          --output type=docker,dest=- \
+          . | gzip > ${DOCKER_ARCHIVE}
+
+    build platform image to local zip [NO_CACHE]:
+      $cmd: |
+        #!/bin/sh -ve
+        ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
+        ${DOCKER_BIN} buildx build \
           --no-cache \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
