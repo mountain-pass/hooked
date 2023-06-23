@@ -140,14 +140,14 @@ export const executeCmd = async (
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
       const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
       const cmd = resolveResolveScript('-', { $resolve: sshScript }, new Environment({ envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }), false)
-      // write a script to execute the shell script on the remote machine...
-      writeScript(filepath, cmd, env)
+      // write a script to execute the shell script on the remote machine... (include system env vars - these may be required e.g. DOCKER_HOST)...
+      const tmp = env.clone().putAllResolved(process.env as any, false)
+      writeScript(filepath, cmd, tmp)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else {
-      // otherwise fallback to running a script on the local machine (include system env vars - these may be required e.g. DOCKER_HOST)...
-      const tmp = env.clone().putAllResolved(process.env as any, false)
-      writeScript(filepath, script.$cmd, tmp)
+      // otherwise fallback to running a script on the local machine
+      writeScript(filepath, script.$cmd, env)
       return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     }

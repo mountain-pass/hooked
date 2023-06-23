@@ -161,7 +161,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         // execute script
         if (isCmdScript(script)) {
           // run cmd
-          // TODO document this
+          // if a native local script... default to using the host environment
           if (!isSSHCmdScript(script) && !isDockerCmdScript(script) && !isDefined(script.$envFromHost)) {
             logger.debug('Defaulting $envFromHost to "true" for local script.')
             script.$envFromHost = true
