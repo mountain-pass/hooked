@@ -176,8 +176,9 @@ export class Environment {
     // const requiredKeys = getEnvVarRefs(resolveMe)
     const missingKeys = this.getMissingRequiredKeys(resolveMe)
     if (missingKeys.length > 0) {
+      const allKeys = Object.keys({ ...this.global, ...this.resolved, ...this.secrets }).sort()
       // eslint-disable-next-line max-len
-      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}. Found ${JSON.stringify(Object.keys(this.getAll()).sort())}`)
+      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\nFound ${JSON.stringify(allKeys, null, 2)}`)
     }
 
     // use string replacement to resolve from the resolvedEnv
