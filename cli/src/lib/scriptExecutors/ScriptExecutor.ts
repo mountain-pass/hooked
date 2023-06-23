@@ -76,7 +76,7 @@ export const resolveInternalScript = async (
 
   // print environment variables, and exit.
   if (isFinalScript && options.printenv === true) {
-    logger.info(JSON.stringify(env.resolved))
+    logger.info(env.toJsonStringResolved(options.pretty))
     return ''
   }
 
@@ -138,7 +138,7 @@ export const resolveCmdScript = async (
 
   // print environment variables, and exit.
   if (isFinalScript && options.printenv === true) {
-    logger.info(JSON.stringify(env.resolved))
+    logger.info(env.toJsonStringResolved(options.pretty))
     return ''
   }
 

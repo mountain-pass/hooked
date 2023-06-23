@@ -228,4 +228,9 @@ export class Environment {
   envToShellExports (): string {
     return '\n' + Object.entries(this.resolved).map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`).sort().join('') + '\n'
   }
+
+  toJsonStringResolved (pretty: boolean = false): string {
+    const sorted = Object.fromEntries(Object.entries(this.resolved).sort((a, b) => a[0].localeCompare(b[0])))
+    return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
+  }
 }

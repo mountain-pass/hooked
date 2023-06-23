@@ -37,6 +37,7 @@ export interface ProgramOptions {
   env: string
   stdin: string
   printenv?: boolean
+  pretty?: boolean
   listenvs?: boolean
   init?: boolean
   log?: boolean
@@ -55,6 +56,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-e, --env <env>', 'accepts a comma separated list of environment names', 'default')
     .option('-in, --stdin <json>', 'allows predefining stdin responses', '{}')
     .option('--printenv', 'print the resolved environment, and exits')
+    .option('--pretty', 'prints the output (printenv) in pretty format')
     .option('--listenvs', 'lists the available environments, and exits')
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
