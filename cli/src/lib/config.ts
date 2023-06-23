@@ -15,7 +15,7 @@ import {
   type TopLevelScripts,
   type YamlConfig
 } from './types.js'
-import { Environment, toJsonStringResolved } from './utils/Environment.js'
+import { Environment, toJsonString } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
@@ -291,20 +291,20 @@ export const resolveEnvironmentVariables = async (
     }
     // no progress made, abort!
     if (retry.length === remainingAttempts.length) {
+      logger.debug(`Retry stuck with ${retry.length} unresolved environment variable(s)...`)
       break
-    }
-    // some progress made, log and retry
-    if (retry.length > 0) {
+    } else if (retry.length > 0) {
+      // some progress made, log and retry
       logger.debug(`Retrying ${retry.length} unresolved environment variable(s)...`)
     }
     // update remaining attempts
     remainingAttempts = retry
   }
   // if there are still remaining attempts...
-  if (errors.length > 0) {
+  if (remainingAttempts.length > 0 && errors.length > 0) {
     const errorsString = `- ${errors.map((err) => err.message).join('\n- ')}`
-    const envString = `environment=${toJsonStringResolved(envVars, true)}`
-    throw new Error(`Could not resolve ${errors.length} environment variables:\n${errorsString}\n${envString}`)
+    // const envString = `environment=${toJsonString(envVars, true)}`
+    throw new Error(`Could not resolve ${errors.length} environment variables:\n${errorsString}`)
   }
 
   // OLD WAY - assumes env vars can be resolved in order...

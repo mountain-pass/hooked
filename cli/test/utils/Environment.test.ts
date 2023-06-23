@@ -5,7 +5,7 @@ import fs from 'fs'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
-import { Environment, toJsonStringResolved } from '../../src/lib/utils/Environment.js'
+import { Environment, toJsonString } from '../../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -25,17 +25,17 @@ describe('Environment', () => {
     describe('toJsonString', () => {
 
         it('should work', () => {
-            expect(toJsonStringResolved({})).to.eql('{}')
+            expect(toJsonString({})).to.eql('{}')
         })
         it('can be pretty printed', () => {
-            expect(toJsonStringResolved({}, true)).to.eql('{}')
-            expect(toJsonStringResolved({zzz:'foo',aaa:'bar'}, true)).to.eql('{\n  "aaa": "bar",\n  "zzz": "foo"\n}')
+            expect(toJsonString({}, true)).to.eql('{}')
+            expect(toJsonString({zzz:'foo',aaa:'bar'}, true)).to.eql('{\n  "aaa": "bar",\n  "zzz": "foo"\n}')
         })
         it('should be alphabetical', () => {
-            expect(toJsonStringResolved({zzz:'foo',aaa:'bar'})).to.eql('{"aaa":"bar","zzz":"foo"}')
+            expect(toJsonString({zzz:'foo',aaa:'bar'})).to.eql('{"aaa":"bar","zzz":"foo"}')
         })
         it('should accept scripts', () => {
-            expect(toJsonStringResolved({zzz:'foo',aaa:{$cmd: 'echo "Foobar"'}})).to.eql('{"aaa":{"$cmd":"echo \\"Foobar\\""},"zzz":"foo"}')
+            expect(toJsonString({zzz:'foo',aaa:{$cmd: 'echo "Foobar"'}})).to.eql('{"aaa":{"$cmd":"echo \\"Foobar\\""},"zzz":"foo"}')
         })
     })
 
@@ -164,14 +164,14 @@ describe('Environment', () => {
         
         it('should error if missing all variables', async () => {
             expect(() => env.resolve('this ${MISSING1} $IGNORED1 ${MISSING2}'))
-                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING1","MISSING2"].\nFound []`)
+                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING1","MISSING2"].\nFound: {}`)
         })
 
         it('should error if missing some variables', async () => {
             env.putResolved('MISSING1', '111')
             env.putResolved('FOO', 'bar')
             expect(() => env.resolve('this ${MISSING1} $IGNORED1 ${MISSING2}'))
-                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING2"].\nFound [\n  "FOO",\n  "MISSING1"\n]`)
+                .to.throw(`Environment 'NOT_DEFINED' is missing required environment variables: ["MISSING2"].\nFound: {\n  "FOO": "bar",\n  "MISSING1": "111"\n}`)
         })
 
         it('should resolve all variables', async () => {

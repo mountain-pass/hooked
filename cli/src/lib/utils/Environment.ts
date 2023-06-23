@@ -1,4 +1,4 @@
-import { type EnvironmentVariables, isDefined } from '../types.js'
+import { isDefined, type EnvironmentVariables } from '../types.js'
 
 /**
  * Retrieves all ${...} references from a string.
@@ -19,7 +19,7 @@ export const getEnvVarRefs = (str: string): string[] => {
   }, {}))
 }
 
-export function toJsonStringResolved (env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
+export function toJsonString (env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
   const sorted = Object.fromEntries(Object.entries(env).sort((a, b) => a[0].localeCompare(b[0])))
   return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
 }
@@ -176,9 +176,8 @@ export class Environment {
     // const requiredKeys = getEnvVarRefs(resolveMe)
     const missingKeys = this.getMissingRequiredKeys(resolveMe)
     if (missingKeys.length > 0) {
-      const allKeys = Object.keys({ ...this.global, ...this.resolved, ...this.secrets }).sort()
       // eslint-disable-next-line max-len
-      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\nFound ${JSON.stringify(allKeys, null, 2)}`)
+      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\nFound: ${toJsonString(this.getAll(), true)}`)
     }
 
     // use string replacement to resolve from the resolvedEnv
@@ -242,6 +241,6 @@ export class Environment {
   }
 
   toJsonStringResolved (pretty: boolean = false): string {
-    return toJsonStringResolved(this.resolved, pretty)
+    return toJsonString(this.resolved, pretty)
   }
 }
