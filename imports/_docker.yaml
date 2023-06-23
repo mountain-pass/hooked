@@ -56,6 +56,7 @@ scripts:
       $cmd: |
         #!/bin/sh -ve
         ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
+        echo "Writing to file '${DOCKER_ARCHIVE}'..."
         ${DOCKER_BIN} buildx build \
           --platform ${PLATFORM} \
           --tag ${DOCKER_IMAGE} \
@@ -67,6 +68,7 @@ scripts:
       $cmd: |
         #!/bin/sh -ve
         ${DOCKER_BIN} buildx create --name mybuilder --node mybuilder0 --use
+        echo "Writing to file '${DOCKER_ARCHIVE}'..."
         ${DOCKER_BIN} buildx build \
           --no-cache \
           --platform ${PLATFORM} \
