@@ -69,9 +69,6 @@ export class Environment {
   // put
 
   putGlobal (key: string, value: string): Environment {
-    if (key === 'DOCKER_CONTAINER' && value === '') {
-      throw new Error(`Received invalid global value '${value}' for key '${key}'`)
-    }
     // reject invalid values
     if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
       logger.debug(`Received invalid global value '${value}' for key '${key}', ignoring...`)
@@ -85,9 +82,6 @@ export class Environment {
   }
 
   putResolved (key: string, value: string): Environment {
-    if (key === 'DOCKER_CONTAINER' && value === '') {
-      throw new Error(`Received invalid global value '${value}' for key '${key}'`)
-    }
     // reject invalid values
     if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
       logger.debug(`Received invalid resolved value '${value}' for key '${key}', ignoring...`)

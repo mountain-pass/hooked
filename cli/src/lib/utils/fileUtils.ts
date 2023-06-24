@@ -69,7 +69,6 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
 
 /**
  * Removes old .env and .tmp files.
- * TODONICK remove dupliate code?
  */
 export const cleanupOldTmpFiles = (): void => {
   logger.debug('Cleaning up .tmp and .env files...')

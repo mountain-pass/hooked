@@ -52,7 +52,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .description('CLI execute preconfigured scripts')
     .version(packageJson.version, '-v, --version')
     .option('--init', 'runs the initialisation wizard')
-    .option('-e, --env <env>', 'accepts a comma separated list of environment names', 'default')
+    .option('-e, --env <env>', 'accepts a comma separated list of environment names ("default" is always on)', 'default')
     .option('-in, --stdin <json>', 'allows predefining stdin responses', '{}')
     .option('--printenv', 'print the resolved environment, and exits')
     .option('--pretty', 'prints the output (printenv) in pretty format')
@@ -178,17 +178,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
         // }
       } catch (err: any) {
-        // try {
-        // logger.error(err)
         // print the rerun command (even on error) for easy re-execution
         if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
         throw err
-        // } catch (error) {
-        //   console.error(err)
-        // } finally {
-        //   // only bypassed for testing...
-        //   process.exit(1)
-        // }
       }
     })
 
