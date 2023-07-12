@@ -193,7 +193,6 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       const notRequestingLogs = resolvedScriptPath[0] !== LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
-        addHistory(successfulScript)
       }
 
       // execute script
@@ -205,6 +204,11 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
       } else if (options.printenv === true) {
         throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
+      }
+
+      // NOTE - update history file AFTER script is run... (otherise `git porcelain` complains about file changes)
+      if (isRoot && notRequestingLogs) {
+        addHistory(successfulScript)
       }
     })
 
