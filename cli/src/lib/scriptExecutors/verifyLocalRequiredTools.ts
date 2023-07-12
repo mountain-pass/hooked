@@ -13,7 +13,7 @@ const verifyLatestVersion = async (env: Environment): Promise<void> => {
   try {
     if (!isDefined(env.global.CI)) {
       // eslint-disable-next-line no-template-curly-in-string
-      logger.debug('Checking if latest version...')
+      logger.debug(`Checking if latest version: \${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true`)
       // eslint-disable-next-line max-len
       const latestPublishedVersion = (await executeCmd(
         { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
@@ -22,7 +22,9 @@ const verifyLatestVersion = async (env: Environment): Promise<void> => {
         { printStdio: false, captureStdout: true },
         5000
       )).trim()
-      if (latestPublishedVersion !== packageJson.version) {
+      if (latestPublishedVersion.trim().length === 0) {
+        logger.warn(`Unable to check latest version for package '${packageJson.name}'.`)
+      } else if (latestPublishedVersion !== packageJson.version) {
         // eslint-disable-next-line max-len
         logger.warn(`Not using latest ${packageJson.name}. Please consider upgrading to ${latestPublishedVersion} (current: ${packageJson.version})\n` +
         `Run: npm i -g --prefer-online --force ${packageJson.name}`)
