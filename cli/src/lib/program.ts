@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import fs from 'fs'
 import HJSON from 'hjson'
-import { yellow } from './colour.js'
+import { cyan, yellow } from './colour.js'
 import {
   fetchGlobalEnvVars,
   findScript,
@@ -42,6 +42,7 @@ export interface ProgramOptions {
   log?: boolean
   batch?: boolean
   pull?: boolean
+  update?: boolean
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
@@ -59,6 +60,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('--listenvs', 'lists the available environments, and exits')
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
+    .option('-u, --update', 'updates to the latest version of hooked')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
@@ -84,6 +86,14 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       try {
         // load imports and consolidate configuration...
         const config = await loadConfig(CONFIG_PATH, options.pull)
+        if (options.pull === true) {
+          return
+        }
+
+        if (options.update === true) {
+          logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
+          return
+        }
 
         // setup default plugins...
         config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }

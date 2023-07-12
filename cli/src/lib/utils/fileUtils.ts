@@ -39,7 +39,7 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
     if (!fs.existsSync(path.dirname(destination))) {
       fs.mkdirSync(path.dirname(destination), { recursive: true })
     }
-    const request = https.get(url, (res: IncomingMessage) => {
+    const request = https.get(url, { headers: { 'Cache-Control': 'no-cache' } }, (res: IncomingMessage) => {
       const code = isDefined(res) && isDefined(res.statusCode) ? res.statusCode : -1
       if (code < 200 || code >= 300) {
         request.destroy()

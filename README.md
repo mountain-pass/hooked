@@ -21,7 +21,11 @@
 npm i -g @mountainpass/hooked-cli
 ```
 
-(If cached, you may need to specify `--prefer-online --force`)
+If cached, you may need to force download:
+
+```
+npm i -g --prefer-online --force @mountainpass/hooked-cli
+```
 
 # Rationale
 
