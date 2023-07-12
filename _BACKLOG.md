@@ -67,10 +67,12 @@
 - [x] ensure local env is resolved, BEFORE imports (esp -> DOCKER_ARCHIVE)
 - [x] exclude host environment variables when running $script
 - [x] use "->" arrow to list select (because sometimes colours aren't present) (i.e. use `list` instead of `rawlist`)
+- [x] Scripts that run scripts, should inherit the system's environment variables.
 
 # Next
 
-- [ ] Scripts that run scripts, should inherit the system's environment variables.
+- [ ] add ability for $envChoice - prompt user for a required environment to load
+
 - [ ] if calling self... don't exit the environment! call within system.
 - [ ] limit history to last 1000x
 

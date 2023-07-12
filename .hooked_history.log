@@ -117,3 +117,8 @@
 {"ts":1689165539703,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
 {"ts":1689165586807,"scriptPath":["install","global"],"envNames":["default"],"stdin":{}}
 {"ts":1689165754076,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
+{"ts":1689168163112,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1689168214013,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
+{"ts":1689169034086,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
+{"ts":1689169078429,"scriptPath":["🌞 echo"],"envNames":["default"],"stdin":{}}
+{"ts":1689169085021,"scriptPath":["🌞 echo"],"envNames":["default"],"stdin":{}}

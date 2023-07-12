@@ -19,9 +19,7 @@ import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools
 import {
   isCmdScript,
   isDefined,
-  isDockerCmdScript,
   isInternalScript,
-  isSSHCmdScript,
   type EnvironmentVariables,
   type SuccessfulScript
 } from './types.js'
@@ -61,7 +59,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-l, --log', 'print the log of previous scripts')
     .option('-p, --pull', 'force download all imports from remote to local cache')
     .option('-u, --update', 'updates to the latest version of hooked')
-    .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required')
+    .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
     .argument('[scriptPath...]', 'the script path to run')
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
@@ -69,30 +67,43 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
       env.putAllGlobal(systemProcessEnvs)
 
+      // if CI env var is set, then set batch mode...
+      if (isDefined(env.global.CI)) {
+        logger.debug('CI environment variable detected. Setting batch mode...')
+        options.batch = true
+      }
+
+      // initialise a new project...
       if (options.init === true) {
         await init(options)
         return
       }
+
+      // no config? initialise a new project...
       if (!fs.existsSync(CONFIG_PATH)) {
         logger.debug('No config file found. Launching setup...')
         await init(options)
         return
       }
+
+      // show logs
       if (options.log === true) {
         printHistory()
         return
       }
+
       let successfulScript: SuccessfulScript | undefined
       try {
-        // load imports and consolidate configuration...
+        // load imports...
         const config = await loadConfig(CONFIG_PATH, options.pull)
 
+        // show update command...
         if (options.update === true) {
           logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
         }
 
+        // exit if previous options where used...
         if (options.pull === true || options.update === true) {
-          // exit here...
           return
         }
 
@@ -100,9 +111,11 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
 
         // check for newer versions
-        await verifyLocalRequiredTools.verifyLatestVersion(env)
+        if (options.batch !== true) {
+          await verifyLocalRequiredTools.verifyLatestVersion(env)
+        }
 
-        // check for abi files?
+        // check for abi files
         if (config.plugins?.abi) {
           config.scripts = {
             ...(await generateAbiScripts()),
@@ -110,7 +123,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
           }
         }
 
-        // check for npm package.json?
+        // check for package.json (npm)
         if (config.plugins?.npm) {
           config.scripts = {
             ...generateNpmScripts(env),
@@ -118,7 +131,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
           }
         }
 
-        // check for Makefile?
+        // check for Makefile
         if (config.plugins?.make) {
           config.scripts = {
             ...generateMakefileScripts(env),
@@ -126,22 +139,23 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
           }
         }
 
+        // show environment names...
         if (options.listenvs === true) {
           logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
           return
         }
 
-        // find script...
+        // find the script to execute...
         const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
 
-        // check script is executable...
+        // check the script is executable...
         if (!isCmdScript(script) && !isInternalScript(script)) {
           throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
         }
 
         const envVars: EnvironmentVariables = {}
 
-        // use relaxed json to parse the stdin
+        // merge in the stdin...
         const stdin: RawEnvironment = HJSON.parse(options.stdin)
         mergeEnvVars(envVars, stdin)
 
