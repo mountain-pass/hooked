@@ -156,7 +156,9 @@ export class Environment {
 
   isResolvableByKey (key: string): boolean {
     const value = { ...this.global, ...this.resolved, ...this.secrets }[key]
-    return typeof value === 'string'
+    const isResolvable = isString(value) && value.trim().length > 0
+    // logger.debug(`isResolvableByKey('${key}') = ${String(isResolvable)}`)
+    return isResolvable
   }
 
   resolveByKey (key: string): string {

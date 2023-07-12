@@ -127,3 +127,6 @@
 {"ts":1689169851711,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
 {"ts":1689169987980,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
 {"ts":1689169992145,"scriptPath":["install","local"],"envNames":["default"],"stdin":{}}
+{"ts":1689170118617,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1689170205319,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
+{"ts":1689170828806,"scriptPath":["🌞 echo"],"envNames":["default"],"stdin":{}}

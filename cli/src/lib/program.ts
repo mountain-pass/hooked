@@ -68,7 +68,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       env.putAllGlobal(systemProcessEnvs)
 
       // if CI env var is set, then set batch mode...
-      if (isDefined(env.global.CI)) {
+      if (env.isResolvableByKey('CI') && options.batch !== true) {
         logger.debug('CI environment variable detected. Setting batch mode...')
         options.batch = true
       }
@@ -92,122 +92,119 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         return
       }
 
-      let successfulScript: SuccessfulScript | undefined
-      try {
-        // load imports...
-        const config = await loadConfig(CONFIG_PATH, options.pull)
+      // load imports...
+      const config = await loadConfig(CONFIG_PATH, options.pull)
 
-        // show update command...
-        if (options.update === true) {
-          logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
+      // show update command...
+      if (options.update === true) {
+        logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
+      }
+
+      // exit if pull or update...
+      if (options.pull === true || options.update === true) {
+        return
+      }
+
+      // load default env...
+      const envVars: EnvironmentVariables = {}
+      await fetchGlobalEnvVars(
+        config,
+        ['default'],
+        options,
+        envVars
+      )
+
+      // setup default plugins...
+      config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
+
+      // check for newer versions
+      if (options.batch !== true && !env.isResolvableByKey('SKIP_VERSION_CHECK') && !isDefined(envVars.SKIP_VERSION_CHECK)) {
+        await verifyLocalRequiredTools.verifyLatestVersion(env)
+      } else {
+        logger.debug('Skipping version check...')
+      }
+
+      // check for abi files
+      if (config.plugins?.abi) {
+        config.scripts = {
+          ...(await generateAbiScripts()),
+          ...config.scripts
         }
+      }
 
-        // exit if previous options where used...
-        if (options.pull === true || options.update === true) {
-          return
+      // check for package.json (npm)
+      if (config.plugins?.npm) {
+        config.scripts = {
+          ...generateNpmScripts(env),
+          ...config.scripts
         }
+      }
 
-        // setup default plugins...
-        config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
-
-        // check for newer versions
-        if (options.batch !== true && !isDefined(env.global.SKIP_VERSION_CHECK)) {
-          await verifyLocalRequiredTools.verifyLatestVersion(env)
-        } else {
-          logger.debug('Skipping version check...')
+      // check for Makefile
+      if (config.plugins?.make) {
+        config.scripts = {
+          ...generateMakefileScripts(env),
+          ...config.scripts
         }
+      }
 
-        // check for abi files
-        if (config.plugins?.abi) {
-          config.scripts = {
-            ...(await generateAbiScripts()),
-            ...config.scripts
-          }
-        }
+      // show environment names...
+      if (options.listenvs === true) {
+        logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
+        return
+      }
 
-        // check for package.json (npm)
-        if (config.plugins?.npm) {
-          config.scripts = {
-            ...generateNpmScripts(env),
-            ...config.scripts
-          }
-        }
+      // find the script to execute...
+      const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
 
-        // check for Makefile
-        if (config.plugins?.make) {
-          config.scripts = {
-            ...generateMakefileScripts(env),
-            ...config.scripts
-          }
-        }
+      // check the script is executable...
+      if (!isCmdScript(script) && !isInternalScript(script)) {
+        throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
+      }
 
-        // show environment names...
-        if (options.listenvs === true) {
-          logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
-          return
-        }
+      // merge in the stdin...
+      const stdin: RawEnvironment = HJSON.parse(options.stdin)
+      mergeEnvVars(envVars, stdin)
 
-        // find the script to execute...
-        const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
+      const providedEnvNames = options.env.split(',')
+      // fetch the environment variables...
+      const [, resolvedEnvNames] = await fetchGlobalEnvVars(
+        config,
+        providedEnvNames,
+        options,
+        envVars
+      )
 
-        // check the script is executable...
-        if (!isCmdScript(script) && !isInternalScript(script)) {
-          throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
-        }
+      // resolve script env vars (if any)
+      if (isCmdScript(script) && isDefined(script.$env)) {
+        // execute script...
+        mergeEnvVars(envVars, script.$env)
+      }
 
-        const envVars: EnvironmentVariables = {}
-
-        // merge in the stdin...
-        const stdin: RawEnvironment = HJSON.parse(options.stdin)
-        mergeEnvVars(envVars, stdin)
-
-        const providedEnvNames = options.env.split(',')
-        // fetch the environment variables...
-        const [, resolvedEnvNames] = await fetchGlobalEnvVars(
-          config,
-          ['default', ...providedEnvNames],
-          options,
-          envVars
-        )
-
-        // resolve script env vars (if any)
-        if (isCmdScript(script) && isDefined(script.$env)) {
-          // execute script...
-          mergeEnvVars(envVars, script.$env)
-        }
-
-        // generate rerun command
-        successfulScript = {
-          ts: Date.now(),
-          scriptPath: resolvedScriptPath,
-          envNames: resolvedEnvNames,
-          stdin
-        }
+      // generate rerun command
+      const successfulScript: SuccessfulScript = {
+        ts: Date.now(),
+        scriptPath: resolvedScriptPath,
+        envNames: ['default', ...resolvedEnvNames],
+        stdin
+      }
+      // store and log "Rerun" command in history (if successful and not the _logs_ option!)
+      const isRoot = !env.isResolvableByKey('HOOKED_ROOT') && !isDefined(envVars.HOOKED_ROOT)
+      const notRequestingLogs = resolvedScriptPath[0] !== LOGS_MENU_OPTION
+      if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
+        addHistory(successfulScript)
+      }
 
-        // execute script
-        if (isCmdScript(script)) {
-          // run cmd
-          // if a native local script... default to using the host environment
-          // if (!isSSHCmdScript(script) && !isDockerCmdScript(script) && !isDefined(script.$envFromHost)) {
-          //   logger.debug('Defaulting $envFromHost to "true" for local script.')
-          //   script.$envFromHost = true
-          // }
-          await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
-        } else if (isInternalScript(script)) {
-          // run internal script
-          await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
-        } else if (options.printenv === true) {
-          throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
-        }
-
-        // store in history (if successful and not the _logs_ option!)
-        if (resolvedScriptPath[0] !== LOGS_MENU_OPTION) addHistory(successfulScript)
-        // }
-      } catch (err: any) {
-        // print the rerun command (even on error) for easy re-execution
-        if (isDefined(successfulScript)) logger.debug(`rerun: ${displaySuccessfulScript(successfulScript)}`)
-        throw err
+      // execute script
+      if (isCmdScript(script)) {
+        // run cmd script
+        await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
+      } else if (isInternalScript(script)) {
+        // run internal script
+        await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
+      } else if (options.printenv === true) {
+        throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
       }
     })
 

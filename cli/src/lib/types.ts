@@ -9,7 +9,7 @@ export interface Plugins {
   make: boolean
 }
 
-/** For the process.env */
+/** Are unresolved "raw" environment variables. e.g. "${HELLO}" */
 export type EnvironmentVariables = Record<string, Script>
 
 export type TopLevelImports = string[]

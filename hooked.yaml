@@ -1,6 +1,7 @@
 
 env:
   default:
+    SKIP_VERSION_CHECK: true
     # username: ${USER}
     # GIT_COMMIT:
     #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
