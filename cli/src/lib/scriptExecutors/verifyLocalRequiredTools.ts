@@ -13,11 +13,11 @@ const verifyLatestVersion = async (env: Environment): Promise<void> => {
   try {
     if (!isDefined(env.global.CI)) {
       // eslint-disable-next-line no-template-curly-in-string
-      logger.debug(`Checking if latest version: \${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true`)
+      logger.debug('Checking if latest version...')
       // eslint-disable-next-line max-len
       const latestPublishedVersion = (await executeCmd(
         { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
-        { env: env.resolved },
+        { env: env.getAll() },
         env,
         { printStdio: false, captureStdout: true },
         5000

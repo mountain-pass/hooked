@@ -24,7 +24,8 @@ import {
   type Script,
   type StdinResponses,
   type StdinScript,
-  type YamlConfig
+  type YamlConfig,
+  isSSHCmdScript
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
@@ -145,9 +146,16 @@ export const resolveCmdScript = async (
     return ''
   }
 
-  // include environment variables from host
+  // if set to true, or not defined and not a docker or ssh script, include host environment variables...
+  const isDocker = isDockerCmdScript(script)
+  const isSSH = isSSHCmdScript(script)
   if (script.$envFromHost === true) {
     env.putAllResolved(process.env as any, false)
+  } else if (!isDefined(script.$envFromHost) && !isDocker && !isSSH) {
+    logger.debug(`Including host environment variables for script '${key}' (isDocker=${String(isDocker)}, isSSH=${String(isSSH)})`)
+    env.putAllResolved(process.env as any, false)
+  } else {
+    logger.debug(`Not including host environment variables for script '${key}'`)
   }
 
   // execute the command, capture the output

@@ -321,7 +321,7 @@ describe('config', () => {
     })
 
     it('$cmd - env should resolve $cmd', async () => {
-      const config: YamlConfig = { env: { default: { foo: { $cmd: 'echo "bar"' } } }, scripts: {} }
+      const config: YamlConfig = { env: { default: { foo: { $envFromHost: false, $cmd: 'echo "bar"' } } }, scripts: {} }
       sinon.stub(child_process, 'execSync').returns('bar')
       const stdin = {}
       const env = new Environment()
@@ -504,7 +504,7 @@ describe('config', () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $envFromHost: false, $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
       
       const stdin = {}
       const env = new Environment()
@@ -617,7 +617,7 @@ describe('config', () => {
     it('base config with remote https:// imports works', async () => {
       // setup
       const importedConfig: YamlConfig = { 
-        env: { default: { bbb: { $cmd: 'echo "222"' } } }, 
+        env: { default: { bbb: { $envFromHost: false, $cmd: 'echo "222"' } } }, 
         scripts: { 
           hello: { $cmd: 'echo "Hello"' }
         }
@@ -634,7 +634,7 @@ describe('config', () => {
       // test
       const rootConfig = { 
         imports: ['https://www.foobar.com/.hooked/custom.yaml'],
-        env: { default: { aaa: { $cmd: 'echo "111"' } } },
+        env: { default: { aaa: { $envFromHost: false, $cmd: 'echo "111"' } } },
         scripts: {
           goodbye: { $cmd: 'echo "Goodbye"' }
         },

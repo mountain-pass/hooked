@@ -86,12 +86,13 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       try {
         // load imports and consolidate configuration...
         const config = await loadConfig(CONFIG_PATH, options.pull)
-        if (options.pull === true) {
-          return
-        }
 
         if (options.update === true) {
           logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
+        }
+
+        if (options.pull === true || options.update === true) {
+          // exit here...
           return
         }
 
@@ -172,10 +173,10 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         if (isCmdScript(script)) {
           // run cmd
           // if a native local script... default to using the host environment
-          if (!isSSHCmdScript(script) && !isDockerCmdScript(script) && !isDefined(script.$envFromHost)) {
-            logger.debug('Defaulting $envFromHost to "true" for local script.')
-            script.$envFromHost = true
-          }
+          // if (!isSSHCmdScript(script) && !isDockerCmdScript(script) && !isDefined(script.$envFromHost)) {
+          //   logger.debug('Defaulting $envFromHost to "true" for local script.')
+          //   script.$envFromHost = true
+          // }
           await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
         } else if (isInternalScript(script)) {
           // run internal script

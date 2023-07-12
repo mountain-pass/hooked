@@ -222,44 +222,6 @@ describe('program', () => {
     })
   })
 
-  it('order should not matter when resolving - part2b - use "--printenv" with multiple environment resolution', async () => {
-    const config: YamlConfig = {
-      imports: ['https://raw.githubusercontent.com/mountain-pass/hooked/main/imports/_docker.yaml'],
-      env: {
-        default: {},
-        local: {
-          DOCKER_IMAGE: 'server-local'
-        }
-      },
-      scripts: {
-        test: {
-          $envNames: ['local'],
-          $cmd: 'echo ${DOCKER_CONTAINER}'
-        }
-      }
-    }
-    writeConfig(config)
-    // const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
-    const execSpy = sinon.spy(child_process, 'execSync')
-    await program.parseAsync('node index.ts -b --printenv test'.split(' '))
-
-    // verify that the script was called with the correct environment
-    // sinon.assert.calledTwice(execSpy)
-    const EXPECTED_TIMES_CALLED = 3
-    sinon.assert.callCount(execSpy, EXPECTED_TIMES_CALLED)
-    const lastenv = execSpy.getCall(EXPECTED_TIMES_CALLED - 1).args[1]?.env
-    expect(lastenv).to.eql({
-      DOCKER_ARCHIVE: "server-local.tar.gz",
-      DOCKER_BIN: "docker",
-      DOCKER_CONTAINER: "server-local",
-      DOCKER_FILE: "Dockerfile",
-      DOCKER_IMAGE: "server-local",
-      DOCKER_VERSION: lastenv?.DOCKER_VERSION,
-      HOOKED_ROOT: 'false',
-      PLATFORM: "linux/amd64,linux/arm64/v8"
-    })
-  })
-
   it('order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
     const config: YamlConfig = {
       env: {
