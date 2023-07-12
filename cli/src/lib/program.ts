@@ -111,8 +111,10 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
         config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
 
         // check for newer versions
-        if (options.batch !== true) {
+        if (options.batch !== true && !isDefined(env.global.SKIP_VERSION_CHECK)) {
           await verifyLocalRequiredTools.verifyLatestVersion(env)
+        } else {
+          logger.debug('Skipping version check...')
         }
 
         // check for abi files

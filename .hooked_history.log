@@ -122,3 +122,8 @@
 {"ts":1689169034086,"scriptPath":["uninstall","local"],"envNames":["default"],"stdin":{}}
 {"ts":1689169078429,"scriptPath":["🌞 echo"],"envNames":["default"],"stdin":{}}
 {"ts":1689169085021,"scriptPath":["🌞 echo"],"envNames":["default"],"stdin":{}}
+{"ts":1689169441549,"scriptPath":["publish"],"envNames":["default"],"stdin":{}}
+{"ts":1689169482263,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
+{"ts":1689169851711,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
+{"ts":1689169987980,"scriptPath":["uninstall","global"],"envNames":["default"],"stdin":{}}
+{"ts":1689169992145,"scriptPath":["install","local"],"envNames":["default"],"stdin":{}}
