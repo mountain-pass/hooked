@@ -1,0 +1,192 @@
+{
+  "$id": "https://github.com/mountain-pass/hooked/schemas/hooked.yaml.schema-v1.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSON Schema for 'Hooked' - a command line tool to manage scripts.",
+  "description": "Manage and execute your scripts from a single place.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "imports": {
+      "description": "A list of hooked yaml scripts to import.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plugin": {
+      "description": "A list of hooked plugins to import.",
+      "type": "object",
+      "properties": {
+        "npm": {
+          "type": "boolean"
+        },
+        "abi": {
+          "type": "boolean",
+          "description": "Scans for blockchain json definitions.\nReserved environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)"
+        },
+        "makefile": {
+          "type": "boolean"
+        },
+        "icons": {
+          "type": "boolean"
+        }
+      }
+    },
+    "env": {
+      "description": "Globally defined environment variables, which are enabled by the --env argument.",
+      "$ref": "#/$defs/envGroup"
+    },
+    "scripts": {
+      "$ref": "#/$defs/scriptsGroup"
+    }
+  },
+  "$defs": {
+    "scriptsGroup": {
+      "description": "A hierarchical group of scripts.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^.*$": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/cmdValue"
+            },
+            {
+              "$ref": "#/$defs/scriptsGroup"
+            }
+          ]
+        }
+      }
+    },
+    "envGroup": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^.*$": {
+          "description": "A named group of environment variables.",
+          "additionalProperties": false,
+          "$ref": "#/$defs/envValue"
+        }
+      }
+    },
+    "envValue": {
+      "patternProperties": {
+        "^.*$": {
+          "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/cmdValue"
+            },
+            {
+              "$ref": "#/$defs/stdinValue"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    "cmdValue": {
+      "type": "object",
+      "description": "Executes a command, and optionally provides output to environment variables or stdin.",
+      "additionalProperties": false,
+      "properties": {
+        "$cmd": {
+          "type": "string"
+        },
+        "$image": {
+          "type": "string"
+        },
+        "$ssh": {
+          "type": "string"
+        },
+        "$env": {
+          "type": "#/$defs/envGroup"
+        },
+        "$envNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "$errorMessage": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "$cmd"
+      ]
+    },
+    "stdinValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$stdin": {
+          "type": "string"
+        },
+        "$default": {
+          "type": "string"
+        },
+        "$choices": {
+          "$ref": "#/$defs/stdinChoicesValue"
+        },
+        "$filterMapping": {
+          "$ref": "#/$defs/filterMappingValue"
+        },
+        "$filter": {
+          "type": "string",
+          "description": "A regex filter to apply to the 'name' or values."
+        },
+        "$sort": {
+          "enum": [
+            "alpha",
+            "alphaDesc"
+          ]
+        }
+      },
+      "required": [
+        "$stdin"
+      ]
+    },
+    "stdinChoicesValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/cmdValue"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "filterMappingValue": {
+      "type": "object",
+      "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
