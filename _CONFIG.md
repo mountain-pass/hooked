@@ -59,8 +59,8 @@ For VisualStudio:
 
 1. Install the "YAML Language Support by Red Hat" plugin
 2. Add the following snippet to either/or:
-   2. User settings: `CMD + P` > `>Preferences: Open User Settings (JSON)`
-   3. Workspace settings: `CMD + P` > `>Preferences: Open Workspace Settings (JSON)`
+  1. User settings: `CMD + P` > `>Preferences: Open User Settings (JSON)`
+  1. Workspace settings: `CMD + P` > `>Preferences: Open Workspace Settings (JSON)`
 
 ```
 {
