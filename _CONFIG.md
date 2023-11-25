@@ -3,6 +3,7 @@
 [Back to Index](README.md)
 
 - [Overview](#overview)
+- [Recommended - enable YAML schema](#recommended---enable-yaml-schema)
 - [Environment Variables (and Resolvers)](#environment-variables-and-resolvers)
   - [`string`](#string)
   - [`$cmd`](#cmd)
@@ -19,9 +20,11 @@
 
 When run, the app looks for a `hooked.yaml` file in the current working directory.
 
-The configuration has three top level items:
+The configuration has four top level items:
 
 - `imports:` - (optional) takes a `string[]` of file paths. These files are loaded and merged with the current file, in order.
+
+- `plugin:` - (optional) provides the ability to use plugins
 
 - `env:` - (optional) takes an `object`.
   - `<environmentName>:` - the name of a pre-configured environment (active when matches the `--env` parameter).
@@ -47,6 +50,30 @@ scripts:
         echo "Backing up database..."
         # ... code to backup db ...
 ```
+
+# Recommended - enable YAML schema
+
+Some editors support YAML schemas, which provides validation and code completion for your YAML configuration files - very nice!
+
+For VisualStudio:
+
+1. Install the "YAML Language Support by Red Hat" plugin
+2. Add the following snippet to either/or:
+   2. User settings: `CMD + P` > `>Preferences: Open User Settings (JSON)`
+   3. Workspace settings: `CMD + P` > `>Preferences: Open Workspace Settings (JSON)`
+
+```
+{
+  ...
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/mountain-pass/hooked/main/schemas/hooked.yaml.schema-v1.json": [
+      "hooked.yaml",
+    ]
+  },
+}
+```
+
+Et voila! You should have validation. Please check the "PROBLEMS" tab for any errors.
 
 # Environment Variables (and Resolvers)
 
