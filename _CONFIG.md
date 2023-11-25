@@ -53,7 +53,7 @@ scripts:
 
 # Recommended - enable YAML schema
 
-Some editors support YAML schemas, which provides validation and code completion for your YAML configuration files - very nice!
+Some editors support YAML schemas, which provides validation, documenation and code completion for your YAML configuration files - very nice!
 
 For VisualStudio:
 
