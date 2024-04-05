@@ -520,7 +520,7 @@ describe('config', () => {
         message: 'what is your name?',
         pageSize: PAGE_SIZE,
         default: undefined,
-        choices: ['one', 'two', 'three'],
+        choices: [{ name: 'one', value: 'one' }, { name: 'two', value: 'two' }, { name: 'three', value: 'three' }],
         loop: true
       }])
     })

@@ -15,10 +15,30 @@ export const getLocalImportsCachePath = (filename: string): string => path.join(
 
 export const CONFIG_BLANK = (): YamlConfig => {
   return {
-    env: { default: { HELLO: 'Hola' } },
+    env: {
+      default: {
+        GREETING: {
+          $stdin: 'What country do you prefer?',
+          $choices: {
+            germany: 'Guten tag',
+            france: 'Bonjour',
+            spain: 'Hola',
+            england: 'Good day'
+          },
+          $sort: 'alpha'
+        },
+        YOURNAME: {
+          $stdin: 'What is your name? (Hint: set YOURNAME to avoid prompt):',
+          $default: 'Bob'
+        },
+        HOMEPATH: {
+          $cmd: 'set -u && echo $HOME'
+        }
+      }
+    },
     scripts: {
       say: {
-        $cmd: 'echo "${HELLO} world!"'
+        $cmd: 'echo "${GREETING} ${YOURNAME}! There is no place like ${HOMEPATH}."'
       }
     }
   }

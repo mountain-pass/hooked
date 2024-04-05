@@ -46,6 +46,7 @@
     "initialPublish": "npm publish --access public",
     "test": "ts-mocha",
     "test:watch": "nodemon",
+    "test:watch:wip": "nodemon --exec 'npm run test -- --grep wip'",
     "test:coverage": "nyc --reporter=html --reporter=text --reporter=text-summary npm test",
     "test:wip": "npm run test -- --grep wip",
     "lint": "eslint --ext .js,.ts src",

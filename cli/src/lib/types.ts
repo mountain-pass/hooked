@@ -80,7 +80,8 @@ export interface StdinScript {
   $stdin: string
   $default?: string
   // allow multiple options
-  $choices?: string[] | boolean[] | number[] | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | null
+  $choices?: string | string[] | boolean[] | number[] | StdinScriptFieldsMapping[] | Record<string, string> |
+  CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | null
   /** fields mapping for json - [name, value, short?] */
   $fieldsMapping?: StdinScriptFieldsMapping
   $sort?: 'alpha' | 'alphaDesc' | 'none'

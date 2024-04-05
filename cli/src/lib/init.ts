@@ -7,11 +7,32 @@ import { type YamlConfig } from './types.js'
 import logger from './utils/logger.js'
 
 /**
+ * Generates a blank hooked.yaml file contents.
+ */
+export const generateBlankTemplateFileContents = (): string => {
+  const config: YamlConfig = CONFIG_BLANK()
+  // write file
+  let configStr = YAML.stringify(config)
+  // prepend installation instructions
+  configStr = `#
+# Hooked configuration file
+# See https://github.com/mountain-pass/hooked for more information.
+#
+# To install the cli: npm i -g @mountainpass/hooked-cli
+# To enable yaml validation: https://github.com/mountain-pass/hooked/blob/main/_CONFIG.md#recommended---enable-yaml-schema
+#
+
+${configStr}`
+  return configStr
+}
+
+/**
  * Facilitates creating configuration files.
  */
 export const init = async (options: ProgramOptions): Promise<void> => {
   if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
-  // ask user which hooked.yaml template to use
+
+  // ask user which hooked.yaml template to use (NOTE: even if only one option, still ask user the chance to escape without creating a file!)
   await inquirer.prompt([
     {
       type: 'list',
@@ -24,13 +45,9 @@ export const init = async (options: ProgramOptions): Promise<void> => {
       loop: true
     }
   ]).then((answers) => {
-    let config: YamlConfig = CONFIG_BLANK()
     if (answers.init === 'blank') {
       logger.debug('Created hooked.yaml from Blank template.')
-      config = CONFIG_BLANK()
+      fs.writeFileSync(CONFIG_PATH, generateBlankTemplateFileContents(), 'utf-8')
     }
-    // write file
-    const configStr = YAML.stringify(config)
-    fs.writeFileSync(CONFIG_PATH, configStr, 'utf-8')
   })
 }
