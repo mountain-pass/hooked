@@ -185,7 +185,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       const successfulScript: SuccessfulScript = {
         ts: Date.now(),
         scriptPath: resolvedScriptPath,
-        envNames: ['default', ...resolvedEnvNames],
+        envNames: [...new Set(['default', ...resolvedEnvNames])],
         stdin
       }
       // store and log "Rerun" command in history (if successful and not the _logs_ option!)
