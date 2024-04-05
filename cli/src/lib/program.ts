@@ -48,7 +48,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
 
   program
     .name('hooked')
-    .description('CLI execute preconfigured scripts')
+    .description('CLI to execute preconfigured scripts.\n\nUpdate: npm i -g --prefer-online --force @mountainpass/hooked-cli')
     .version(packageJson.version, '-v, --version')
     .option('--init', 'runs the initialisation wizard')
     .option('-e, --env <env>', 'accepts a comma separated list of environment names ("default" is always on)', 'default')
