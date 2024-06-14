@@ -100,9 +100,11 @@
           "type": "string"
         },
         "$image": {
+          "description": "If supplied, command will execute in this docker image container.",
           "type": "string"
         },
         "$ssh": {
+          "description": "If supplied, command will execute in this remote server.",
           "type": "string"
         },
         "$env": {

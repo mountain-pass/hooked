@@ -135,8 +135,6 @@ Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source c
 
 This deserves it's own section... [check it out](_CONFIG.md).
 
-We are adding Plugins too... [check out the ABI Plugin here](_ABI_PLUGIN.md)
-
 Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
 # Backlog

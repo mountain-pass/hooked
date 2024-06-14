@@ -3,7 +3,7 @@
 [Back to Index](README.md)
 
 - [Overview](#overview)
-- [Configuration](#configuration)
+- [Configuration \> Environment Variables (Required)](#configuration--environment-variables-required)
 
 # Overview
 
@@ -13,18 +13,7 @@ These ABI definitions will then be presented under an `_abi_` menu option, that 
 
 It will scan up to a maximum of five child directories deep.
 
-# Configuration
-
-To enable, add the following to the root of your YAML file.
-
-```yaml
-plugins:
-    abi: true
-```
-
-**Parameters:**
-
-Environment variables
+# Configuration > Environment Variables (Required)
 
 - `PROVIDER_URL` - (`string`) the JSON RPC endpoint to connect to.
 - `PRIVATE_KEY` - (`string` - optional) the private key of the wallet to load.

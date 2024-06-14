@@ -3,12 +3,14 @@
 [Back to Index](README.md)
 
 - [Overview](#overview)
-- [Recommended - enable YAML schema](#recommended---enable-yaml-schema)
-- [Environment Variables (and Resolvers)](#environment-variables-and-resolvers)
+  - [`imports:` (optional)](#imports-optional)
+  - [`plugin:` (optional)](#plugin-optional)
+  - [`env:` (optional)](#env-optional)
+  - [`scripts:` (optional)](#scripts-optional)
+- [Environment Variables and Resolvers](#environment-variables-and-resolvers)
   - [`string`](#string)
   - [`$cmd`](#cmd)
   - [`$stdin`](#stdin)
-- [Scripts](#scripts)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
@@ -20,62 +22,100 @@
 
 When run, the app looks for a `hooked.yaml` file in the current working directory.
 
-The configuration has four top level items:
+The `hooked.yaml` can have multiple configuration options. Lets break them down.
 
-- `imports:` - (optional) takes a `string[]` of file paths. These files are loaded and merged with the current file, in order.
+## `imports:` (optional)
 
-- `plugin:` - (optional) provides the ability to use plugins
+Specifies a `string[]` of file paths or http endpoints. These files are (downloaded), loaded and merged into the current running configuration (in order).
 
-- `env:` - (optional) takes an `object`.
-  - `<environmentName>:` - the name of a pre-configured environment (active when matches the `--env` parameter).
-    - `<environmentVariableKey>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-resolvers) as a value.
+> PROPOSED: For file paths, supports glob pattern matching
 
-- `scripts:` - (optional) takes an `object` ([see Scripts](#scripts)).
-
-*Example: hooked.yaml*
-
+Example:
 ```yaml
 imports:
-  - ./_admin.yaml
-  - ./_mongo.yaml
+  - ./hooked-*.yml
+  - https://github.com/somefile.yml
+```
 
+## `plugin:` (optional)
+
+Provides the ability to use built-in plugins. If the key is present, and the value is `true`, the plugin will be enabled.
+
+The currently available plugins are:
+
+- `icons: true` - makes pretty icons to differentiate executable scripts vs groups.
+- `abi: true` - scans for `*.abi` files, and imports the contract methods as scripts. [Configuration documentation](_ABI_PLUGIN.md).
+- `makefile: true` - scans for a `Makefile` file, and imports the named tasks as scripts.
+- `npm: true` - scans for a `package.json` file, and imports the named scripts as scripts.
+
+Example:
+```yaml
+plugin:
+  npm: true
+```
+
+## `env:` (optional)
+
+Globally defined environment variables, which can be references inside `scripts`.
+
+  - `<EnvironmentName>:` - the name of a environment (active when matches the `--env` parameter).
+    - `<EnvironmentVariable>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-variables-and-resolvers) as a value.
+
+Example:
+```yaml
 env:
-  default:
-    MONGO_URL: ${MONGO_URL_PROD_READONLY}
+  test:
+    PASSWORD: jellybeans
+  production:
+    PASSWORD: fluffydog
+    USER:
+      $cmd: echo "root"
+```
 
+## `scripts:` (optional)
+
+The `scripts` object takes any number of child descendant objects, using the `key` hierarchy as the script path.
+
+The object's descendant values, must eventually end with [`$cmd`](#cmd) objects - which allows the user to execute a predefined script.
+
+How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
+
+**Example:**
+
+```yaml
 scripts:
-  mongobackup_prod:
-    $cmd: |
-        #!/bin/sh -ve
-        echo "Backing up database..."
-        # ... code to backup db ...
+  say:
+    hello:
+      in_spanish:
+        $cmd: echo Hola!
+      in_english:
+        $cmd: echo Hello!
+  do:
+    something:
+      nested:
+        very:
+          deep:
+            $cmd: echo Woohoo!
+  print a message containing input from the user (this is a valid name!) ✅✅✅:
+    $env:
+      GREETING: Hello
+      NAME:
+        $stdin: What is your name?
+        $default: I don't know my name
+    $cmd: echo ${GREETING} ${NAME}!
+````
+
+These could be run, using:
+
+```sh
+j say hello in_spanish
+# or
+j d s n v d
+# or
+j "print a mess"
 ```
 
-# Recommended - enable YAML schema
-
-Some editors support YAML schemas, which provides validation, documenation and code completion for your YAML configuration files - very nice!
-
-For VisualStudio:
-
-1. Install the "YAML Language Support by Red Hat" plugin
-2. Add the following snippet to either/or:
-    1. User settings: `CMD + P` > `>Preferences: Open User Settings (JSON)`
-    1. Workspace settings: `CMD + P` > `>Preferences: Open Workspace Settings (JSON)`
-
-```
-{
-  ...
-  "yaml.schemas": {
-    "https://raw.githubusercontent.com/mountain-pass/hooked/main/schemas/hooked.yaml.schema-v1.json": [
-      "hooked*.{yml,yaml}",
-    ]
-  },
-}
-```
-
-Et voila! You should have validation. Please check the "PROBLEMS" tab for any errors.
-
-# Environment Variables (and Resolvers)
+# Environment Variables and Resolvers
 
 Environment variables can be defined in three places:
 
@@ -92,6 +132,8 @@ In order to support more complicated resolution scenarios, we've provided the fo
 3. [`$stdin`](#stdin)
 
 ## `string`
+
+> Used for: Environment Variables
 
 Resolves to a plain text string.
 
@@ -113,6 +155,8 @@ env:
 ```
 
 ## `$cmd`
+
+> Used for: Environment Variables or Scripts
 
 Resolves to the output of the command.
 
@@ -146,12 +190,14 @@ env:
 **Tips:**
 
 - you can use multiline string for a longer script.
-- you can update the `PATH` env var to use custom scripts.
+- you can update the `PATH` environment variable.
 - you can utilise a container service like Docker to run custom language scripts.
 - you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
 - if you want a script to always pass, append ` || true` to the end of the failing line.
 
 ## `$stdin`
+
+> Used for: Environment Variables
 
 Requests input from the user.
 
@@ -160,7 +206,7 @@ Requests input from the user.
 - `$stdin` - (`string`) the prompt to ask the user.
 - `$default` - (`string` - optional) the default value to present to the user.
 - `$choices` - (`string[]` | `EnvironmentResolver` | `string` (JSON array) | `string` (newline delimited) - optional) a list of choices to ask the user. If not provided, user is prompted to enter freetext.
-  - `EnvironmentResolver` - any [EnvironmentResolver](#environment-resolvers) can be provided as child.
+  - `EnvironmentResolver` - any [EnvironmentResolver](#environment-variables-and-resolvers) can be provided as child.
   - If a JSON string is provided which resolves to an array of objects, a choice will be provided for each object
   - Otherwise, a newline delimited string will be used (one option per line)
 - `$fieldsMapping` - (`{name: string, value: string}` - optional) - for JSON arrays that don't have `name` & `value` keys, please provide a fieldname mapping. Also accepts [JSONPath expressions](https://github.com/dchester/jsonpath).
@@ -184,55 +230,9 @@ env:
       $sort: alpha
 ```
 
-# Scripts
-
-The `scripts` object takes any number of child descendant objects, using the `key` hierarchy as the script path.
-
-The objects should eventually end in a [`$cmd`](#cmd) object (with an optional `$env` sibling!), which allows the user to execute a predefined script.
-
-How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
-
-**Example:**
-
-```yaml
-env:
-  default:
-
-scripts:
-  say:
-    hello:
-      in_spanish:
-        $cmd: echo Hola!
-      in_english:
-        $cmd: echo Hello!
-  do:
-    something:
-      nested:
-        very:
-          deep:
-            $cmd: echo Woohoo!
-  + print a message containing input from the user (this is a valid name!) ✅✅✅:
-    $env:
-      GREETING: Hello
-      NAME:
-        $stdin: What is your name?
-        $default: I don't know my name
-    $cmd: echo ${GREETING} ${NAME}!
-````
-
-These could be run, using:
-
-```sh
-j say hello in_spanish
-# or
-j d s n v d
-# or
-j "print a mess"
-```
-
 # Conventions
 
-Environment variables are always defined with curly braces e.g. `${SOME_VALUE}`.
+Environment variables defined with curly braces e.g. `${SOME_VALUE}` will be checked before script execution, to validate that they are present. Environment variables referenced without curly braces e.g. `$SOME_VALUE` will still be resolved at runtime, but no validation will be performed that they are present.
 
 The default environment name (if not specified with `--env`), is `default`.
 
