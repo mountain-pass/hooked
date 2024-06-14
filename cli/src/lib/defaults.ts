@@ -10,13 +10,14 @@ import fileUtils from './utils/fileUtils.js'
 // local first
 let tmp = fileUtils.resolvePath('hooked.yaml')
 if (fs.existsSync(tmp)) {
-  // resolve real path - in case it's a symbolic link
+  // resolve real path - might be a symbolic link!
   tmp = fs.realpathSync(tmp)
 } else {
   // allow a global hooked.yaml
   const global = fileUtils.resolvePath('~/hooked.yaml')
   if (fs.existsSync(global)) {
-    tmp = global
+    // resolve real path - might be a symbolic link!
+    tmp = fs.realpathSync(global)
   }
 }
 
