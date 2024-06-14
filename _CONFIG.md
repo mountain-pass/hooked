@@ -44,7 +44,7 @@ Provides the ability to use built-in plugins. If the key is present, and the val
 The currently available plugins are:
 
 - `icons: true` - makes pretty icons to differentiate executable scripts vs groups.
-- `abi: true` - scans for `*.abi` files, and imports the contract methods as scripts. [Configuration documentation](_ABI_PLUGIN.md).
+- `abi: true` - scans for `*.json` files, and imports the contract methods as scripts. [Configuration documentation](_ABI_PLUGIN.md).
 - `makefile: true` - scans for a `Makefile` file, and imports the named tasks as scripts.
 - `npm: true` - scans for a `package.json` file, and imports the named scripts as scripts.
 
@@ -56,7 +56,7 @@ plugin:
 
 ## `env:` (optional)
 
-Globally defined environment variables, which can be references inside `scripts`.
+Globally defined environment variables, which can be referenced inside `scripts`.
 
   - `<EnvironmentName>:` - the name of a environment (active when matches the `--env` parameter).
     - `<EnvironmentVariable>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-variables-and-resolvers) as a value.
@@ -74,7 +74,9 @@ env:
 
 ## `scripts:` (optional)
 
-The `scripts` object takes any number of child descendant objects, using the `key` hierarchy as the script path.
+Organises `$cmd` object, into a named hierarchy.
+
+The `scripts` object takes any number of child descendant objects, using the `key` as the script path.
 
 The object's descendant values, must eventually end with [`$cmd`](#cmd) objects - which allows the user to execute a predefined script.
 

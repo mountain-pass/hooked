@@ -14,43 +14,49 @@
       }
     },
     "plugin": {
-      "description": "A list of hooked plugins to import.",
+      "description": "Provides the ability to use built-in plugins.",
       "type": "object",
       "properties": {
-        "npm": {
+        "icons": {
+          "description": "Makes pretty icons to differentiate executable scripts vs groups.",
           "type": "boolean"
         },
         "abi": {
-          "type": "boolean",
-          "description": "Scans for blockchain json definitions.\nReserved environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)"
-        },
-        "makefile": {
+          "description": "Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)",
           "type": "boolean"
         },
-        "icons": {
+        "makefile": {
+          "description": "Scans for a `Makefile` file, and imports the named tasks as scripts.",
+          "type": "boolean"
+        },
+        "npm": {
+          "description": "Scans for a `package.json` file, and imports the named scripts as scripts.",
           "type": "boolean"
         }
       }
     },
     "env": {
-      "description": "Globally defined environment variables, which are enabled by the --env argument.",
+      "description": "A named group of environment variables.",
       "$ref": "#/$defs/envGroup"
     },
     "scripts": {
+      "description": "Organises `$cmd` objects, into a named hierarchy.",
       "$ref": "#/$defs/scriptsGroup"
     }
   },
   "$defs": {
     "scriptsGroup": {
-      "description": "A hierarchical group of scripts.",
+      "description": "Organises `$cmd` objects, into a named hierarchy.",
       "additionalProperties": false,
       "patternProperties": {
         "^.*$": {
           "anyOf": [
             {
+              "description": "Executes a command, and optionally provides output to environment variables or stdin.",
               "$ref": "#/$defs/cmdValue"
             },
             {
+              "description": "Organises `$cmd` objects, into a named hierarchy.",
               "$ref": "#/$defs/scriptsGroup"
             }
           ]
@@ -58,6 +64,7 @@
       }
     },
     "envGroup": {
+      "description": "A named group of environment variables.",
       "additionalProperties": false,
       "patternProperties": {
         "^.*$": {
@@ -68,23 +75,29 @@
       }
     },
     "envValue": {
+      "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)",
       "patternProperties": {
         "^.*$": {
           "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)",
           "oneOf": [
             {
+              "description": "Executes a command, and optionally provides output to environment variables or stdin.",
               "$ref": "#/$defs/cmdValue"
             },
             {
+              "description": "Provides a prompt to the user, to select from a set of choices.",
               "$ref": "#/$defs/stdinValue"
             },
             {
+              "description": "Resolves to a plain text string.\nResolves any `${..}` environment variables within the string.\nThrows an error if an environment variable is missing. Can be used to enforce presence of variables.",
               "type": "string"
             },
             {
+              "description": "Resolves to a plain text string.",
               "type": "number"
             },
             {
+              "description": "Resolves to a plain text string.",
               "type": "boolean"
             }
           ]
@@ -96,7 +109,27 @@
       "description": "Executes a command, and optionally provides output to environment variables or stdin.",
       "additionalProperties": false,
       "properties": {
+        "$env": {
+          "description": "Additional environment variables to resolve (added to global environment). Resolved before $envNames",
+          "type": "#/$defs/envGroup"
+        },
+        "$envNames": {
+          "description": "Additional environment group names to resolve ONLY when executing command. Resolved after $env.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "$envFromHost": {
+          "description": "If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands (i.e. local).",
+          "type": "boolean"
+        },
         "$cmd": {
+          "description": "The command to execute. Supports multiline.",
+          "type": "string"
+        },
+        "$errorMessage": {
+          "description": "The message to show, if an error occurs.",
           "type": "string"
         },
         "$image": {
@@ -105,18 +138,6 @@
         },
         "$ssh": {
           "description": "If supplied, command will execute in this remote server.",
-          "type": "string"
-        },
-        "$env": {
-          "type": "#/$defs/envGroup"
-        },
-        "$envNames": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "$errorMessage": {
           "type": "string"
         }
       },
@@ -127,27 +148,34 @@
     "stdinValue": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Provides a prompt to the user, to select from a set of choices.",
       "properties": {
         "$stdin": {
+          "description": "The prompt provided to the user.",
           "type": "string"
         },
         "$default": {
+          "description": "The default value provided to the user.",
           "type": "string"
         },
         "$choices": {
+          "description": "Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc.",
           "$ref": "#/$defs/stdinChoicesValue"
         },
-        "$filterMapping": {
-          "$ref": "#/$defs/filterMappingValue"
+        "$fieldsMapping": {
+          "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths.",
+          "$ref": "#/$defs/fieldsMappingValue"
         },
         "$filter": {
-          "type": "string",
-          "description": "A regex filter to apply to the 'name' or values."
+          "description": "A regex filter to apply to the 'name' or values.",
+          "type": "string"
         },
         "$sort": {
+          "description": "Sorts the displayed 'name' values.",
           "enum": [
             "alpha",
-            "alphaDesc"
+            "alphaDesc",
+            "none"
           ]
         }
       },
@@ -156,20 +184,24 @@
       ]
     },
     "stdinChoicesValue": {
+      "description": "Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc.",
       "oneOf": [
         {
           "$ref": "#/$defs/cmdValue"
         },
         {
+          "description": "A multiline string, each line will become a choice.",
           "type": "string"
         },
         {
+          "description": "An array of string options, each entry will become a choice.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         {
+          "description": "An array of name/value object, each entry will become a choice.",
           "type": "array",
           "items": {
             "type": "object"
@@ -177,15 +209,17 @@
         }
       ]
     },
-    "filterMappingValue": {
+    "fieldsMappingValue": {
       "type": "object",
       "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths.",
       "additionalProperties": false,
       "properties": {
         "name": {
+          "description": "A JSON path to the 'name' value.",
           "type": "string"
         },
         "value": {
+          "description": "A JSON path to the 'value' value.",
           "type": "string"
         }
       }

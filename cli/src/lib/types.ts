@@ -2,6 +2,7 @@ import { type Environment } from './utils/Environment'
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
+/**  */
 export interface Plugins {
   abi: boolean
   icons: boolean
@@ -18,9 +19,13 @@ export type TopLevelEnvironments = Record<string, EnvironmentVariables>
 export type TopLevelScripts = Record<string, any>
 
 export interface YamlConfig {
+  /**  */
   plugins?: Plugins
+  /**  */
   imports?: TopLevelImports
+  /**  */
   env: TopLevelEnvironments
+  /**  */
   scripts: TopLevelScripts
 }
 
@@ -76,16 +81,22 @@ export interface StdinScriptFieldsMapping {
   name: string
   value: string
 }
+
+/** Provides a prompt to the user, to select from a set of choices. */
 export interface StdinScript {
+  /** The prompt provided to the user. */
   $stdin: string
+  /** The default value provided to the user. */
   $default?: string
-  // allow multiple options
+  /** Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc. */
   $choices?: string | string[] | boolean[] | number[] | StdinScriptFieldsMapping[] | Record<string, string> |
   CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | null
-  /** fields mapping for json - [name, value, short?] */
+  /** For JSON arrays, name and value can be overridden by specifying alternative JSON paths. */
   $fieldsMapping?: StdinScriptFieldsMapping
-  $sort?: 'alpha' | 'alphaDesc' | 'none'
+  /** A regex filter to apply to the 'name' or values. */
   $filter?: string
+  /** Sorts the displayed 'name' values. */
+  $sort?: 'alpha' | 'alphaDesc' | 'none'
 }
 
 export interface InternalScript {
