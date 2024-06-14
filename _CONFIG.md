@@ -67,7 +67,7 @@ For VisualStudio:
   ...
   "yaml.schemas": {
     "https://raw.githubusercontent.com/mountain-pass/hooked/main/schemas/hooked.yaml.schema-v1.json": [
-      "hooked.yaml",
+      "hooked*.{yml,yaml}",
     ]
   },
 }
