@@ -26,9 +26,9 @@ The `hooked.yaml` can have multiple configuration options. Lets break them down.
 
 ## `imports:` (optional)
 
-Specifies a `string[]` of file paths or http endpoints. These files are (downloaded), loaded and merged into the current running configuration (in order).
+Specifies a `string[]` of file paths or http endpoints, of hooked configuration files. These files are (downloaded), loaded and merged into the current running configuration (in order).
 
-> PROPOSED: For file paths, supports glob pattern matching
+> PROPOSED: File paths support glob pattern matching.
 
 Example:
 ```yaml

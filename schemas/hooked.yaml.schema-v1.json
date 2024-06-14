@@ -7,9 +7,10 @@
   "additionalProperties": false,
   "properties": {
     "imports": {
-      "description": "A list of hooked yaml scripts to import.",
+      "description": "Specifies a `string[]` of file paths or http endpoints, of hooked configuration files. These files are (downloaded), loaded and merged into the current running configuration (in order).",
       "type": "array",
       "items": {
+        "description": "A file path or http endpoint, resolving to a hooked configuration file. File paths support glob pattern matching.",
         "type": "string"
       }
     },
@@ -36,7 +37,7 @@
       }
     },
     "env": {
-      "description": "A named group of environment variables.",
+      "description": "Globally defined environment variables, which can be referenced inside `scripts`.",
       "$ref": "#/$defs/envGroup"
     },
     "scripts": {
