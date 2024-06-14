@@ -21,7 +21,7 @@
 
 # Overview
 
-When run, the app looks for a `hooked.yaml` file in the current working directory.
+When run, the app looks for a `hooked.yaml` file in the current working directory, then the user's home directory.
 
 The `hooked.yaml` can have multiple configuration options. Lets break them down.
 

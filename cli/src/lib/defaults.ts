@@ -3,8 +3,24 @@ import os from 'os'
 import fs from 'fs'
 import path from 'path'
 import { type YamlConfig } from './types.js'
+import fileUtils from './utils/fileUtils.js'
 
-export const HOOKED_FILE = fs.realpathSync(path.resolve('hooked.yaml'))
+// look for hooked.yaml...
+
+// local first
+let tmp = fileUtils.resolvePath('hooked.yaml')
+if (fs.existsSync(tmp)) {
+  // resolve real path - in case it's a symbolic link
+  tmp = fs.realpathSync(tmp)
+} else {
+  // allow a global hooked.yaml
+  const global = fileUtils.resolvePath('~/hooked.yaml')
+  if (fs.existsSync(global)) {
+    tmp = global
+  }
+}
+
+export const HOOKED_FILE = tmp
 export const HOOKED_DIR = path.dirname(HOOKED_FILE)
 export const HISTORY_PATH = path.resolve(HOOKED_DIR, '.hooked_history.log')
 

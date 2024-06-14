@@ -104,6 +104,8 @@ Provided Environment Variables:
         logger.debug(`No config file found at '${HOOKED_FILE}'. Launching setup...`)
         await init(options)
         return
+      } else {
+        logger.debug(`Using config file: ${HOOKED_FILE}`)
       }
 
       // show logs
