@@ -15,6 +15,6 @@
         "cli": "yarn workspace @mountainpass/hooked-cli"
     },
     "devDependencies": {
-        "lerna": "^6.4.1"
+        "lerna": "8.1.3"
     }
 }

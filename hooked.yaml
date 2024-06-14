@@ -1,3 +1,11 @@
+# imports:
+#   - ./hooked-*.yml
+
+plugin:
+  icons: true
+  abi: true
+  makefile: true
+  npm: true
 
 env:
   default:
