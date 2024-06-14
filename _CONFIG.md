@@ -74,7 +74,7 @@ env:
 
 ## `scripts:` (optional)
 
-Organises `$cmd` object, into a named hierarchy.
+Organises `$cmd` objects, into a named hierarchy.
 
 The `scripts` object takes any number of child descendant objects, using the `key` as the script path.
 
