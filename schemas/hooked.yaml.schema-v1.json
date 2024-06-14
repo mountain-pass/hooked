@@ -41,7 +41,7 @@
       "$ref": "#/$defs/envGroup"
     },
     "scripts": {
-      "description": "Organises `$cmd` objects, into a named hierarchy.",
+      "description": "Organises `$cmd` and `$write_files` objects, into a named hierarchy.",
       "$ref": "#/$defs/scriptsGroup"
     }
   },
@@ -53,11 +53,12 @@
         "^.*$": {
           "anyOf": [
             {
-              "description": "Executes a command, and optionally provides output to environment variables or stdin.",
+              "$ref": "#/$defs/writeFilesValue"
+            },
+            {
               "$ref": "#/$defs/cmdValue"
             },
             {
-              "description": "Organises `$cmd` objects, into a named hierarchy.",
               "$ref": "#/$defs/scriptsGroup"
             }
           ]
@@ -104,6 +105,54 @@
           ]
         }
       }
+    },
+    "writeFilesValue": {
+      "type": "object",
+      "description": "Writes files to the filesystem.",
+      "additionalProperties": false,
+      "properties": {
+        "$write_files": {
+          "description": "Writes files to the filesystem.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/writeFileDef"
+          }
+        }
+      },
+      "required": [
+        "$write_files"
+      ]
+    },
+    "writeFileDef": {
+      "description": "Configuration for writing a file.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "Sets the file location.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Sets the contents of the file.",
+          "type": "string"
+        },
+        "permissions": {
+          "description": "Sets the read/write/execute access permissions on the file (default '644').",
+          "type": "string"
+        },
+        "encoding": {
+          "description": "Sets file encoding (default 'utf-8').",
+          "type": "string"
+        },
+        "owner": {
+          "description": "Sets the '<uid>:<gid>' of the file. (Note: must be numerical!).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ]
     },
     "cmdValue": {
       "type": "object",

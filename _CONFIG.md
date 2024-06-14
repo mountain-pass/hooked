@@ -9,8 +9,9 @@
   - [`scripts:` (optional)](#scripts-optional)
 - [Environment Variables and Resolvers](#environment-variables-and-resolvers)
   - [`string`](#string)
-  - [`$cmd`](#cmd)
   - [`$stdin`](#stdin)
+  - [`$cmd`](#cmd)
+  - [`$write_files`](#write_files)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
@@ -78,7 +79,7 @@ Organises `$cmd` objects, into a named hierarchy.
 
 The `scripts` object takes any number of child descendant objects, using the `key` as the script path.
 
-The object's descendant values, must eventually end with [`$cmd`](#cmd) objects - which allows the user to execute a predefined script.
+The object's descendant values, must eventually end with a [`$cmd`](#cmd) or [$write_files](#write_files) objects - which allows the user to execute a predefined script.
 
 How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
 
@@ -130,8 +131,9 @@ All environment variables need to resolve to key `string` and value `string` pai
 In order to support more complicated resolution scenarios, we've provided the following three resolvers:
 
 1. [`string`](#string)
-2. [`$cmd`](#cmd)
-3. [`$stdin`](#stdin)
+2. [`$stdin`](#stdin)
+3. [`$cmd`](#cmd)
+4. [`$write_files`](#write_files)
 
 ## `string`
 
@@ -155,47 +157,6 @@ env:
     WELCOME_MESSAGE: Hello there ${USER}!
     NAME: ${USER}
 ```
-
-## `$cmd`
-
-> Used for: Environment Variables or Scripts
-
-Resolves to the output of the command.
-
-Throws an error if command exits with a non-zero status code.
-
-Throws an error if an environment variable is missing i.e. `${..}`.
-
-
-**Parameters:**
-
-- `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
-- `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
-- `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
-- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
-- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
-- `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
-
-**Example:**
-
-```yaml
-env:
-  default:
-    WELCOME_MESSAGE:
-      $cmd: echo Hello world!
-    ANOTHER_MESSAGE:
-      $cmd: |
-        #!/bin/sh -ve
-        echo Hello world!
-```
-
-**Tips:**
-
-- you can use multiline string for a longer script.
-- you can update the `PATH` environment variable.
-- you can utilise a container service like Docker to run custom language scripts.
-- you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
-- if you want a script to always pass, append ` || true` to the end of the failing line.
 
 ## `$stdin`
 
@@ -230,6 +191,73 @@ env:
         value: id
       $filter: /.*red.*/i
       $sort: alpha
+```
+
+## `$cmd`
+
+> Used for: Environment Variables or Scripts
+
+Resolves to the output of the command.
+
+Throws an error if command exits with a non-zero status code.
+
+Throws an error if an environment variable is missing i.e. `${..}`.
+
+**Parameters:**
+
+- `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
+- `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
+- `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
+- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
+- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
+- `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
+
+**Example:**
+
+```yaml
+env:
+  default:
+    WELCOME_MESSAGE:
+      $cmd: echo Hello world!
+    ANOTHER_MESSAGE:
+      $cmd: |
+        #!/bin/sh -ve
+        echo Hello world!
+```
+
+**Tips:**
+
+- you can use multiline string for a longer script.
+- you can update the `PATH` environment variable.
+- you can utilise a container service like Docker to run custom language scripts.
+- you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
+- if you want a script to always pass, append ` || true` to the end of the failing line.
+
+## `$write_files`
+
+> Used for: Scripts
+
+Writes files to the filesystem.
+
+**Parameters:**
+
+- `$path` - (`string`) Sets the file location.
+- `$content` - (`string`) Sets the contents of the file.
+- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file (default '644').
+- `$encoding` - (`object` - optional) Sets file encoding (default 'utf-8').
+- `$owner` - (`string[]` - optional) Sets the '<uid>:<gid>' of the file. (Note: must be numerical!).
+
+**Example:**
+
+```yaml
+env:
+  default:
+    WELCOME_MESSAGE:
+      $cmd: echo Hello world!
+    ANOTHER_MESSAGE:
+      $cmd: |
+        #!/bin/sh -ve
+        echo Hello world!
 ```
 
 # Conventions

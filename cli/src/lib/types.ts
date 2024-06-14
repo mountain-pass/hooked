@@ -1,3 +1,4 @@
+import { type Mode } from 'fs'
 import { type Environment } from './utils/Environment'
 
 export type Dictionary<ValueType> = Record<string, ValueType>
@@ -46,6 +47,25 @@ export interface SuccessfulScript {
 }
 
 // script types
+
+/** Configuration for writing a file. */
+export interface WriteFile {
+  /** Sets the file location. */
+  path: string
+  /** Sets the contents of the file. */
+  content: string
+  /** Sets the read/write/execute access permissions on the file (default '644'). */
+  permissions?: Mode
+  /** Sets file encoding (default 'utf-8'). */
+  encoding?: BufferEncoding
+  /** Sets the '<uid>:<gid>' of the file. (Note: must be numerical!). */
+  owner?: string
+}
+
+/** Writes files to the filesystem. */
+export interface WriteFilesScript {
+  $write_files: WriteFile[]
+}
 
 export interface CmdScript {
   /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
@@ -104,7 +124,11 @@ export interface InternalScript {
   $internal: (options: { key: string, stdin: StdinResponses, env: Environment }) => Promise<string>
 }
 
-export type Script = string | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript
+export type Script = string | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | WriteFilesScript
+
+export const isWriteFilesScript = (script: Script): script is WriteFilesScript => {
+  return Array.isArray((script as any).$write_files)
+}
 
 export const isCmdScript = (script: Script): script is CmdScript => {
   return typeof (script as any).$cmd === 'string'
@@ -155,5 +179,12 @@ export const isObject = (o: any): o is object => {
 export const isScript = (script: any): script is Script => {
   return (typeof script === 'object' || typeof script === 'function') &&
   script !== null &&
-  (isCmdScript(script) || isStdinScript(script) || isEnvScript(script) || isResolveScript(script) || isInternalScript(script))
+  (
+    isWriteFilesScript(script) ||
+    isCmdScript(script) ||
+    isStdinScript(script) ||
+    isEnvScript(script) ||
+    isResolveScript(script) ||
+    isInternalScript(script)
+  )
 }

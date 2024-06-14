@@ -1,4 +1,7 @@
 import inquirer from 'inquirer'
+import fs from 'fs'
+import fsPromise from 'fs/promises'
+import path from 'path'
 import jp from 'jsonpath'
 import { fetchGlobalEnvVars, resolveEnvironmentVariables } from '../config.js'
 import { PAGE_SIZE } from '../defaults.js'
@@ -25,13 +28,17 @@ import {
   type StdinResponses,
   type StdinScript,
   type YamlConfig,
-  isSSHCmdScript
+  isSSHCmdScript,
+  isWriteFilesScript,
+  type WriteFilesScript,
+  type WriteFile
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
+import fileUtils from '../utils/fileUtils.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
@@ -92,7 +99,7 @@ export const resolveInternalScript = async (
 }
 
 /**
- *
+ * Resolves all environment variables, and runs the $cmd script.
  * @param key
  * @param script
  * @param stdin
@@ -187,6 +194,71 @@ export const resolveCmdScript = async (
     }
     throw e
   }
+}
+
+/**
+ * Writes the given file definition.
+ */
+const writeFile = async (def: WriteFile, env: Environment): Promise<void> => {
+  const filepath = fileUtils.resolvePath(env.resolve(def.path))
+  logger.debug(`Writing file - ${filepath}`)
+  await fsPromise.writeFile(filepath, env.resolve(def.content), {
+    encoding: isDefined(def.encoding) ? env.resolve(def.encoding) as BufferEncoding : 'utf-8',
+    mode: isDefined(def.permissions) ? env.resolve(def.permissions) : '644',
+    flag: 'w'
+  })
+  // set owner if present
+  if (isString(def.owner)) {
+    const tmp = env.resolve(def.owner)
+    if (tmp.includes(':')) {
+      const [uid, gid] = tmp.split(':')
+      await fsPromise.chown(filepath, parseInt(uid), parseInt(gid))
+    }
+  }
+}
+
+/**
+ * Resolves all environment variables, and writes the file.
+ * @param key
+ * @param script
+ * @param stdin
+ * @param env
+ * @param config
+ * @param options
+ * @param envVars
+ * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
+ * @returns
+ */
+export const resolveWriteFilesScript = async (
+  key: string,
+  script: WriteFilesScript,
+  stdin: StdinResponses,
+  env: Environment,
+  config: YamlConfig,
+  options: ProgramOptions,
+  envVars: EnvironmentVariables = {}
+): Promise<void> => {
+  // actually resolve the environment variables... (cmd script)
+  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
+
+  const missingKeys = new Set<string>()
+  for (const def of script.$write_files) {
+    env.getMissingRequiredKeys(def.path).forEach(missingKeys.add)
+    env.getMissingRequiredKeys(def.content).forEach(missingKeys.add)
+    if (isString(def.encoding)) env.getMissingRequiredKeys(def.encoding).forEach(missingKeys.add)
+    if (isString(def.owner)) env.getMissingRequiredKeys(def.owner).forEach(missingKeys.add)
+    if (isString(def.permissions)) env.getMissingRequiredKeys(def.permissions).forEach(missingKeys.add)
+  }
+  if (missingKeys.size > 0) {
+    // eslint-disable-next-line max-len
+    const foundString = toJsonString(env.getAll(), true)
+    // const envVarsString = toJsonString(envVars, true)
+    // eslint-disable-next-line max-len
+    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify([...missingKeys].sort())}\nFound: ${foundString}`)
+  }
+
+  // wait until all files have been written...
+  await Promise.all(script.$write_files.map(async def => { await writeFile(def, env) }))
 }
 
 export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
@@ -369,6 +441,8 @@ export const resolveScript = async (
   // perform environment variable resolution
   if (isInternalScript(script)) {
     await resolveInternalScript(key, script, stdin, env, config, options, envVars)
+  } else if (isWriteFilesScript(script)) {
+    await resolveWriteFilesScript(key, script, stdin, env, config, options, envVars)
   } else if (isCmdScript(script)) {
     await resolveCmdScript(key, script, stdin, env, config, options)
   } else if (isStdinScript(script)) {

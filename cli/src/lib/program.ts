@@ -15,12 +15,13 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { resolveCmdScript, resolveInternalScript } from './scriptExecutors/ScriptExecutor.js'
+import { resolveCmdScript, resolveInternalScript, resolveWriteFilesScript } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
   isCmdScript,
   isDefined,
   isInternalScript,
+  isWriteFilesScript,
   type EnvironmentVariables,
   type SuccessfulScript
 } from './types.js'
@@ -177,7 +178,7 @@ Provided Environment Variables:
       const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
 
       // check the script is executable...
-      if (!isCmdScript(script) && !isInternalScript(script)) {
+      if (!isCmdScript(script) && !isInternalScript(script) && !isWriteFilesScript(script)) {
         throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
       }
 
@@ -221,6 +222,9 @@ Provided Environment Variables:
       } else if (isInternalScript(script)) {
         // run internal script
         await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
+      } else if (isWriteFilesScript(script)) {
+        // write files
+        await resolveWriteFilesScript('-', script, stdin, env, config, options, envVars)
       } else if (options.printenv === true) {
         throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
       }
