@@ -1,7 +1,7 @@
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
-import { CONFIG_ADVANCED_GREETING, CONFIG_BLANK, CONFIG_PATH, PAGE_SIZE } from './defaults.js'
+import { CONFIG_ADVANCED_GREETING, CONFIG_BLANK, HOOKED_FILE, PAGE_SIZE } from './defaults.js'
 import { type ProgramOptions } from './program.js'
 import logger from './utils/logger.js'
 
@@ -48,11 +48,11 @@ export const init = async (options: ProgramOptions): Promise<void> => {
   ]).then((answers) => {
     if (answers.init === 'blank') {
       logger.debug('Created hooked.yaml from Blank template.')
-      fs.writeFileSync(CONFIG_PATH, generateBlankTemplateFileContents(), 'utf-8')
+      fs.writeFileSync(HOOKED_FILE, generateBlankTemplateFileContents(), 'utf-8')
     }
     if (answers.init === 'advanced') {
       logger.debug('Created hooked.yaml from Advanced Blank template.')
-      fs.writeFileSync(CONFIG_PATH, generateAdvancedBlankTemplateFileContents(), 'utf-8')
+      fs.writeFileSync(HOOKED_FILE, generateAdvancedBlankTemplateFileContents(), 'utf-8')
     }
   })
 }

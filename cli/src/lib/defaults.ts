@@ -1,10 +1,12 @@
 /* eslint-disable no-template-curly-in-string */
 import os from 'os'
+import fs from 'fs'
 import path from 'path'
 import { type YamlConfig } from './types.js'
 
-export const HISTORY_PATH = path.resolve('.hooked_history.log')
-export const CONFIG_PATH = path.resolve('hooked.yaml')
+export const HOOKED_FILE = fs.realpathSync(path.resolve('hooked.yaml'))
+export const HOOKED_DIR = path.dirname(HOOKED_FILE)
+export const HISTORY_PATH = path.resolve(HOOKED_DIR, '.hooked_history.log')
 
 export const PAGE_SIZE = 10
 

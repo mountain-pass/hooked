@@ -8,7 +8,7 @@ import {
   findScript,
   loadConfig
 } from './config.js'
-import { CONFIG_PATH, LOGS_MENU_OPTION } from './defaults.js'
+import { HOOKED_FILE, HOOKED_DIR, LOGS_MENU_OPTION } from './defaults.js'
 import exitHandler from './exitHandler.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
@@ -79,8 +79,8 @@ Provided Environment Variables:
       const env = new Environment()
       env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
       env.putAllGlobal(systemProcessEnvs)
-      env.putResolved('HOOKED_DIR', path.dirname(CONFIG_PATH))
-      env.putResolved('HOOKED_FILE', CONFIG_PATH)
+      env.putResolved('HOOKED_DIR', HOOKED_DIR)
+      env.putResolved('HOOKED_FILE', HOOKED_FILE)
 
       if (options.help === true) {
         program.help()
@@ -100,8 +100,8 @@ Provided Environment Variables:
       }
 
       // no config? initialise a new project...
-      if (!fs.existsSync(CONFIG_PATH)) {
-        logger.debug('No config file found. Launching setup...')
+      if (!fs.existsSync(HOOKED_FILE)) {
+        logger.debug(`No config file found at '${HOOKED_FILE}'. Launching setup...`)
         await init(options)
         return
       }
@@ -113,7 +113,7 @@ Provided Environment Variables:
       }
 
       // load imports...
-      const config = await loadConfig(CONFIG_PATH, options.pull)
+      const config = await loadConfig(HOOKED_FILE, options.pull)
 
       // show update command...
       if (options.update === true) {

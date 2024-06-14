@@ -5,6 +5,7 @@ import { cyan } from '../colour.js'
 import * as ethers from 'ethers'
 import { isString } from '../types.js'
 import logger from '../utils/logger.js'
+import { HOOKED_DIR } from '../defaults.js'
 
 type BaseTypes = 'bool' |
 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' |
@@ -105,7 +106,7 @@ const getProviderAndWallet = async (env: any): Promise<{ provider: ethers.JsonRp
 
 export const generateAbiScripts = async (): Promise<any> => {
   logger.debug('ABI: enabled...')
-  const files = await searchJsonFiles('.')
+  const files = await searchJsonFiles(HOOKED_DIR)
   logger.debug(`ABI: Found files - ${(files).length}`)
   if (files.length === 0) {
     return {}

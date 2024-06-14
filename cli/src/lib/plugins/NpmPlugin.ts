@@ -1,9 +1,11 @@
 /* eslint-disable no-template-curly-in-string */
 import fs from 'fs'
+import path from 'path'
 import { resolveResolveScript } from '../scriptExecutors/ScriptExecutor.js'
 import { isDefined } from '../types.js'
 import { Environment } from '../utils/Environment.js'
 import { loadPackageJsonSync } from '../utils/packageJson.js'
+import { HOOKED_DIR } from '../defaults.js'
 
 export const generateNpmScripts = (env: Environment): any => {
   // environment variables, that can be overridden by the user
@@ -12,7 +14,7 @@ export const generateNpmScripts = (env: Environment): any => {
     NPM_SCRIPT: npmScript = 'npm run ${NPM_COMMAND}'
   } = env.global
 
-  if (fs.existsSync(packageJsonFile)) {
+  if (fs.existsSync(path.resolve(HOOKED_DIR, packageJsonFile))) {
     const packageJson = loadPackageJsonSync(packageJsonFile)
     if (isDefined(packageJson.scripts) && Object.keys(packageJson.scripts).length > 0) {
       const npmScripts = {
