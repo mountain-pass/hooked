@@ -15,7 +15,7 @@ import {
   type TopLevelScripts,
   type YamlConfig
 } from './types.js'
-import { Environment, toJsonString } from './utils/Environment.js'
+import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
@@ -224,9 +224,10 @@ export const _resolveAndMergeConfigurationWithImports = async (config: YamlConfi
   const allLocal = await fetchImports(config.imports, pullLatestFlag)
 
   // load imports from local
-  for (const importPath of allLocal) {
-    const filepath = fileUtils.resolvePath(importPath)
+  for (const localpath of allLocal) {
+    const filepath = fileUtils.resolvePath(localpath)
     logger.debug(`Importing: ${filepath}`)
+    // files must be loaded in order
     const tmp = await loadConfig(filepath, pullLatestFlag)
     _mergeEnvAndScripts(tmp, envs, scripts)
   }

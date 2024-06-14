@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 
-describe('wip resolveStdinScript', () => {
+describe('resolveStdinScript', () => {
 
   afterEach(() => {
     sinon.restore()

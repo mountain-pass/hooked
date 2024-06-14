@@ -44,7 +44,7 @@
     "prej": "yarn workspace cli build",
     "j": "node ./dist/index.js",
     "initialPublish": "npm publish --access public",
-    "test": "ts-mocha",
+    "test": "DEBUG=mocha:* ts-mocha",
     "test:watch": "nodemon",
     "test:watch:wip": "nodemon --exec 'npm run test -- --grep wip'",
     "test:coverage": "nyc --reporter=html --reporter=text --reporter=text-summary npm test",
@@ -58,6 +58,7 @@
   "dependencies": {
     "commander": "10.0.1",
     "ethers": "6.3.0",
+    "glob": "10.4.1",
     "hjson": "3.2.2",
     "inquirer": "9.2.2",
     "jsonpath": "1.1.1",

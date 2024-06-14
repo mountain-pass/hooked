@@ -4,8 +4,21 @@ import fs from 'fs'
 import path from 'path'
 import { type IncomingMessage } from 'http'
 import { isDefined } from '../types.js'
-import { cyan } from '../colour.js'
 import logger from './logger.js'
+
+/**
+ * Optionally resolves a leading tilde character to the user's home directory.
+ * @param filepath
+ * @returns
+ */
+export const resolveHomePath = (filepath: string): string => {
+  if (filepath[0] === '~') {
+    const home = os.homedir()
+    const newpath = path.join(home, filepath.slice(1))
+    return newpath
+  }
+  return filepath
+}
 
 /**
  * Resolves a path, including home directories.
@@ -13,11 +26,7 @@ import logger from './logger.js'
  * @returns
  */
 export const resolvePath = (filepath: string): string => {
-  if (filepath[0] === '~') {
-    return path.join(os.homedir(), filepath.slice(1))
-  } else {
-    return path.resolve(filepath)
-  }
+  return path.resolve(resolveHomePath(filepath))
 }
 
 export const getDirnameFilename = (filepath: string): string => {
@@ -80,6 +89,7 @@ export const cleanupOldTmpFiles = (): void => {
 }
 
 export default {
+  resolveHomePath,
   resolvePath,
   downloadFile
 }

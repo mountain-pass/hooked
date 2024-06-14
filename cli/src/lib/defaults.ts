@@ -17,6 +17,22 @@ export const CONFIG_BLANK = (): YamlConfig => {
   return {
     env: {
       default: {
+        SKIP_VERSION_CHECK: 'true',
+        GREETING: 'Hello'
+      }
+    },
+    scripts: {
+      say: {
+        $cmd: 'echo "${GREETING}!"'
+      }
+    }
+  }
+}
+
+export const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
+  return {
+    env: {
+      default: {
         GREETING: {
           $stdin: 'What country do you prefer?',
           $choices: {
@@ -44,11 +60,10 @@ export const CONFIG_BLANK = (): YamlConfig => {
   }
 }
 
-export const DEFAULT_CONFIG_2: YamlConfig = {
+export const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
   env: {
     default: {
-      username: { $env: 'USER' },
-      GIT_COMMIT: { $cmd: 'git rev-parse --short HEAD || echo "NOT_AVAILABLE"' }
+      username: { $env: 'USER' }
     },
     english: {
       HELLO: { $cmd: 'printf "Hello"' },
@@ -68,8 +83,7 @@ export const DEFAULT_CONFIG_2: YamlConfig = {
   scripts: {
     say: {
       hello: {
-        // eslint-disable-next-line no-template-curly-in-string
-        $cmd: 'echo "${HELLO} ${WORLD}, ${NAME}!"\necho "git commit is -> ($GIT_COMMIT)"\n'
+        $cmd: 'echo "${HELLO} ${WORLD}, ${NAME}!"'
       }
     }
   }

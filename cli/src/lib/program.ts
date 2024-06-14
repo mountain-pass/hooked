@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import fs from 'fs'
+import path from 'path'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
 import {
@@ -66,6 +67,8 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       const env = new Environment()
       env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
       env.putAllGlobal(systemProcessEnvs)
+      env.putResolved('HOOKED_DIR', path.dirname(CONFIG_PATH))
+      env.putResolved('HOOKED_FILE', CONFIG_PATH)
 
       // if CI env var is set, then set batch mode...
       if (env.isResolvableByKey('CI') && options.batch !== true) {

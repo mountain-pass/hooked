@@ -25,8 +25,7 @@ import {
   type StdinResponses,
   type StdinScript,
   type YamlConfig,
-  isSSHCmdScript,
-  type StdinScriptFieldsMapping
+  isSSHCmdScript
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'

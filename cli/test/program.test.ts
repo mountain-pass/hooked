@@ -2,6 +2,7 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import fs from 'fs'
+import path from 'path'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import YAML from 'yaml'
@@ -80,8 +81,10 @@ describe('program', () => {
     OTHER_HOST_VAR: 'SHOULD_NOT_BE_PASSED'
   }
 
+  const hookedFile = path.resolve('hooked.yaml')
+
   beforeEach(() => {
-    if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
+    if (fs.existsSync(hookedFile)) fs.unlinkSync(hookedFile)
     sinon.restore()
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
@@ -90,7 +93,7 @@ describe('program', () => {
   })
 
   afterEach(() => {
-    // if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
+    // if (fs.existsSync(hookedFile)) fs.unlinkSync(hookedFile)
     sinon.restore()
   })
 
@@ -111,36 +114,41 @@ describe('program', () => {
     return result
   }
 
+  const DEFAULT_ENV_VARS = {
+    "HOOKED_DIR": path.dirname(hookedFile),
+    "HOOKED_FILE": hookedFile
+  }
+
   it('--printenv should print environment variables only', async () => {
     // assuming { HOSTVAR: 'HOST_VAR_RESOLVED' } is already set in the environment...
-    expect(await printEnv(BASE_CONFIG)).to.eql({ FOO: 'barHOST_VAR_RESOLVED' })
+    expect(await printEnv(BASE_CONFIG)).to.eql({ FOO: 'barHOST_VAR_RESOLVED', ...DEFAULT_ENV_VARS })
   })
 
   it('--printenv should print environment variables only #2', async () => {
     // assuming { HOSTVAR: 'HOST_VAR_RESOLVED' } is already set in the environment...
-    expect(await printEnv(BASE_CONFIG_2)).to.eql({ FOO: 'barHOST_VAR_RESOLVED' })
+    expect(await printEnv(BASE_CONFIG_2)).to.eql({ FOO: 'barHOST_VAR_RESOLVED', ...DEFAULT_ENV_VARS })
   })
 
   it('--printenv should print environment variables only #3', async () => {
     // assuming { HOSTVAR: 'HOST_VAR_RESOLVED' } is already set in the environment...
-    expect(await printEnv(BASE_CONFIG_3)).to.eql({ FOO: 'barHOST_VAR_RESOLVED' })
+    expect(await printEnv(BASE_CONFIG_3)).to.eql({ FOO: 'barHOST_VAR_RESOLVED', ...DEFAULT_ENV_VARS })
   })
 
   it('--printenv should print environment variables only #4', async () => {
     // assuming { HOSTVAR: 'HOST_VAR_RESOLVED' } is already set in the environment...
-    expect(await printEnv(BASE_CONFIG_4)).to.eql({ FOO: 'barHOST_VAR_RESOLVED' })
+    expect(await printEnv(BASE_CONFIG_4)).to.eql({ FOO: 'barHOST_VAR_RESOLVED', ...DEFAULT_ENV_VARS })
   })
 
   it('--stdin should support strict json', async () => {
     writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}})
     await program.parseAsync(["node", "index.ts","-b","--printenv","test", "--stdin", '{"FOO":"cat"}'])
-    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'cat'}))
+    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'cat', ...DEFAULT_ENV_VARS}))
   })
 
   it('--stdin should support relaxed json', async () => {
     writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}})
     await program.parseAsync(["node", "index.ts","-b","--printenv","test", "--stdin", "{FOO:'dog'}"])
-    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'dog'}))
+    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'dog', ...DEFAULT_ENV_VARS}))
   })
 
   it('should throw error, if no config file exists (and run in batch mode)', async () => {
@@ -161,7 +169,8 @@ describe('program', () => {
     // the environment provided to the script should be the one defined in the config ONLY (not system!)
     expect(execSpy.getCall(0).args[1]?.env).to.eql({
       FOO: 'barHOST_VAR_RESOLVED',
-      HOOKED_ROOT: 'false'
+      HOOKED_ROOT: 'false',
+      ...DEFAULT_ENV_VARS
     })
   })
 
@@ -191,7 +200,8 @@ describe('program', () => {
     expect(execSpy.getCall(0).args[1]?.env).to.eql({
       cat: 'bar',
       foo: 'bar',
-      HOOKED_ROOT: 'false'
+      HOOKED_ROOT: 'false',
+      ...DEFAULT_ENV_VARS
     })
   })
 
@@ -218,7 +228,8 @@ describe('program', () => {
     expect(execSpy.getCall(0).args[1]?.env).to.eql({
       connectTo: 'root@192.168.0.1',
       IPADDR: "192.168.0.1",
-      HOOKED_ROOT: 'false'
+      HOOKED_ROOT: 'false',
+      ...DEFAULT_ENV_VARS
     })
   })
 
@@ -257,7 +268,8 @@ describe('program', () => {
       foo: 'bar',
       seven: '8-7',
       eight: '8',
-      HOOKED_ROOT: 'false'
+      HOOKED_ROOT: 'false',
+      ...DEFAULT_ENV_VARS
     })
   })
   

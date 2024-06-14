@@ -572,7 +572,7 @@ describe('config', () => {
 
   describe('yaml config', () => {
 
-    it('base config should allow string, number and boolean', async () => {
+    it('wip base config should allow string, number and boolean', async () => {
       // setup
       const importedConfig: YamlConfig = { 
         env: { default: { aaa: 'zzz', bbb: 123 as any, ccc: true as any } }, 
@@ -610,7 +610,9 @@ describe('config', () => {
         hello: { $cmd: 'echo "Hello"' },
         goodbye: { $cmd: 'echo "Goodbye"' }
       })
-      sinon.assert.calledWithExactly(spyFsExistsSync, path.join(os.homedir(), '.hooked', 'hooked.yaml'))
+      sinon.assert.calledThrice(spyFsExistsSync)
+      const argument = spyFsExistsSync.getCall(0).args[0]
+      expect(argument).to.eql(path.join(os.homedir(), '.hooked', 'hooked.yaml'))
       sinon.assert.calledOnce(spyFsReadFileSync)
     })
 

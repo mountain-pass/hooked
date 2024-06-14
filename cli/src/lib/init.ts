@@ -1,20 +1,11 @@
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
-import { CONFIG_BLANK, CONFIG_PATH, PAGE_SIZE } from './defaults.js'
+import { CONFIG_ADVANCED_GREETING, CONFIG_BLANK, CONFIG_PATH, PAGE_SIZE } from './defaults.js'
 import { type ProgramOptions } from './program.js'
-import { type YamlConfig } from './types.js'
 import logger from './utils/logger.js'
 
-/**
- * Generates a blank hooked.yaml file contents.
- */
-export const generateBlankTemplateFileContents = (): string => {
-  const config: YamlConfig = CONFIG_BLANK()
-  // write file
-  let configStr = YAML.stringify(config)
-  // prepend installation instructions
-  configStr = `#
+const HEADER = `#
 # Hooked configuration file
 # See https://github.com/mountain-pass/hooked for more information.
 #
@@ -22,8 +13,17 @@ export const generateBlankTemplateFileContents = (): string => {
 # To enable yaml validation: https://github.com/mountain-pass/hooked/blob/main/_CONFIG.md#recommended---enable-yaml-schema
 #
 
-${configStr}`
-  return configStr
+`
+
+/**
+ * Generates a blank hooked.yaml file contents.
+ */
+export const generateBlankTemplateFileContents = (): string => {
+  return `${HEADER}${YAML.stringify(CONFIG_BLANK())}`
+}
+
+export const generateAdvancedBlankTemplateFileContents = (): string => {
+  return `${HEADER}${YAML.stringify(CONFIG_ADVANCED_GREETING())}`
 }
 
 /**
@@ -40,7 +40,8 @@ export const init = async (options: ProgramOptions): Promise<void> => {
       message: 'Create new config from:',
       pageSize: PAGE_SIZE,
       choices: [
-        { name: 'new Blank template', value: 'blank' }
+        { name: 'new Blank template', value: 'blank' },
+        { name: 'new Advanced Blank template', value: 'advanced' }
       ],
       loop: true
     }
@@ -48,6 +49,10 @@ export const init = async (options: ProgramOptions): Promise<void> => {
     if (answers.init === 'blank') {
       logger.debug('Created hooked.yaml from Blank template.')
       fs.writeFileSync(CONFIG_PATH, generateBlankTemplateFileContents(), 'utf-8')
+    }
+    if (answers.init === 'advanced') {
+      logger.debug('Created hooked.yaml from Advanced Blank template.')
+      fs.writeFileSync(CONFIG_PATH, generateAdvancedBlankTemplateFileContents(), 'utf-8')
     }
   })
 }

@@ -2,6 +2,7 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import fs from 'fs'
+import path from 'path'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import YAML from 'yaml'
@@ -24,7 +25,7 @@ const BASE_CONFIG = {
   }
 }
 
-describe('wip program arguments', () => {
+describe('program arguments', () => {
 
   beforeEach(() => {
     if (fs.existsSync('hooked.yaml')) fs.unlinkSync('hooked.yaml')
@@ -37,10 +38,18 @@ describe('wip program arguments', () => {
     sinon.restore()
   })
 
-  it('--printenv should print environment variables only', async () => {
-    fs.writeFileSync('hooked.yaml', YAML.stringify(BASE_CONFIG), 'utf-8')
+  it('--printenv should print environment variables (including BASEDIR) only', async () => {
+    const filepath = path.resolve('hooked.yaml')
+    const parentDir = path.dirname(filepath)
+    fs.writeFileSync(filepath, YAML.stringify(BASE_CONFIG), 'utf-8')
     const spylog = sinon.stub(console, 'log')
     await program(["node", "index.ts","--printenv","test"])
-    sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'bar'}))
+    sinon.assert.calledOnce(spylog)
+    const argument = JSON.parse(spylog.getCall(0).args[0])
+    expect(argument).to.eql({
+      FOO:'bar', 
+      HOOKED_DIR: path.dirname(filepath),
+      HOOKED_FILE: filepath
+    })
   })
 })

@@ -4,6 +4,7 @@ import fileUtils from './fileUtils.js'
 import logger from './logger.js'
 import fs from 'fs'
 import path from 'path'
+import { glob } from 'glob'
 
 /**
  * Fetches the imports into the local cache.
@@ -15,7 +16,17 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
 
   if (Array.isArray(imports) && imports.length > 0) {
     const remotes = imports.filter(i => i.startsWith('https://'))
-    const locals = imports.filter(i => !i.startsWith('https://'))
+    const localGlobs: string[] = imports.filter(i => !i.startsWith('https://')).map(str => fileUtils.resolveHomePath(str))
+    let locals: string[] = []
+    for (const globPath of localGlobs) {
+      const tmp = await glob(globPath, { signal: AbortSignal.timeout(1000) })
+      if (tmp.length > 0) {
+        locals = [...locals, ...tmp]
+      } else {
+        logger.debug(`No files matching glob path "${globPath}", treating as file reference.`)
+        locals = [...locals, globPath]
+      }
+    }
     const remotesCache = remotes.map(i => getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i))))
     const allLocal: string[] = []
     // const allLocal = imports.map(i => i.startsWith('https://')

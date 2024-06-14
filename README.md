@@ -133,7 +133,7 @@ Don't forget to commit `hooked.yaml` and `.hooked_history.log` files to source c
 
 # Configuration
 
-This deserves it's own section... [check it out](_CONFIG.md).
+For detailed hooked configuration, [please read here](_CONFIG.md).
 
 Impatient? Checkout the [`hooked.yaml`](hooked.yaml) config we use!
 
