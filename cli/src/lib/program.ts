@@ -42,6 +42,7 @@ export interface ProgramOptions {
   batch?: boolean
   pull?: boolean
   update?: boolean
+  help?: boolean
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
@@ -62,6 +63,16 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-u, --update', 'updates to the latest version of hooked')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
     .argument('[scriptPath...]', 'the script path to run')
+    .addHelpText('afterAll', `
+Environment Variables:
+  LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug")
+  SKIPCLEANUP          If 'true', doesn't cleanup old *.sh files. Useful for debugging.
+
+Provided Environment Variables:
+  HOOKED_FILE          The root hooked.yaml file that was run.
+  HOOKED_DIR           The parent directory of the HOOKED_FILE.
+  HOOKED_ROOT          <true|false> True if the current script is the root file.
+    `)
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
       const env = new Environment()
@@ -69,6 +80,11 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
       env.putAllGlobal(systemProcessEnvs)
       env.putResolved('HOOKED_DIR', path.dirname(CONFIG_PATH))
       env.putResolved('HOOKED_FILE', CONFIG_PATH)
+
+      if (options.help === true) {
+        program.help()
+        return
+      }
 
       // if CI env var is set, then set batch mode...
       if (env.isResolvableByKey('CI') && options.batch !== true) {
