@@ -52,8 +52,8 @@ export interface SuccessfulScript {
 export interface WriteFile {
   /** Sets the file location. */
   path: string
-  /** Sets the contents of the file. */
-  content: string
+  /** Sets the contents of the file. If absent, treats the path as a folder. */
+  content?: string
   /** Sets the read/write/execute access permissions on the file (default '644'). */
   permissions?: Mode
   /** Sets file encoding (default 'utf-8'). */

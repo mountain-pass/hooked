@@ -244,7 +244,7 @@ Writes files to the filesystem.
 **Parameters:**
 
 - `$path` - (`string`) Sets the file location.
-- `$content` - (`string`) Sets the contents of the file.
+- `$content` - (`string`) Sets the contents of the file. If absent, treats the path as a folder.
 - `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file (default '644').
 - `$encoding` - (`object` - optional) Sets file encoding (default 'utf-8').
 - `$owner` - (`string[]` - optional) Sets the '<uid>:<gid>' of the file. (Note: must be numerical!).

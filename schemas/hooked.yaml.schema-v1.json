@@ -167,7 +167,7 @@
           "type": "string"
         },
         "content": {
-          "description": "Sets the contents of the file.",
+          "description": "Sets the contents of the file. If absent, treats the path as a folder.",
           "type": "string"
         },
         "permissions": {
@@ -184,8 +184,7 @@
         }
       },
       "required": [
-        "path",
-        "content"
+        "path"
       ]
     },
     "cmdValue": {

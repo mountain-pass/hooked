@@ -1,4 +1,5 @@
 import inquirer from 'inquirer'
+import fs from 'fs'
 import fsPromise from 'fs/promises'
 import jp from 'jsonpath'
 import { fetchGlobalEnvVars, findScript, resolveEnvironmentVariables } from '../config.js'
@@ -199,14 +200,24 @@ export const resolveCmdScript = async (
 /**
  * Writes the given file definition.
  */
-const writeFile = async (def: WriteFile, env: Environment): Promise<void> => {
+const writeFileOrFolder = async (def: WriteFile, env: Environment): Promise<void> => {
   const filepath = fileUtils.resolvePath(env.resolve(def.path))
-  logger.debug(`Writing file - ${filepath}`)
-  await fsPromise.writeFile(filepath, env.resolve(def.content), {
-    encoding: isDefined(def.encoding) ? env.resolve(def.encoding) as BufferEncoding : 'utf-8',
-    mode: isDefined(def.permissions) ? env.resolve(def.permissions) : '644',
-    flag: 'w'
-  })
+  if (isDefined(def.content)) {
+    // is file
+    logger.debug(`Writing file - ${filepath}`)
+    await fsPromise.writeFile(filepath, env.resolve(def.content), {
+      encoding: isDefined(def.encoding) ? env.resolve(def.encoding) as BufferEncoding : 'utf-8',
+      flag: 'w'
+    })
+  } else {
+    // is folder
+    logger.debug(`Writing folder - ${filepath}`)
+    await fsPromise.mkdir(filepath, { recursive: true })
+  }
+  // set mode if present
+  if (isString(def.permissions)) {
+    await fsPromise.chmod(filepath, env.resolve(def.permissions))
+  }
   // set owner if present
   if (isString(def.owner)) {
     const tmp = env.resolve(def.owner)
@@ -244,7 +255,7 @@ export const resolveWriteFilesScript = async (
   const missingKeys = new Set<string>()
   for (const def of script.$write_files) {
     env.getMissingRequiredKeys(def.path).forEach(missingKeys.add)
-    env.getMissingRequiredKeys(def.content).forEach(missingKeys.add)
+    if (isString(def.content)) env.getMissingRequiredKeys(def.content).forEach(missingKeys.add)
     if (isString(def.encoding)) env.getMissingRequiredKeys(def.encoding).forEach(missingKeys.add)
     if (isString(def.owner)) env.getMissingRequiredKeys(def.owner).forEach(missingKeys.add)
     if (isString(def.permissions)) env.getMissingRequiredKeys(def.permissions).forEach(missingKeys.add)
@@ -258,7 +269,7 @@ export const resolveWriteFilesScript = async (
   }
 
   // wait until all files have been written...
-  await Promise.all(script.$write_files.map(async def => { await writeFile(def, env) }))
+  await Promise.all(script.$write_files.map(async def => { await writeFileOrFolder(def, env) }))
 }
 
 export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
