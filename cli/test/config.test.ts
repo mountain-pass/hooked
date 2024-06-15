@@ -16,7 +16,7 @@ const { expect } = chai
 import os from 'os'
 import path from 'path'
 import fileUtils from '../src/lib/utils/fileUtils.js'
-import { LOGS_MENU_OPTION, PAGE_SIZE, getLocalImportsCachePath } from '../src/lib/defaults.js'
+import defaults from '../src/lib/defaults.js'
 import { ProgramOptions } from '../src/lib/program.js'
 
 describe('config', () => {
@@ -46,9 +46,9 @@ describe('config', () => {
         type: 'list',
         name: 'next',
         message: 'Please select an option:',
-        pageSize: PAGE_SIZE,
-        default: LOGS_MENU_OPTION,
-        choices: [LOGS_MENU_OPTION, 'foo'],
+        pageSize: defaults.getDefaults().PAGE_SIZE,
+        default: defaults.getDefaults().LOGS_MENU_OPTION,
+        choices: [defaults.getDefaults().LOGS_MENU_OPTION, 'foo'],
         loop: true
       }
     ])
@@ -435,7 +435,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
-        pageSize: PAGE_SIZE,
+        pageSize: defaults.getDefaults().PAGE_SIZE,
         default: undefined,
         choices: [
           {name: 'one', value: 'one'}, 
@@ -462,7 +462,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
-        pageSize: PAGE_SIZE,
+        pageSize: defaults.getDefaults().PAGE_SIZE,
         default: undefined,
         choices: [
         {name:'true',value:'true'}, 
@@ -489,7 +489,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
-        pageSize: PAGE_SIZE,
+        pageSize: defaults.getDefaults().PAGE_SIZE,
         default: undefined,
         choices: [
           { name: '1', value: '1' },
@@ -518,7 +518,7 @@ describe('config', () => {
         type: 'list',
         name: 'name',
         message: 'what is your name?',
-        pageSize: PAGE_SIZE,
+        pageSize: defaults.getDefaults().PAGE_SIZE,
         default: undefined,
         choices: [{ name: 'one', value: 'one' }, { name: 'two', value: 'two' }, { name: 'three', value: 'three' }],
         loop: true
@@ -661,7 +661,7 @@ describe('config', () => {
       })
       sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), '.hooked', 'imports', 'custom.yaml'))
       sinon.assert.calledOnce(fsspy2)
-      sinon.assert.calledOnceWithExactly(fsspy3, 'https://www.foobar.com/.hooked/custom.yaml', getLocalImportsCachePath('custom.yaml'))
+      sinon.assert.calledOnceWithExactly(fsspy3, 'https://www.foobar.com/.hooked/custom.yaml', defaults.getLocalImportsCachePath('custom.yaml'))
     })
 
   })

@@ -4,7 +4,7 @@ import path from 'path'
 import fsPromise from 'fs/promises'
 import jp from 'jsonpath'
 import { fetchGlobalEnvVars, findScript, resolveEnvironmentVariables } from '../config.js'
-import { PAGE_SIZE } from '../defaults.js'
+import defaults from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
 import {
   isCmdScript,
@@ -483,7 +483,7 @@ export const resolveStdinScript = async (
           type: isDefined(choices) ? 'list' : 'text',
           name: key,
           message: newMessage,
-          pageSize: PAGE_SIZE,
+          pageSize: defaults.getDefaults().PAGE_SIZE,
           default: newDefault,
           choices,
           loop: true

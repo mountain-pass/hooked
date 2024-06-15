@@ -2,7 +2,7 @@
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
-import { LOGS_MENU_OPTION, PAGE_SIZE } from './defaults.js'
+import defaults from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type ProgramOptions } from './program.js'
 import { resolveScript } from './scriptExecutors/ScriptExecutor.js'
@@ -56,7 +56,7 @@ export const findScript = async (
       return [display, { $cmd }] as [string, CmdScript]
     })
     if (history.length > 0) {
-      script = { [LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
+      script = { [defaults.getDefaults().LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
     } else {
       logger.debug('No history found.')
     }
@@ -126,7 +126,7 @@ export const findScript = async (
           type: 'list',
           name: 'next',
           message: 'Please select an option:',
-          pageSize: PAGE_SIZE,
+          pageSize: defaults.getDefaults().PAGE_SIZE,
           default: choices[0],
           choices,
           loop: true

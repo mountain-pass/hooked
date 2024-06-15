@@ -1,7 +1,7 @@
 import fs from 'fs'
 import inquirer from 'inquirer'
 import YAML from 'yaml'
-import { CONFIG_ADVANCED_GREETING, CONFIG_BLANK, HOOKED_FILE, PAGE_SIZE } from './defaults.js'
+import defaults from './defaults.js'
 import { type ProgramOptions } from './program.js'
 import logger from './utils/logger.js'
 
@@ -19,11 +19,11 @@ const HEADER = `#
  * Generates a blank hooked.yaml file contents.
  */
 export const generateBlankTemplateFileContents = (): string => {
-  return `${HEADER}${YAML.stringify(CONFIG_BLANK())}`
+  return `${HEADER}${YAML.stringify(defaults.CONFIG_BLANK())}`
 }
 
 export const generateAdvancedBlankTemplateFileContents = (): string => {
-  return `${HEADER}${YAML.stringify(CONFIG_ADVANCED_GREETING())}`
+  return `${HEADER}${YAML.stringify(defaults.CONFIG_ADVANCED_GREETING())}`
 }
 
 /**
@@ -38,7 +38,7 @@ export const init = async (options: ProgramOptions): Promise<void> => {
       type: 'list',
       name: 'init',
       message: 'Create new config from:',
-      pageSize: PAGE_SIZE,
+      pageSize: defaults.getDefaults().PAGE_SIZE,
       choices: [
         { name: 'new Blank template', value: 'blank' },
         { name: 'new Advanced Blank template', value: 'advanced' }
@@ -48,11 +48,11 @@ export const init = async (options: ProgramOptions): Promise<void> => {
   ]).then((answers) => {
     if (answers.init === 'blank') {
       logger.debug('Created hooked.yaml from Blank template.')
-      fs.writeFileSync(HOOKED_FILE, generateBlankTemplateFileContents(), 'utf-8')
+      fs.writeFileSync(defaults.getDefaults().HOOKED_FILE, generateBlankTemplateFileContents(), 'utf-8')
     }
     if (answers.init === 'advanced') {
       logger.debug('Created hooked.yaml from Advanced Blank template.')
-      fs.writeFileSync(HOOKED_FILE, generateAdvancedBlankTemplateFileContents(), 'utf-8')
+      fs.writeFileSync(defaults.getDefaults().HOOKED_FILE, generateAdvancedBlankTemplateFileContents(), 'utf-8')
     }
   })
 }

@@ -1,10 +1,8 @@
 /* eslint-disable no-template-curly-in-string */
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import fs from 'fs'
 import { describe } from 'mocha'
 import sinon from 'sinon'
-import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
 import { Environment, toJsonString } from '../../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai

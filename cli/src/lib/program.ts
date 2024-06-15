@@ -1,6 +1,5 @@
 import { Command } from 'commander'
 import fs from 'fs'
-import path from 'path'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
 import {
@@ -8,7 +7,7 @@ import {
   findScript,
   loadConfig
 } from './config.js'
-import { HOOKED_FILE, HOOKED_DIR, LOGS_MENU_OPTION } from './defaults.js'
+import defaults from './defaults.js'
 import exitHandler from './exitHandler.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
@@ -43,9 +42,10 @@ export interface ProgramOptions {
   listenvs?: boolean
   init?: boolean
   log?: boolean
-  batch?: boolean
   pull?: boolean
   update?: boolean
+  batch?: boolean
+  config?: string
   help?: boolean
 }
 
@@ -66,6 +66,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-p, --pull', 'force download all imports from remote to local cache')
     .option('-u, --update', 'updates to the latest version of hooked')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
+    .option('-c, --config', 'specify the hooked configuration file to use')
     .argument('[scriptPath...]', 'the script path to run')
     .addHelpText('afterAll', `
 Environment Variables:
@@ -79,11 +80,14 @@ Provided Environment Variables:
     `)
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
+      // set the default configuration location
+      defaults.setDefaultConfigurationFilepath(options.config)
+
       const env = new Environment()
       env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
       env.putAllGlobal(systemProcessEnvs)
-      env.putResolved('HOOKED_DIR', HOOKED_DIR)
-      env.putResolved('HOOKED_FILE', HOOKED_FILE)
+      env.putResolved('HOOKED_DIR', defaults.getDefaults().HOOKED_DIR)
+      env.putResolved('HOOKED_FILE', defaults.getDefaults().HOOKED_FILE)
 
       if (options.help === true) {
         program.help()
@@ -103,12 +107,12 @@ Provided Environment Variables:
       }
 
       // no config? initialise a new project...
-      if (!fs.existsSync(HOOKED_FILE)) {
-        logger.debug(`No config file found at '${HOOKED_FILE}'. Launching setup...`)
+      if (!fs.existsSync(defaults.getDefaults().HOOKED_FILE)) {
+        logger.debug(`No config file found at '${defaults.getDefaults().HOOKED_FILE}'. Launching setup...`)
         await init(options)
         return
       } else {
-        logger.debug(`Using config file: ${HOOKED_FILE}`)
+        logger.debug(`Using config file: ${defaults.getDefaults().HOOKED_FILE}`)
       }
 
       // show logs
@@ -118,7 +122,7 @@ Provided Environment Variables:
       }
 
       // load imports...
-      const config = await loadConfig(HOOKED_FILE, options.pull)
+      const config = await loadConfig(defaults.getDefaults().HOOKED_FILE, options.pull)
 
       // show update command...
       if (options.update === true) {
@@ -233,7 +237,7 @@ Provided Environment Variables:
       }
       // store and log "Rerun" command in history (if successful and not the _logs_ option!)
       const isRoot = !env.isResolvableByKey('HOOKED_ROOT') && !isDefined(envVars.HOOKED_ROOT)
-      const notRequestingLogs = paths.join(' ') !== LOGS_MENU_OPTION
+      const notRequestingLogs = paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
       }

@@ -1,4 +1,4 @@
-import { getLocalImportsCachePath } from '../defaults.js'
+import defaults from '../defaults.js'
 import { type TopLevelImports } from '../types.js'
 import fileUtils from './fileUtils.js'
 import logger from './logger.js'
@@ -27,7 +27,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
         locals = [...locals, globPath]
       }
     }
-    const remotesCache = remotes.map(i => getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i))))
+    const remotesCache = remotes.map(i => defaults.getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i))))
     const allLocal: string[] = []
     // const allLocal = imports.map(i => i.startsWith('https://')
     //   ? getLocalImportsCachePath(removeOptionalTrailingQuestion(path.basename(i)))

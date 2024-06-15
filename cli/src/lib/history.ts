@@ -1,7 +1,7 @@
 
 import fs from 'fs'
 import { stripEmojis } from './config.js'
-import { HISTORY_PATH } from './defaults.js'
+import defaults from './defaults.js'
 import { type SuccessfulScript } from './types.js'
 import logger from './utils/logger.js'
 
@@ -11,7 +11,7 @@ import logger from './utils/logger.js'
  * @returns
  */
 export const fetchHistory = (max: number = 20): SuccessfulScript[] => {
-  const filepath = HISTORY_PATH
+  const filepath = defaults.getDefaults().HISTORY_PATH
   if (fs.existsSync(filepath)) {
     const lines = fs.readFileSync(filepath, 'utf-8').split(/\r?\n/g)
     return lines
@@ -85,7 +85,7 @@ export const displaySuccessfulScript = (
  * @param script
  */
 export const addHistory = (script: SuccessfulScript): void => {
-  const filepath = HISTORY_PATH
+  const filepath = defaults.getDefaults().HISTORY_PATH
   fs.writeFileSync(
     filepath,
     JSON.stringify(script) + '\n',

@@ -2,37 +2,64 @@
 import os from 'os'
 import fs from 'fs'
 import path from 'path'
-import { type YamlConfig } from './types.js'
+import { isString, type YamlConfig } from './types.js'
 import fileUtils from './utils/fileUtils.js'
 
-// look for hooked.yaml...
-
-// local first
-let tmp = fileUtils.resolvePath('hooked.yaml')
-if (fs.existsSync(tmp)) {
+/**
+ * Look for hooked.yaml in local dir and home.
+ * @returns
+ */
+const findHookedYaml = (): string => {
+  // local first
+  let tmp = fileUtils.resolvePath('hooked.yaml')
+  if (fs.existsSync(tmp)) {
   // resolve real path - might be a symbolic link!
-  tmp = fs.realpathSync(tmp)
-} else {
+    tmp = fs.realpathSync(tmp)
+  } else {
   // allow a global hooked.yaml
-  const global = fileUtils.resolvePath('~/hooked.yaml')
-  if (fs.existsSync(global)) {
+    const global = fileUtils.resolvePath('~/hooked.yaml')
+    if (fs.existsSync(global)) {
     // resolve real path - might be a symbolic link!
-    tmp = fs.realpathSync(global)
+      tmp = fs.realpathSync(global)
+    }
   }
+  return tmp
 }
 
-export const HOOKED_FILE = tmp
-export const HOOKED_DIR = path.dirname(HOOKED_FILE)
-export const HISTORY_PATH = path.resolve(HOOKED_DIR, '.hooked_history.log')
+interface Defaults {
+  HOOKED_FILE: string
+  HOOKED_DIR: string
+  HISTORY_PATH: string
+  PAGE_SIZE: number
+  LOGS_MENU_OPTION: string
+  LOCAL_CACHE_PATH: string
+}
 
-export const PAGE_SIZE = 10
+const defaults: Defaults = {
+  HOOKED_FILE: '/tmp/hooked.yaml',
+  HOOKED_DIR: '/tmp',
+  HISTORY_PATH: '/tmp/.hooked_history.log',
+  PAGE_SIZE: 10,
+  LOGS_MENU_OPTION: '🪵  _logs_',
+  LOCAL_CACHE_PATH: path.join(os.homedir(), '.hooked', 'imports')
+}
 
-export const LOGS_MENU_OPTION = '🪵  _logs_'
-export const LOCAL_CACHE_PATH = path.join(os.homedir(), '.hooked', 'imports')
+/**
+ * Ability to set the hooked file path defaults.
+ * @param hookedFilepath
+ */
+const setDefaultConfigurationFilepath = (hookedFilepath: string | undefined): void => {
+  const filepath = isString(hookedFilepath) ? hookedFilepath : findHookedYaml()
+  defaults.HOOKED_FILE = filepath
+  defaults.HOOKED_DIR = path.dirname(defaults.HOOKED_FILE)
+  defaults.HISTORY_PATH = path.resolve(defaults.HOOKED_DIR, '.hooked_history.log')
+}
 
-export const getLocalImportsCachePath = (filename: string): string => path.join(LOCAL_CACHE_PATH, filename)
+const getDefaults = (): Defaults => defaults
 
-export const CONFIG_BLANK = (): YamlConfig => {
+const getLocalImportsCachePath = (filename: string): string => path.join(getDefaults().LOCAL_CACHE_PATH, filename)
+
+const CONFIG_BLANK = (): YamlConfig => {
   return {
     env: {
       default: {
@@ -48,7 +75,7 @@ export const CONFIG_BLANK = (): YamlConfig => {
   }
 }
 
-export const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
+const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
   return {
     env: {
       default: {
@@ -79,7 +106,7 @@ export const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
   }
 }
 
-export const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
+const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
   env: {
     default: {
       username: { $env: 'USER' }
@@ -106,4 +133,13 @@ export const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
       }
     }
   }
+}
+
+export default {
+  getDefaults,
+  setDefaultConfigurationFilepath,
+  getLocalImportsCachePath,
+  CONFIG_BLANK,
+  CONFIG_ENVIRONMENTS_EXAMPLE,
+  CONFIG_ADVANCED_GREETING
 }

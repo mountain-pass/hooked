@@ -6,6 +6,7 @@ import path from 'path'
 import { describe } from 'mocha'
 import sinon from 'sinon'
 import YAML from 'yaml'
+import defaults from '../src/lib/defaults.js'
 import exitHandler from '../src/lib/exitHandler.js'
 import { newProgram } from '../src/lib/program.js'
 import verifyLocalRequiredTools from '../src/lib/scriptExecutors/verifyLocalRequiredTools.js'
@@ -88,6 +89,7 @@ describe('program', () => {
     sinon.restore()
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
+    sinon.stub(defaults, 'setDefaultConfigurationFilepath').returns()
     spylog = sinon.spy(logger, 'info')
     program = newProgram(SYSTEM_ENVIRONMENT_VARIABLES, false)
   })

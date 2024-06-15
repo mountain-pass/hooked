@@ -5,7 +5,7 @@ import fs from 'fs'
 import { describe } from 'mocha'
 import path from 'path'
 import sinon from 'sinon'
-import { LOCAL_CACHE_PATH } from '../../src/lib/defaults.js'
+import defaults from '../../src/lib/defaults.js'
 import fileUtils from '../../src/lib/utils/fileUtils.js'
 import { fetchImports } from '../../src/lib/utils/imports.js'
 chai.use(chaiAsPromised)
@@ -13,7 +13,7 @@ const { expect } = chai
 
 describe('imports', () => {
 
-    const local = LOCAL_CACHE_PATH
+    const local = defaults.getDefaults().LOCAL_CACHE_PATH
 
     beforeEach(() => {
         sinon.restore()
@@ -31,7 +31,7 @@ describe('imports', () => {
 
         it('required - exists', async () => {
             sinon.stub(fileUtils, 'downloadFile').resolves()
-            await expect(fetchImports(['https://fakedomain.com/doesexist.yaml'], false)).to.eventually.eql([path.join(LOCAL_CACHE_PATH, 'doesexist.yaml')])
+            await expect(fetchImports(['https://fakedomain.com/doesexist.yaml'], false)).to.eventually.eql([path.join(defaults.getDefaults().LOCAL_CACHE_PATH, 'doesexist.yaml')])
         })
     
         it('required - not exists', async () => {
@@ -41,7 +41,7 @@ describe('imports', () => {
 
         it('optional - exists', async () => {
             sinon.stub(fileUtils, 'downloadFile').resolves()
-            await expect(fetchImports(['https://fakedomain.com/doesexist.yaml?'], false)).to.eventually.eql([path.join(LOCAL_CACHE_PATH, 'doesexist.yaml')])
+            await expect(fetchImports(['https://fakedomain.com/doesexist.yaml?'], false)).to.eventually.eql([path.join(defaults.getDefaults().LOCAL_CACHE_PATH, 'doesexist.yaml')])
         })
     
         it('optional - not exists', async () => {
