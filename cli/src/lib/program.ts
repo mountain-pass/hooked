@@ -66,7 +66,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-p, --pull', 'force download all imports from remote to local cache')
     .option('-u, --update', 'updates to the latest version of hooked')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
-    .option('-c, --config', 'specify the hooked configuration file to use')
+    .option('-c, --config <config>', 'specify the hooked configuration file to use')
     .argument('[scriptPath...]', 'the script path to run')
     .addHelpText('afterAll', `
 Environment Variables:

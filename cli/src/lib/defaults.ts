@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { isString, type YamlConfig } from './types.js'
 import fileUtils from './utils/fileUtils.js'
+import logger from './utils/logger.js'
 
 /**
  * Look for hooked.yaml in local dir and home.
@@ -49,7 +50,8 @@ const defaults: Defaults = {
  * @param hookedFilepath
  */
 const setDefaultConfigurationFilepath = (hookedFilepath: string | undefined): void => {
-  const filepath = isString(hookedFilepath) ? hookedFilepath : findHookedYaml()
+  const filepath = isString(hookedFilepath) ? path.resolve(hookedFilepath) : findHookedYaml()
+  logger.debug(`Setting config file: ${filepath}`)
   defaults.HOOKED_FILE = filepath
   defaults.HOOKED_DIR = path.dirname(defaults.HOOKED_FILE)
   defaults.HISTORY_PATH = path.resolve(defaults.HOOKED_DIR, '.hooked_history.log')
