@@ -1,9 +1,7 @@
 import inquirer from 'inquirer'
-import fs from 'fs'
 import fsPromise from 'fs/promises'
-import path from 'path'
 import jp from 'jsonpath'
-import { fetchGlobalEnvVars, resolveEnvironmentVariables } from '../config.js'
+import { fetchGlobalEnvVars, findScript, resolveEnvironmentVariables } from '../config.js'
 import { PAGE_SIZE } from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
 import {
@@ -31,7 +29,9 @@ import {
   isSSHCmdScript,
   isWriteFilesScript,
   type WriteFilesScript,
-  type WriteFile
+  type WriteFile,
+  isJobChainScript,
+  type JobChainScript
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
@@ -270,6 +270,71 @@ export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEn
   }
 }
 
+/**
+ * Resolves all environment variables, and writes the file.
+ * @param key
+ * @param script
+ * @param stdin
+ * @param env
+ * @param config
+ * @param options
+ * @param envVars
+ * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
+ * @returns
+ */
+export const resolveJobChainScript = async (
+  key: string,
+  script: JobChainScript,
+  stdin: StdinResponses,
+  env: Environment,
+  config: YamlConfig,
+  options: ProgramOptions,
+  envVars: EnvironmentVariables = {}
+): Promise<void> => {
+  // optionaly resolve job, and return job definitions
+  type ScriptAndPaths = [Script, string[]]
+  const executableScriptsAndPaths: ScriptAndPaths[] = await Promise.all(script.$job_chain.map(async (refOrJob, idx) => {
+    // resolve job by reference
+    if (isString(refOrJob)) {
+      return await findScript(config, refOrJob.split(' '), options)
+    } else {
+      return [refOrJob, [key, `${idx}`]]
+    }
+  }))
+
+  // check executable scripts are actually executable
+  for (const scriptAndPaths of executableScriptsAndPaths) {
+    const [scriptx] = scriptAndPaths
+    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWriteFilesScript(scriptx)) {
+      // all good
+    } else {
+      // uknown
+      throw new Error(`Expected $cmd or $write_files, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
+    }
+  }
+
+  // execute scripts synchronously
+  for (const scriptAndPaths of executableScriptsAndPaths) {
+    const [scriptx, pathsx] = scriptAndPaths
+    if (isCmdScript(scriptx)) {
+      // resolve $cmd $env vars (if any)
+      if (isDefined(scriptx.$env)) {
+        mergeEnvVars(envVars, scriptx.$env)
+      }
+      // run cmd script
+      await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+    } else if (isInternalScript(scriptx)) {
+      // run internal script
+      await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+    } else if (isWriteFilesScript(scriptx)) {
+      // write files
+      await resolveWriteFilesScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+    } else if (options.printenv === true) {
+      throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
+    }
+  }
+}
+
 class InvalidConfigError extends Error {
   constructor (m: string) {
     super(m)
@@ -443,6 +508,8 @@ export const resolveScript = async (
     await resolveInternalScript(key, script, stdin, env, config, options, envVars)
   } else if (isWriteFilesScript(script)) {
     await resolveWriteFilesScript(key, script, stdin, env, config, options, envVars)
+  } else if (isJobChainScript(script)) {
+    await resolveJobChainScript(key, script, stdin, env, config, options, envVars)
   } else if (isCmdScript(script)) {
     await resolveCmdScript(key, script, stdin, env, config, options)
   } else if (isStdinScript(script)) {

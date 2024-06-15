@@ -93,7 +93,7 @@ Using environment: default
 ? What is your name? Bob
 ? Please select a script say
 ? Please select a script hello
-Using script: say hello
+Found script: say hello
 rerun: j say hello -e default -in '{"FIRSTNAME":"Bob"}'
 Hello world, Bob (nickpersonal)!
 git commit is -> (279e8b9)

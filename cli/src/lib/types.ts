@@ -67,6 +67,14 @@ export interface WriteFilesScript {
   $write_files: WriteFile[]
 }
 
+/**
+ * Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.
+ */
+export interface JobChainScript {
+  /** A list of script paths, or job definitions. */
+  $job_chain: string[] | Script[]
+}
+
 export interface CmdScript {
   /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
   $env?: EnvironmentVariables
@@ -124,7 +132,20 @@ export interface InternalScript {
   $internal: (options: { key: string, stdin: StdinResponses, env: Environment }) => Promise<string>
 }
 
-export type Script = string | CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | WriteFilesScript
+export type Script = string
+| CmdScript
+| DockerCmdScript
+| SSHCmdScript
+| StdinScript
+| EnvScript
+| ResolveScript
+| InternalScript
+| WriteFilesScript
+| JobChainScript
+
+export const isJobChainScript = (script: Script): script is JobChainScript => {
+  return Array.isArray((script as any).$job_chain)
+}
 
 export const isWriteFilesScript = (script: Script): script is WriteFilesScript => {
   return Array.isArray((script as any).$write_files)
@@ -182,6 +203,7 @@ export const isScript = (script: any): script is Script => {
   (
     isWriteFilesScript(script) ||
     isCmdScript(script) ||
+    isJobChainScript(script) ||
     isStdinScript(script) ||
     isEnvScript(script) ||
     isResolveScript(script) ||

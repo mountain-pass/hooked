@@ -41,7 +41,7 @@
       "$ref": "#/$defs/envGroup"
     },
     "scripts": {
-      "description": "Organises `$cmd` and `$write_files` objects, into a named hierarchy.",
+      "description": "Organises `$cmd`, `$write_files` and `$job_chain` objects, into a named hierarchy.",
       "$ref": "#/$defs/scriptsGroup"
     }
   },
@@ -52,6 +52,9 @@
       "patternProperties": {
         "^.*$": {
           "anyOf": [
+            {
+              "$ref": "#/$defs/jobChainValue"
+            },
             {
               "$ref": "#/$defs/writeFilesValue"
             },
@@ -105,6 +108,37 @@
           ]
         }
       }
+    },
+    "jobChainValue": {
+      "type": "object",
+      "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
+      "additionalProperties": false,
+      "properties": {
+        "$job_chain": {
+          "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "description": "A script path.",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/writeFilesValue"
+              },
+              {
+                "$ref": "#/$defs/cmdValue"
+              },
+              {
+                "$ref": "#/$defs/scriptsGroup"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "$job_chain"
+      ]
     },
     "writeFilesValue": {
       "type": "object",

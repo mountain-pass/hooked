@@ -138,7 +138,7 @@ export const findScript = async (
         script = script[nextScript]
       })
   }
-  logger.debug(`Using script: ${resolvedScriptPath.join(' ')}`)
+  logger.debug(`Found script: ${resolvedScriptPath.join(' ')}`)
   return [script, resolvedScriptPath]
 }
 
@@ -192,10 +192,13 @@ export const internalFindEnv = (
     logger.debug(`Using environment: ${foundEnv}`)
     const newLocal = found[0][1]
     return [newLocal === null ? {} : newLocal, foundEnv]
+  } else if (found.length === 0 && envName === 'default') {
+    // ignore blank env:, if the environment is 'default'
+    return [{}, 'default']
   }
 
   const availableEnvs = envs.map(([key, value]) => `\t- ${key}`).join('\n')
-  throw new Error(`Environment not found: ${envName}\nDid you mean?\n${availableEnvs}`)
+  throw new Error(`Environment not found: ${envName}\nDid you mean?\n${envs.length > 0 ? availableEnvs : '(No environments available)'}`)
 }
 
 /* Aggregator function, for merging imported configs. */

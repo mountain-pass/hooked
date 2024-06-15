@@ -18,9 +18,12 @@ import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import { resolveCmdScript, resolveInternalScript, resolveWriteFilesScript } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
+  type Script,
   isCmdScript,
   isDefined,
   isInternalScript,
+  isJobChainScript,
+  isString,
   isWriteFilesScript,
   type EnvironmentVariables,
   type SuccessfulScript
@@ -177,16 +180,40 @@ Provided Environment Variables:
       }
 
       // find the script to execute...
-      const [script, resolvedScriptPath] = await findScript(config, scriptPath, options)
+      const rootScriptAndPaths = await findScript(config, scriptPath, options)
+      const [script, paths] = rootScriptAndPaths
 
-      // check the script is executable...
-      if (!isCmdScript(script) && !isInternalScript(script) && !isWriteFilesScript(script)) {
-        throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)}`)
+      // executable scripts
+      type ScriptAndPaths = [Script, string[]]
+      let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
+
+      // check the script/s is executable...
+      if (isJobChainScript(script)) {
+        // optionaly resolve job, and return job definitions
+        executableScriptsAndPaths = await Promise.all(script.$job_chain.map(async (refOrJob, idx) => {
+          // resolve job by reference
+          if (isString(refOrJob)) {
+            return await findScript(config, refOrJob.split(' '), options)
+          } else {
+            return [refOrJob, [...paths, `${idx}`]]
+          }
+        }))
       }
 
       // merge in the stdin...
       const stdin: RawEnvironment = HJSON.parse(options.stdin)
       mergeEnvVars(envVars, stdin)
+
+      // check executable scripts are actually executable
+      for (const scriptAndPaths of executableScriptsAndPaths) {
+        const [scriptx] = scriptAndPaths
+        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWriteFilesScript(scriptx)) {
+          // all good
+        } else {
+          // uknown
+          throw new Error(`Expected $cmd or $write_files, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
+        }
+      }
 
       const providedEnvNames = options.env.split(',')
       // fetch the environment variables...
@@ -197,38 +224,39 @@ Provided Environment Variables:
         envVars
       )
 
-      // resolve script env vars (if any)
-      if (isCmdScript(script) && isDefined(script.$env)) {
-        // execute script...
-        mergeEnvVars(envVars, script.$env)
-      }
-
       // generate rerun command
       const successfulScript: SuccessfulScript = {
         ts: Date.now(),
-        scriptPath: resolvedScriptPath,
+        scriptPath: paths,
         envNames: [...new Set(['default', ...resolvedEnvNames])],
         stdin
       }
       // store and log "Rerun" command in history (if successful and not the _logs_ option!)
       const isRoot = !env.isResolvableByKey('HOOKED_ROOT') && !isDefined(envVars.HOOKED_ROOT)
-      const notRequestingLogs = resolvedScriptPath[0] !== LOGS_MENU_OPTION
+      const notRequestingLogs = paths.join(' ') !== LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
       }
 
-      // execute script
-      if (isCmdScript(script)) {
-        // run cmd script
-        await resolveCmdScript('-', script, stdin, env, config, options, envVars, true)
-      } else if (isInternalScript(script)) {
-        // run internal script
-        await resolveInternalScript('-', script, stdin, env, config, options, envVars, true)
-      } else if (isWriteFilesScript(script)) {
-        // write files
-        await resolveWriteFilesScript('-', script, stdin, env, config, options, envVars)
-      } else if (options.printenv === true) {
-        throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(script)}"`)
+      // execute scripts synchronously
+      for (const scriptAndPaths of executableScriptsAndPaths) {
+        const [scriptx, pathsx] = scriptAndPaths
+        if (isCmdScript(scriptx)) {
+          // resolve $cmd $env vars (if any)
+          if (isDefined(scriptx.$env)) {
+            mergeEnvVars(envVars, scriptx.$env)
+          }
+          // run cmd script
+          await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+        } else if (isInternalScript(scriptx)) {
+          // run internal script
+          await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+        } else if (isWriteFilesScript(scriptx)) {
+          // write files
+          await resolveWriteFilesScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+        } else if (options.printenv === true) {
+          throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
+        }
       }
 
       // NOTE - update history file AFTER script is run... (otherise `git porcelain` complains about file changes)

@@ -12,6 +12,7 @@
   - [`$stdin`](#stdin)
   - [`$cmd`](#cmd)
   - [`$write_files`](#write_files)
+  - [`$job_chain`](#job_chain)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
@@ -134,6 +135,7 @@ In order to support more complicated resolution scenarios, we've provided the fo
 2. [`$stdin`](#stdin)
 3. [`$cmd`](#cmd)
 4. [`$write_files`](#write_files)
+5. [`$job_chain`](#job_chain)
 
 ## `string`
 
@@ -258,6 +260,37 @@ env:
       $cmd: |
         #!/bin/sh -ve
         echo Hello world!
+```
+
+## `$job_chain`
+
+> Used for: Scripts
+
+Allows running multiple jobs, one after the other.
+
+Environment variables will be accumulated, and passed on to future jobs.
+
+Takes an array of any of the following parameters:
+
+**Parameters:**
+
+- (`string`) The script path to run.
+- (`Script`) An executable script definition.
+
+**Example:**
+
+```yaml
+scripts:
+  run all jobs:
+    $job_chain:
+      - aaa
+      - bbb ccc
+      - $cmd: echo all done!
+  aaa:
+    $cmd: echo aaa
+  bbb:
+    cccddd:
+      $cmd: echo bbbccc
 ```
 
 # Conventions
