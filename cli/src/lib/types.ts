@@ -52,8 +52,12 @@ export interface SuccessfulScript {
 export interface WriteFile {
   /** Sets the file location. */
   path: string
-  /** Sets the contents of the file. If absent, treats the path as a folder. */
-  content?: string
+  /**
+   * Sets the contents of the file to match the string.
+   * If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension).
+   * If absent, treats the path as a folder.
+   */
+  content?: string | object
   /** Sets the read/write/execute access permissions on the file (default '644'). */
   permissions?: Mode
   /** Sets file encoding (default 'utf-8'). */

@@ -167,8 +167,15 @@
           "type": "string"
         },
         "content": {
-          "description": "Sets the contents of the file. If absent, treats the path as a folder.",
-          "type": "string"
+          "description": "Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            }
+          ]
         },
         "permissions": {
           "description": "Sets the read/write/execute access permissions on the file (default '644').",

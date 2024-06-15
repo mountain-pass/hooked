@@ -1,5 +1,6 @@
 import inquirer from 'inquirer'
-import fs from 'fs'
+import YAML from 'yaml'
+import path from 'path'
 import fsPromise from 'fs/promises'
 import jp from 'jsonpath'
 import { fetchGlobalEnvVars, findScript, resolveEnvironmentVariables } from '../config.js'
@@ -204,8 +205,21 @@ const writeFileOrFolder = async (def: WriteFile, env: Environment): Promise<void
   const filepath = fileUtils.resolvePath(env.resolve(def.path))
   if (isDefined(def.content)) {
     // is file
+    let content = ''
+    if (isString(def.content)) {
+      // write string
+      content = def.content
+    } else if (/.ya?ml$/i.test(def.path)) {
+      // treat as yaml
+      content = YAML.stringify(def.content)
+    } else {
+      // treat as json
+      content = JSON.stringify(def.content)
+    }
     logger.debug(`Writing file - ${filepath}`)
-    await fsPromise.writeFile(filepath, env.resolve(def.content), {
+    // NOTE ensure parent directory exists!
+    await fsPromise.mkdir(path.dirname(filepath), { recursive: true })
+    await fsPromise.writeFile(filepath, env.resolve(content), {
       encoding: isDefined(def.encoding) ? env.resolve(def.encoding) as BufferEncoding : 'utf-8',
       flag: 'w'
     })
