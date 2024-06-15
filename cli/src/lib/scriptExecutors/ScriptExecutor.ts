@@ -29,9 +29,8 @@ import {
   type StdinScript,
   type YamlConfig,
   isSSHCmdScript,
-  isWriteFilesScript,
-  type WriteFilesScript,
-  type WriteFile,
+  isWritePathScript,
+  type WritePathScript,
   isJobChainScript,
   type JobChainScript
 } from '../types.js'
@@ -201,26 +200,26 @@ export const resolveCmdScript = async (
 /**
  * Writes the given file definition.
  */
-const writeFileOrFolder = async (def: WriteFile, env: Environment): Promise<void> => {
-  const filepath = fileUtils.resolvePath(env.resolve(def.path))
-  if (isDefined(def.content)) {
+const writeFileOrFolder = async (def: WritePathScript, env: Environment): Promise<void> => {
+  const filepath = fileUtils.resolvePath(env.resolve(def.$path))
+  if (isDefined(def.$content)) {
     // is file
     let content = ''
-    if (isString(def.content)) {
+    if (isString(def.$content)) {
       // write string
-      content = def.content
-    } else if (/.ya?ml$/i.test(def.path)) {
+      content = def.$content
+    } else if (/.ya?ml$/i.test(def.$path)) {
       // treat as yaml
-      content = YAML.stringify(def.content)
+      content = YAML.stringify(def.$content)
     } else {
       // treat as json
-      content = JSON.stringify(def.content)
+      content = JSON.stringify(def.$content)
     }
     logger.debug(`Writing file - ${filepath}`)
     // NOTE ensure parent directory exists!
     await fsPromise.mkdir(path.dirname(filepath), { recursive: true })
     await fsPromise.writeFile(filepath, env.resolve(content), {
-      encoding: isDefined(def.encoding) ? env.resolve(def.encoding) as BufferEncoding : 'utf-8',
+      encoding: isDefined(def.$encoding) ? env.resolve(def.$encoding) as BufferEncoding : 'utf-8',
       flag: 'w'
     })
   } else {
@@ -229,12 +228,12 @@ const writeFileOrFolder = async (def: WriteFile, env: Environment): Promise<void
     await fsPromise.mkdir(filepath, { recursive: true })
   }
   // set mode if present
-  if (isString(def.permissions)) {
-    await fsPromise.chmod(filepath, env.resolve(def.permissions))
+  if (isString(def.$permissions)) {
+    await fsPromise.chmod(filepath, env.resolve(def.$permissions))
   }
   // set owner if present
-  if (isString(def.owner)) {
-    const tmp = env.resolve(def.owner)
+  if (isString(def.$owner)) {
+    const tmp = env.resolve(def.$owner)
     if (tmp.includes(':')) {
       const [uid, gid] = tmp.split(':')
       await fsPromise.chown(filepath, parseInt(uid), parseInt(gid))
@@ -254,9 +253,9 @@ const writeFileOrFolder = async (def: WriteFile, env: Environment): Promise<void
  * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
  * @returns
  */
-export const resolveWriteFilesScript = async (
+export const resolveWritePathScript = async (
   key: string,
-  script: WriteFilesScript,
+  script: WritePathScript,
   stdin: StdinResponses,
   env: Environment,
   config: YamlConfig,
@@ -267,13 +266,11 @@ export const resolveWriteFilesScript = async (
   await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
   const missingKeys = new Set<string>()
-  for (const def of script.$write_files) {
-    env.getMissingRequiredKeys(def.path).forEach(missingKeys.add)
-    if (isString(def.content)) env.getMissingRequiredKeys(def.content).forEach(missingKeys.add)
-    if (isString(def.encoding)) env.getMissingRequiredKeys(def.encoding).forEach(missingKeys.add)
-    if (isString(def.owner)) env.getMissingRequiredKeys(def.owner).forEach(missingKeys.add)
-    if (isString(def.permissions)) env.getMissingRequiredKeys(def.permissions).forEach(missingKeys.add)
-  }
+  env.getMissingRequiredKeys(script.$path).forEach(missingKeys.add)
+  if (isString(script.$content)) env.getMissingRequiredKeys(script.$content).forEach(missingKeys.add)
+  if (isString(script.$encoding)) env.getMissingRequiredKeys(script.$encoding).forEach(missingKeys.add)
+  if (isString(script.$owner)) env.getMissingRequiredKeys(script.$owner).forEach(missingKeys.add)
+  if (isString(script.$permissions)) env.getMissingRequiredKeys(script.$permissions).forEach(missingKeys.add)
   if (missingKeys.size > 0) {
     // eslint-disable-next-line max-len
     const foundString = toJsonString(env.getAll(), true)
@@ -283,7 +280,7 @@ export const resolveWriteFilesScript = async (
   }
 
   // wait until all files have been written...
-  await Promise.all(script.$write_files.map(async def => { await writeFileOrFolder(def, env) }))
+  await writeFileOrFolder(script, env)
 }
 
 export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
@@ -330,11 +327,11 @@ export const resolveJobChainScript = async (
   // check executable scripts are actually executable
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx] = scriptAndPaths
-    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWriteFilesScript(scriptx)) {
+    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx)) {
       // all good
     } else {
       // uknown
-      throw new Error(`Expected $cmd or $write_files, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
+      throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
     }
   }
 
@@ -351,9 +348,9 @@ export const resolveJobChainScript = async (
     } else if (isInternalScript(scriptx)) {
       // run internal script
       await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-    } else if (isWriteFilesScript(scriptx)) {
+    } else if (isWritePathScript(scriptx)) {
       // write files
-      await resolveWriteFilesScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+      await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
     } else if (options.printenv === true) {
       throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
     }
@@ -531,8 +528,8 @@ export const resolveScript = async (
   // perform environment variable resolution
   if (isInternalScript(script)) {
     await resolveInternalScript(key, script, stdin, env, config, options, envVars)
-  } else if (isWriteFilesScript(script)) {
-    await resolveWriteFilesScript(key, script, stdin, env, config, options, envVars)
+  } else if (isWritePathScript(script)) {
+    await resolveWritePathScript(key, script, stdin, env, config, options, envVars)
   } else if (isJobChainScript(script)) {
     await resolveJobChainScript(key, script, stdin, env, config, options, envVars)
   } else if (isCmdScript(script)) {

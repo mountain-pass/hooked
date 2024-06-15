@@ -41,7 +41,7 @@
       "$ref": "#/$defs/envGroup"
     },
     "scripts": {
-      "description": "Organises `$cmd`, `$write_files` and `$job_chain` objects, into a named hierarchy.",
+      "description": "Organises `$cmd`, `$path` and `$job_chain` objects, into a named hierarchy.",
       "$ref": "#/$defs/scriptsGroup"
     }
   },
@@ -53,13 +53,13 @@
         "^.*$": {
           "anyOf": [
             {
-              "$ref": "#/$defs/jobChainValue"
+              "$ref": "#/$defs/JobChainScript"
             },
             {
-              "$ref": "#/$defs/writeFilesValue"
+              "$ref": "#/$defs/WritePathScript"
             },
             {
-              "$ref": "#/$defs/cmdValue"
+              "$ref": "#/$defs/CmdScript"
             },
             {
               "$ref": "#/$defs/scriptsGroup"
@@ -87,7 +87,7 @@
           "oneOf": [
             {
               "description": "Executes a command, and optionally provides output to environment variables or stdin.",
-              "$ref": "#/$defs/cmdValue"
+              "$ref": "#/$defs/CmdScript"
             },
             {
               "description": "Provides a prompt to the user, to select from a set of choices.",
@@ -109,7 +109,7 @@
         }
       }
     },
-    "jobChainValue": {
+    "JobChainScript": {
       "type": "object",
       "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
       "additionalProperties": false,
@@ -124,10 +124,10 @@
                 "type": "string"
               },
               {
-                "$ref": "#/$defs/writeFilesValue"
+                "$ref": "#/$defs/WritePathScript"
               },
               {
-                "$ref": "#/$defs/cmdValue"
+                "$ref": "#/$defs/CmdScript"
               },
               {
                 "$ref": "#/$defs/scriptsGroup"
@@ -140,33 +140,16 @@
         "$job_chain"
       ]
     },
-    "writeFilesValue": {
-      "type": "object",
-      "description": "Writes files to the filesystem.",
-      "additionalProperties": false,
-      "properties": {
-        "$write_files": {
-          "description": "Writes files to the filesystem.",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/writeFileDef"
-          }
-        }
-      },
-      "required": [
-        "$write_files"
-      ]
-    },
-    "writeFileDef": {
-      "description": "Configuration for writing a file.",
+    "WritePathScript": {
+      "description": "Configuration for writing a file/folder.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "path": {
-          "description": "Sets the file location.",
+        "$path": {
+          "description": "Sets the file/folder location.",
           "type": "string"
         },
-        "content": {
+        "$content": {
           "description": "Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder.",
           "anyOf": [
             {
@@ -177,24 +160,31 @@
             }
           ]
         },
-        "permissions": {
-          "description": "Sets the read/write/execute access permissions on the file (default '644').",
-          "type": "string"
+        "$permissions": {
+          "description": "Sets the read/write/execute access permissions on the file/folder (default '644').",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
         },
-        "encoding": {
+        "$encoding": {
           "description": "Sets file encoding (default 'utf-8').",
           "type": "string"
         },
-        "owner": {
-          "description": "Sets the '<uid>:<gid>' of the file. (Note: must be numerical!).",
+        "$owner": {
+          "description": "Sets the 'uid:gid' of the file/folder. (Note: must be numerical!).",
           "type": "string"
         }
       },
       "required": [
-        "path"
+        "$path"
       ]
     },
-    "cmdValue": {
+    "CmdScript": {
       "type": "object",
       "description": "Executes a command, and optionally provides output to environment variables or stdin.",
       "additionalProperties": false,
@@ -277,7 +267,7 @@
       "description": "Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc.",
       "oneOf": [
         {
-          "$ref": "#/$defs/cmdValue"
+          "$ref": "#/$defs/CmdScript"
         },
         {
           "description": "A multiline string, each line will become a choice.",

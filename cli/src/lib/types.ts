@@ -48,27 +48,22 @@ export interface SuccessfulScript {
 
 // script types
 
-/** Configuration for writing a file. */
-export interface WriteFile {
-  /** Sets the file location. */
-  path: string
+/** Configuration for writing a file/folder. */
+export interface WritePathScript {
+  /** Sets the file/folder location. */
+  $path: string
   /**
    * Sets the contents of the file to match the string.
    * If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension).
    * If absent, treats the path as a folder.
    */
-  content?: string | object
-  /** Sets the read/write/execute access permissions on the file (default '644'). */
-  permissions?: Mode
+  $content?: string | object
+  /** Sets the read/write/execute access permissions on the file/folder (default '644'). */
+  $permissions?: Mode
   /** Sets file encoding (default 'utf-8'). */
-  encoding?: BufferEncoding
-  /** Sets the '<uid>:<gid>' of the file. (Note: must be numerical!). */
-  owner?: string
-}
-
-/** Writes files to the filesystem. */
-export interface WriteFilesScript {
-  $write_files: WriteFile[]
+  $encoding?: BufferEncoding
+  /** Sets the 'uid:gid' of the file/folder. (Note: must be numerical!). */
+  $owner?: string
 }
 
 /**
@@ -144,15 +139,15 @@ export type Script = string
 | EnvScript
 | ResolveScript
 | InternalScript
-| WriteFilesScript
+| WritePathScript
 | JobChainScript
 
 export const isJobChainScript = (script: Script): script is JobChainScript => {
   return Array.isArray((script as any).$job_chain)
 }
 
-export const isWriteFilesScript = (script: Script): script is WriteFilesScript => {
-  return Array.isArray((script as any).$write_files)
+export const isWritePathScript = (script: Script): script is WritePathScript => {
+  return typeof (script as any).$path === 'string'
 }
 
 export const isCmdScript = (script: Script): script is CmdScript => {
@@ -205,7 +200,7 @@ export const isScript = (script: any): script is Script => {
   return (typeof script === 'object' || typeof script === 'function') &&
   script !== null &&
   (
-    isWriteFilesScript(script) ||
+    isWritePathScript(script) ||
     isCmdScript(script) ||
     isJobChainScript(script) ||
     isStdinScript(script) ||

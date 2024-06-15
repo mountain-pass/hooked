@@ -15,7 +15,7 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { resolveCmdScript, resolveInternalScript, resolveWriteFilesScript } from './scriptExecutors/ScriptExecutor.js'
+import { resolveCmdScript, resolveInternalScript, resolveWritePathScript } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
   type Script,
@@ -24,7 +24,7 @@ import {
   isInternalScript,
   isJobChainScript,
   isString,
-  isWriteFilesScript,
+  isWritePathScript,
   type EnvironmentVariables,
   type SuccessfulScript
 } from './types.js'
@@ -207,11 +207,11 @@ Provided Environment Variables:
       // check executable scripts are actually executable
       for (const scriptAndPaths of executableScriptsAndPaths) {
         const [scriptx] = scriptAndPaths
-        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWriteFilesScript(scriptx)) {
+        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx)) {
           // all good
         } else {
           // uknown
-          throw new Error(`Expected $cmd or $write_files, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
+          throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
         }
       }
 
@@ -251,9 +251,9 @@ Provided Environment Variables:
         } else if (isInternalScript(scriptx)) {
           // run internal script
           await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-        } else if (isWriteFilesScript(scriptx)) {
+        } else if (isWritePathScript(scriptx)) {
           // write files
-          await resolveWriteFilesScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+          await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
         } else if (options.printenv === true) {
           throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
         }

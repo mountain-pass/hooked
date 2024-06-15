@@ -11,7 +11,7 @@
   - [`string`](#string)
   - [`$stdin`](#stdin)
   - [`$cmd`](#cmd)
-  - [`$write_files`](#write_files)
+  - [`$path`](#path)
   - [`$job_chain`](#job_chain)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
@@ -80,7 +80,7 @@ Organises `$cmd` objects, into a named hierarchy.
 
 The `scripts` object takes any number of child descendant objects, using the `key` as the script path.
 
-The object's descendant values, must eventually end with a [`$cmd`](#cmd) or [$write_files](#write_files) objects - which allows the user to execute a predefined script.
+The object's descendant values, must eventually end with a [`$cmd`](#cmd) or [$path](#path) objects - which allows the user to execute a predefined script.
 
 How deep can you go? **As deep as you want!** (Note: Let me know if you hit a limit)
 
@@ -134,7 +134,7 @@ In order to support more complicated resolution scenarios, we've provided the fo
 1. [`string`](#string)
 2. [`$stdin`](#stdin)
 3. [`$cmd`](#cmd)
-4. [`$write_files`](#write_files)
+4. [`$path`](#path)
 5. [`$job_chain`](#job_chain)
 
 ## `string`
@@ -235,19 +235,19 @@ env:
 - you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
 - if you want a script to always pass, append ` || true` to the end of the failing line.
 
-## `$write_files`
+## `$path`
 
 > Used for: Scripts
 
-Writes files to the filesystem.
+Writes a file/folder to the filesystem.
 
 **Parameters:**
 
-- `$path` - (`string`) Sets the file location.
+- `$path` - (`string`) Sets the file/folder location.
 - `$content` - (`string`) Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder.
-- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file (default '644').
+- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder (default '644').
 - `$encoding` - (`object` - optional) Sets file encoding (default 'utf-8').
-- `$owner` - (`string[]` - optional) Sets the '<uid>:<gid>' of the file. (Note: must be numerical!).
+- `$owner` - (`string[]` - optional) Sets the 'uid:gid' of the file/folder. (Note: must be numerical!).
 
 **Example:**
 
