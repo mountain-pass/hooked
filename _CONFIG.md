@@ -89,10 +89,10 @@ Provides the ability to use built-in plugins. If the key is present, and the val
 
 The currently available plugins are:
 
-- `icons: true` - makes pretty icons to differentiate executable scripts vs groups.
-- `abi: true` - scans for `*.json` files, and imports the contract methods as scripts. [Configuration documentation](_ABI_PLUGIN.md).
-- `makefile: true` - scans for a `Makefile` file, and imports the named tasks as scripts.
-- `npm: true` - scans for a `package.json` file, and imports the named scripts as scripts.
+- `icons` - (default: `true`) makes pretty icons to differentiate executable scripts vs groups.
+- `abi` - (default: `false`) scans for `*.json` files, and imports the contract methods as scripts. [Configuration documentation](_ABI_PLUGIN.md).
+- `makefile` - (default: `true`) scans for a `Makefile` file, and imports the named tasks as scripts.
+- `npm` - (default: `true`) scans for a `package.json` file, and imports the named scripts as scripts.
 
 Example:
 ```yaml
