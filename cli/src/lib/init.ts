@@ -46,13 +46,13 @@ export const init = async (options: ProgramOptions): Promise<void> => {
       loop: true
     }
   ]).then((answers) => {
-    if (answers.init === 'blank') {
-      logger.debug('Created hooked.yaml from Blank template.')
-      fs.writeFileSync(defaults.getDefaults().HOOKED_FILE, generateBlankTemplateFileContents(), 'utf-8')
-    }
-    if (answers.init === 'advanced') {
-      logger.debug('Created hooked.yaml from Advanced Blank template.')
-      fs.writeFileSync(defaults.getDefaults().HOOKED_FILE, generateAdvancedBlankTemplateFileContents(), 'utf-8')
+    if (['blank', 'advanced'].includes(answers.init)) {
+      const contents = answers.init === 'advanced' ? generateAdvancedBlankTemplateFileContents() : generateBlankTemplateFileContents()
+      const filepath = defaults.getDefaults().HOOKED_FILE
+      if (fs.existsSync(filepath)) {
+        throw new Error(`Cannot create - file already exists '${filepath}'`)
+      }
+      fs.writeFileSync(filepath, contents, { encoding: 'utf-8' })
     }
   })
 }
