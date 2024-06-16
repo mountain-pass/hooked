@@ -32,7 +32,8 @@ import {
   isWritePathScript,
   type WritePathScript,
   isJobChainScript,
-  type JobChainScript
+  type JobChainScript,
+  isEnvScript
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
@@ -121,11 +122,6 @@ export const resolveCmdScript = async (
   envVars: EnvironmentVariables = {},
   isFinalScript = false
 ): Promise<string> => {
-  // if "step" $env is defined, merge environment variables
-  if (isDefined(script.$env)) {
-    mergeEnvVars(envVars, script.$env)
-  }
-
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
     await fetchGlobalEnvVars(
@@ -285,13 +281,22 @@ export const resolveWritePathScript = async (
   await writeFileOrFolder(script, env)
 }
 
-export const resolveEnvScript = (key: string, script: EnvScript, env: ResolvedEnv): void => {
-  const resolvedEnvValue = env[script.$env]
-  if (isDefined(resolvedEnvValue)) {
-    env[key] = resolvedEnvValue
-  } else {
-    throw new Error(`Global environment variable not found: ${script.$env}`)
+export const resolveEnvScript = async (
+  key: string,
+  script: EnvScript,
+  stdin: StdinResponses,
+  env: Environment,
+  config: YamlConfig,
+  options: ProgramOptions,
+  envVars: EnvironmentVariables = {}
+): Promise<void> => {
+  // if "step" $env is defined, merge raw environment variables
+  if (isDefined(script.$env)) {
+    mergeEnvVars(envVars, script.$env)
   }
+
+  // resolve environment variables
+  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 }
 
 /**
@@ -329,7 +334,7 @@ export const resolveJobChainScript = async (
   // check executable scripts are actually executable
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx] = scriptAndPaths
-    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx)) {
+    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
       // all good
     } else {
       // uknown
@@ -341,10 +346,6 @@ export const resolveJobChainScript = async (
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx, pathsx] = scriptAndPaths
     if (isCmdScript(scriptx)) {
-      // resolve $cmd $env vars (if any)
-      if (isDefined(scriptx.$env)) {
-        mergeEnvVars(envVars, scriptx.$env)
-      }
       // run cmd script
       await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
     } else if (isInternalScript(scriptx)) {
@@ -353,6 +354,9 @@ export const resolveJobChainScript = async (
     } else if (isWritePathScript(scriptx)) {
       // write files
       await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+    } else if (isEnvScript(scriptx)) {
+      // write files
+      await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
     } else if (options.printenv === true) {
       throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
     }

@@ -15,6 +15,7 @@
   - [`$stdin`](#stdin)
   - [`$cmd`](#cmd)
   - [`$path`](#path)
+  - [`$env`](#env)
   - [`$job_chain`](#job_chain)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
@@ -179,7 +180,8 @@ In order to support more complicated resolution scenarios, we've provided the fo
 2. [`$stdin`](#stdin)
 3. [`$cmd`](#cmd)
 4. [`$path`](#path)
-5. [`$job_chain`](#job_chain)
+5. [`$env`](#env)
+6. [`$job_chain`](#job_chain)
 
 ## `string`
 
@@ -254,7 +256,6 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 - `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
 - `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
 - `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
-- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
 - `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
 - `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
 
@@ -304,6 +305,23 @@ env:
       $cmd: |
         #!/bin/sh -ve
         echo Hello world!
+```
+
+## `$env`
+
+> Used for: Scripts
+
+Additional environment variables to resolve (added to global environment).
+
+**Example:**
+
+```yaml
+scripts:
+  runme:
+    $job_chain:
+      - $env:
+          GREETING: Hello
+      - $cmd: echo ${GREETING} world!
 ```
 
 ## `$job_chain`

@@ -243,29 +243,33 @@ describe('program', () => {
           eight: '8',
         },
         custom: {
-          foo: '${BAR}'
+          foo: '${BAR}',
+          cat: 'DOG'
         }
       },
       scripts: {
-        test: {
-          $envNames: ['custom'],
-          $env: {
+        test: {$job_chain:[
+          {$env: {
             SCRIPT: 'echo "${foo}"',
             BAR: 'bar'
-          },
+          }},
+          {
+          $envNames: ['custom'],
           $envFromHost: false,
           $cmd: 'echo "${SCRIPT}"'
         }
+      ]}
       }
     }
     writeConfig(config)
     const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
-    await program.parseAsync('node index.ts -b test'.split(' '))
+    await program.parseAsync('node index.ts -b test --env custom'.split(' '))
 
     // verify that the script was called with the correct environment
     sinon.assert.calledOnce(execSpy)
     expect(execSpy.getCall(0).args[1]?.env).to.eql({
       SCRIPT: 'echo "bar"',
+      cat: 'DOG',
       BAR: 'bar',
       foo: 'bar',
       seven: '8-7',

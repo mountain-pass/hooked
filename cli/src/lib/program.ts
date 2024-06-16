@@ -14,7 +14,7 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { resolveCmdScript, resolveInternalScript, resolveWritePathScript } from './scriptExecutors/ScriptExecutor.js'
+import { resolveCmdScript, resolveEnvScript, resolveInternalScript, resolveWritePathScript } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
   type Script,
@@ -25,7 +25,8 @@ import {
   isString,
   isWritePathScript,
   type EnvironmentVariables,
-  type SuccessfulScript
+  type SuccessfulScript,
+  isEnvScript
 } from './types.js'
 import { Environment, type RawEnvironment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
@@ -213,7 +214,7 @@ Provided Environment Variables:
       // check executable scripts are actually executable
       for (const scriptAndPaths of executableScriptsAndPaths) {
         const [scriptx] = scriptAndPaths
-        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx)) {
+        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
           // all good
         } else {
           // uknown
@@ -248,10 +249,6 @@ Provided Environment Variables:
       for (const scriptAndPaths of executableScriptsAndPaths) {
         const [scriptx, pathsx] = scriptAndPaths
         if (isCmdScript(scriptx)) {
-          // resolve $cmd $env vars (if any)
-          if (isDefined(scriptx.$env)) {
-            mergeEnvVars(envVars, scriptx.$env)
-          }
           // run cmd script
           await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
         } else if (isInternalScript(scriptx)) {
@@ -260,6 +257,9 @@ Provided Environment Variables:
         } else if (isWritePathScript(scriptx)) {
           // write files
           await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+        } else if (isEnvScript(scriptx)) {
+          // write files
+          await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
         } else if (options.printenv === true) {
           throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
         }

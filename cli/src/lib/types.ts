@@ -75,8 +75,6 @@ export interface JobChainScript {
 }
 
 export interface CmdScript {
-  /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
-  $env?: EnvironmentVariables
   /** Additional environment group names to resolve ONLY when executing command. Resolved after $env. */
   $envNames?: string[]
   /** If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands (i.e. local). */
@@ -98,6 +96,7 @@ export interface SSHCmdScript extends CmdScript {
 }
 
 export interface EnvScript {
+  /** Additional environment variables to resolve (added to global environment). */
   $env: string
 }
 export interface ResolveScript {
@@ -163,7 +162,7 @@ export const isSSHCmdScript = (script: Script): script is SSHCmdScript => {
 }
 
 export const isEnvScript = (script: Script): script is EnvScript => {
-  return typeof (script as any).$env === 'string'
+  return typeof (script as any).$env !== 'undefined'
 }
 
 export const isResolveScript = (script: Script): script is ResolveScript => {

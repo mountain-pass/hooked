@@ -314,10 +314,12 @@ describe('config', () => {
       await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, new Environment().putAllGlobal({ NOTHELLO: "Goodbye" }), CONFIG, OPTIONS)).to.be.rejectedWith(`Script '-' is missing required environment variables: ["HELLO"]`)
     })
     it('executing a $cmd with "step defined" satisfied env should succeed', async () => {
-      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"', $env: { HELLO: 'Hola' } }, {}, new Environment(), CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
+      const env = new Environment()
+      env.putGlobal("HELLO", 'hi!')
+      await expect(resolveCmdScript('-', { $cmd: 'echo "${HELLO}"' }, {}, env, CONFIG, OPTIONS)).to.not.be.rejectedWith(Error)
     })
     it('executing a $cmd with "step defined" UNsatisfied env should fail', async () => {
-      await expect(resolveCmdScript('MYSCRIPT', { $cmd: 'echo "${HELLO}"', $env: { NOTHELLO: 'Adios' } }, {}, new Environment(), CONFIG, OPTIONS)).to.be.rejectedWith(`Script 'MYSCRIPT' is missing required environment variables: ["HELLO"]`)
+      await expect(resolveCmdScript('MYSCRIPT', { $cmd: 'echo "${HELLO}"' }, {}, new Environment(), CONFIG, OPTIONS)).to.be.rejectedWith(`Script 'MYSCRIPT' is missing required environment variables: ["HELLO"]`)
     })
 
     it('$cmd - env should resolve $cmd', async () => {
