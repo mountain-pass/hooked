@@ -3,6 +3,9 @@
 [Back to Index](README.md)
 
 - [Overview](#overview)
+- [Recommended - Enable YAML schema to help editing](#recommended---enable-yaml-schema-to-help-editing)
+  - [For VisualStudio:](#for-visualstudio)
+- [Editing `hooked.yaml`](#editing-hookedyaml)
   - [`imports:` (optional)](#imports-optional)
   - [`plugin:` (optional)](#plugin-optional)
   - [`env:` (optional)](#env-optional)
@@ -22,9 +25,42 @@
 
 # Overview
 
-When run, the app looks for a `hooked.yaml` file in the current working directory, then the user's home directory.
+When run, the app needs a `hooked.yaml` file to get started.
 
-The `hooked.yaml` can have multiple configuration options. Lets break them down.
+By convention, it looks in the current working directory, or the user's home directory for this file. Alternatively, you can explicitly define it with the `--config` cli arg.
+
+To get started, run `j --init`, to create a template `hooked.yaml` file.
+
+You can manually edit the `hooked.yaml` file, to include whatever scripting options you want.
+
+# Recommended - Enable YAML schema to help editing
+
+Most decent editors support YAML schemas, which provides **validation**, **documentation** and **code completion** tooltips for your YAML configuration files.
+
+## For VisualStudio:
+
+1. Install the "YAML Language Support by Red Hat" plugin
+2. Add the following snippet to either/or:
+    1. User settings: `CMD + P` > `>Preferences: Open User Settings (JSON)`
+    1. Workspace settings: `CMD + P` > `>Preferences: Open Workspace Settings (JSON)`
+
+```
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/mountain-pass/hooked/main/schemas/hooked.yaml.schema-v1.json": [
+      "hooked*.{yml,yaml}",
+    ]
+  }
+}
+```
+
+You should now have **validation**, **documentation** and **code completion** tooltips!
+
+> **Troubleshooting:** Check the "PROBLEMS" tab for any errors. Alternatively, restart the plugins with `>Developer: Restart Extension Host` to pickup/apply changes.
+
+# Editing `hooked.yaml`
+
+The `hooked.yaml` file has the following four root elements:
 
 ## `imports:` (optional)
 
