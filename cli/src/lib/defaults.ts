@@ -11,8 +11,8 @@ import logger from './utils/logger.js'
  * @returns
  */
 const findHookedYaml = (): string => {
-  // local first
-  let tmp = fileUtils.resolvePath('hooked.yaml')
+  // local first (NOTE - do NOT use HOOKED_DIR or fileUtils.resolvePath here!)
+  let tmp = path.resolve('hooked.yaml')
   if (fs.existsSync(tmp)) {
   // resolve real path - might be a symbolic link!
     tmp = fs.realpathSync(tmp)
@@ -50,7 +50,7 @@ const defaults: Defaults = {
  * @param hookedFilepath
  */
 const setDefaultConfigurationFilepath = (hookedFilepath: string | undefined): void => {
-  const filepath = isString(hookedFilepath) ? path.resolve(hookedFilepath) : findHookedYaml()
+  const filepath = isString(hookedFilepath) ? fileUtils.resolvePath(hookedFilepath) : findHookedYaml()
   logger.debug(`Setting config file: ${filepath}`)
   defaults.HOOKED_FILE = filepath
   defaults.HOOKED_DIR = path.dirname(defaults.HOOKED_FILE)
