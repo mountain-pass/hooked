@@ -201,7 +201,7 @@ export const resolveCmdScript = async (
  * Writes the given file definition.
  */
 const writeFileOrFolder = async (def: WritePathScript, env: Environment): Promise<void> => {
-  const filepath = fileUtils.resolvePath(env.resolve(def.$path))
+  const filepath = fileUtils.resolvePath(def.$path)
   if (isDefined(def.$content)) {
     // is file
     let content = ''
@@ -234,9 +234,11 @@ const writeFileOrFolder = async (def: WritePathScript, env: Environment): Promis
   // set owner if present
   if (isString(def.$owner)) {
     const tmp = env.resolve(def.$owner)
-    if (tmp.includes(':')) {
+    if (/^\d+:\d+$/.test(tmp)) {
       const [uid, gid] = tmp.split(':')
       await fsPromise.chown(filepath, parseInt(uid), parseInt(gid))
+    } else {
+      throw new Error('"$owner" must be a numerical uid and gid. e.g. "1000:1000"')
     }
   }
 }

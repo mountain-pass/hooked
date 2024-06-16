@@ -5,28 +5,25 @@ import path from 'path'
 import { type IncomingMessage } from 'http'
 import { isDefined } from '../types.js'
 import logger from './logger.js'
+import defaults from '../defaults.js'
 
 /**
- * Optionally resolves a leading tilde character to the user's home directory.
- * @param filepath
- * @returns
- */
-export const resolveHomePath = (filepath: string): string => {
-  if (filepath[0] === '~') {
-    const home = os.homedir()
-    const newpath = path.join(home, filepath.slice(1))
-    return newpath
-  }
-  return filepath
-}
-
-/**
- * Resolves a path, including home directories.
+ * Resolves a path.
+ * - if starts with tilde, prepend the home directory
+ * - if starts with forward slash, treat as absolute
+ * - if not starts with forward slash, prepend HOOKED_DIR
  * @param filepath
  * @returns
  */
 export const resolvePath = (filepath: string): string => {
-  return path.resolve(resolveHomePath(filepath))
+  let tmp = filepath
+  if (tmp[0] === '~') {
+    tmp = path.join(os.homedir(), filepath.slice(1))
+  } else if (tmp[0] !== '/') {
+    tmp = path.join(defaults.getDefaults().HOOKED_DIR, filepath)
+  }
+  // is the resolve here necessary?
+  return path.resolve(tmp)
 }
 
 export const getDirnameFilename = (filepath: string): string => {
@@ -89,7 +86,6 @@ export const cleanupOldTmpFiles = (): void => {
 }
 
 export default {
-  resolveHomePath,
   resolvePath,
   downloadFile
 }

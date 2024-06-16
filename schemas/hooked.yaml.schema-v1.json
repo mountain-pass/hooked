@@ -73,7 +73,6 @@
       "additionalProperties": false,
       "patternProperties": {
         "^.*$": {
-          "description": "A named group of environment variables.",
           "additionalProperties": false,
           "$ref": "#/$defs/envValue"
         }

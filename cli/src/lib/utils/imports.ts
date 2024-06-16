@@ -16,7 +16,7 @@ export const fetchImports = async (imports: TopLevelImports | undefined, pull: b
 
   if (Array.isArray(imports) && imports.length > 0) {
     const remotes = imports.filter(i => i.startsWith('https://'))
-    const localGlobs: string[] = imports.filter(i => !i.startsWith('https://')).map(str => fileUtils.resolveHomePath(str))
+    const localGlobs: string[] = imports.filter(i => !i.startsWith('https://')).map(str => fileUtils.resolvePath(str))
     let locals: string[] = []
     for (const globPath of localGlobs) {
       const tmp = await glob(globPath, { signal: AbortSignal.timeout(1000) })

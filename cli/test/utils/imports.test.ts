@@ -59,18 +59,22 @@ describe('imports', () => {
     describe('local imports', () => {
 
         it('required - exists', async () => {
-            fs.writeFileSync('doesexist.yaml', 'hello')
-            await expect(fetchImports(['doesexist.yaml'], false)).to.eventually.eql(['doesexist.yaml'])
+            const filepath = path.resolve('doesexist.yaml')
+            fs.writeFileSync(filepath, 'hello')
+            await expect(fetchImports(['doesexist.yaml'], false)).to.eventually.eql([filepath])
         })
     
         it('required - not exists', async () => {
-            await expect(fetchImports(['doesnotexist.yaml'], false)).to.eventually.be.rejectedWith('Missing import files: doesnotexist.yaml')
-            await expect(fetchImports(['doesnotexist.yaml', 'doesnotexist2.yaml'], false)).to.eventually.be.rejectedWith('Missing import files: doesnotexist.yaml, doesnotexist2.yaml')
+            const filepath = path.resolve('doesnotexist.yaml')
+            const filepath2 = path.resolve('doesnotexist2.yaml')
+            await expect(fetchImports(['doesnotexist.yaml'], false)).to.eventually.be.rejectedWith(`Missing import files: ${filepath}`)
+            await expect(fetchImports(['doesnotexist.yaml', 'doesnotexist2.yaml'], false)).to.eventually.be.rejectedWith(`Missing import files: ${filepath}, ${filepath2}`)
         })
     
         it('optional - exists', async () => {
+            const filepath = path.resolve('doesexist.yaml')
             fs.writeFileSync('doesexist.yaml', 'hello')
-            await expect(fetchImports(['doesexist.yaml?'], false)).to.eventually.eql(['doesexist.yaml'])
+            await expect(fetchImports(['doesexist.yaml?'], false)).to.eventually.eql([filepath])
         })
     
         it('optional - not exists', async () => {
@@ -79,11 +83,13 @@ describe('imports', () => {
         })
     
         it('mix of local imports', async () => {
-            fs.writeFileSync('doesexist.yaml', 'hello')
+            const filepath = path.resolve('doesexist.yaml')
+            const filepath2 = path.resolve('doesnotexist.yaml')
+            fs.writeFileSync(filepath, 'hello')
             // required and optional
-            await expect(fetchImports(['doesexist.yaml', 'doesnotexistoptional.yaml?'], false)).to.eventually.eql(['doesexist.yaml'])
+            await expect(fetchImports(['doesexist.yaml', 'doesnotexistoptional.yaml?'], false)).to.eventually.eql([filepath])
             // required and missing
-            await expect(fetchImports(['doesexist.yaml', 'doesnotexist.yaml'], false)).to.eventually.be.rejectedWith('Missing import files: doesnotexist.yaml')
+            await expect(fetchImports(['doesexist.yaml', 'doesnotexist.yaml'], false)).to.eventually.be.rejectedWith(`Missing import files: ${filepath2}`)
         })
 
     })

@@ -30,13 +30,21 @@ The `hooked.yaml` can have multiple configuration options. Lets break them down.
 
 Specifies a `string[]` of file paths or http endpoints, of hooked configuration files. These files are (downloaded), loaded and merged into the current running configuration (in order).
 
-> PROPOSED: File paths support glob pattern matching.
+**Notes**
+
+- File paths support glob pattern matching.
+- Relative file paths, are resolved from the `${HOOKED_DIR}`.
+- Tilde paths, are replaced with the user's home directory.
+- Paths ending with a question mark, are optional. And will not raise an error if missing.
+- `https://` paths, will be downloaded, and resolved from the local cache.
 
 Example:
 ```yaml
 imports:
-  - ./hooked-*.yml
-  - https://github.com/somefile.yml
+  - ./hooked-*.{yml,yaml}
+  - ~/hooked-homedir.yaml
+  - /tmp/hooked-optional.yml?
+  - https://raw.githubusercontent.com/mountain-pass/hooked/main/hooked.yaml
 ```
 
 ## `plugin:` (optional)

@@ -40,10 +40,9 @@ describe('program arguments', () => {
 
   it('--printenv should print environment variables (including BASEDIR) only', async () => {
     const filepath = path.resolve('hooked.yaml')
-    const parentDir = path.dirname(filepath)
     fs.writeFileSync(filepath, YAML.stringify(BASE_CONFIG), 'utf-8')
     const spylog = sinon.stub(console, 'log')
-    await program(["node", "index.ts","--printenv","test"])
+    await program(["node","index.ts","--printenv","test","--config",filepath])
     sinon.assert.calledOnce(spylog)
     const argument = JSON.parse(spylog.getCall(0).args[0])
     expect(argument).to.eql({
