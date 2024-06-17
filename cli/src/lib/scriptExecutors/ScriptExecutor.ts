@@ -31,8 +31,8 @@ import {
   isSSHCmdScript,
   isWritePathScript,
   type WritePathScript,
-  isJobChainScript,
-  type JobChainScript,
+  isJobsSerialScript,
+  type JobsSerialScript,
   isEnvScript
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
@@ -311,9 +311,9 @@ export const resolveEnvScript = async (
  * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
  * @returns
  */
-export const resolveJobChainScript = async (
+export const resolveJobsSerialScript = async (
   key: string,
-  script: JobChainScript,
+  script: JobsSerialScript,
   stdin: StdinResponses,
   env: Environment,
   config: YamlConfig,
@@ -322,7 +322,7 @@ export const resolveJobChainScript = async (
 ): Promise<void> => {
   // optionaly resolve job, and return job definitions
   type ScriptAndPaths = [Script, string[]]
-  const executableScriptsAndPaths: ScriptAndPaths[] = await Promise.all(script.$job_chain.map(async (refOrJob, idx) => {
+  const executableScriptsAndPaths: ScriptAndPaths[] = await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
     // resolve job by reference
     if (isString(refOrJob)) {
       return await findScript(config, refOrJob.split(' '), options)
@@ -536,8 +536,8 @@ export const resolveScript = async (
     await resolveInternalScript(key, script, stdin, env, config, options, envVars)
   } else if (isWritePathScript(script)) {
     await resolveWritePathScript(key, script, stdin, env, config, options, envVars)
-  } else if (isJobChainScript(script)) {
-    await resolveJobChainScript(key, script, stdin, env, config, options, envVars)
+  } else if (isJobsSerialScript(script)) {
+    await resolveJobsSerialScript(key, script, stdin, env, config, options, envVars)
   } else if (isCmdScript(script)) {
     await resolveCmdScript(key, script, stdin, env, config, options)
   } else if (isStdinScript(script)) {

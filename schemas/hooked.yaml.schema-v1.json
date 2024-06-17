@@ -41,7 +41,7 @@
       "$ref": "#/$defs/EnvironmentGroup"
     },
     "scripts": {
-      "description": "Organises `$cmd`, `$path` and `$job_chain` objects, into a named hierarchy.",
+      "description": "Organises `$cmd`, `$path` and `$jobs_serial` objects, into a named hierarchy.",
       "$ref": "#/$defs/scriptsGroup"
     }
   },
@@ -53,7 +53,7 @@
         "^.*$": {
           "anyOf": [
             {
-              "$ref": "#/$defs/JobChainScript"
+              "$ref": "#/$defs/JobsSerialScript"
             },
             {
               "$ref": "#/$defs/WritePathScript"
@@ -111,12 +111,12 @@
         }
       }
     },
-    "JobChainScript": {
+    "JobsSerialScript": {
       "type": "object",
       "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
       "additionalProperties": false,
       "properties": {
-        "$job_chain": {
+        "$jobs_serial": {
           "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
           "type": "array",
           "items": {
@@ -142,7 +142,7 @@
         }
       },
       "required": [
-        "$job_chain"
+        "$jobs_serial"
       ]
     },
     "WritePathScript": {

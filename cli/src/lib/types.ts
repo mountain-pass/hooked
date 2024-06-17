@@ -69,9 +69,9 @@ export interface WritePathScript {
 /**
  * Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.
  */
-export interface JobChainScript {
+export interface JobsSerialScript {
   /** A list of script paths, or job definitions. */
-  $job_chain: string[] | Script[]
+  $jobs_serial: string[] | Script[]
 }
 
 export interface CmdScript {
@@ -139,10 +139,10 @@ export type Script = string
 | ResolveScript
 | InternalScript
 | WritePathScript
-| JobChainScript
+| JobsSerialScript
 
-export const isJobChainScript = (script: Script): script is JobChainScript => {
-  return Array.isArray((script as any).$job_chain)
+export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {
+  return Array.isArray((script as any).$jobs_serial)
 }
 
 export const isWritePathScript = (script: Script): script is WritePathScript => {
@@ -191,6 +191,14 @@ export const isString = (o: any): o is string => {
   return typeof o === 'string'
 }
 
+export const isNumber = (o: any): o is number => {
+  return typeof o === 'number'
+}
+
+export const isBoolean = (o: any): o is boolean => {
+  return typeof o === 'boolean'
+}
+
 export const isObject = (o: any): o is object => {
   return typeof o === 'object'
 }
@@ -201,7 +209,7 @@ export const isScript = (script: any): script is Script => {
   (
     isWritePathScript(script) ||
     isCmdScript(script) ||
-    isJobChainScript(script) ||
+    isJobsSerialScript(script) ||
     isStdinScript(script) ||
     isEnvScript(script) ||
     isResolveScript(script) ||

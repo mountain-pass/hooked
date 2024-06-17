@@ -248,7 +248,7 @@ describe('program', () => {
         }
       },
       scripts: {
-        test: {$job_chain:[
+        test: {$jobs_serial:[
           {$env: {
             SCRIPT: 'echo "${foo}"',
             BAR: 'bar'

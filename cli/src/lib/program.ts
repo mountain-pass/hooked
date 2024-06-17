@@ -21,7 +21,7 @@ import {
   isCmdScript,
   isDefined,
   isInternalScript,
-  isJobChainScript,
+  isJobsSerialScript,
   isString,
   isWritePathScript,
   type EnvironmentVariables,
@@ -195,9 +195,9 @@ Provided Environment Variables:
       let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
 
       // check the script/s is executable...
-      if (isJobChainScript(script)) {
+      if (isJobsSerialScript(script)) {
         // optionaly resolve job, and return job definitions
-        executableScriptsAndPaths = await Promise.all(script.$job_chain.map(async (refOrJob, idx) => {
+        executableScriptsAndPaths = await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
           // resolve job by reference
           if (isString(refOrJob)) {
             return await findScript(config, refOrJob.split(' '), options)

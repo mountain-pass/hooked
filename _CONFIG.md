@@ -16,7 +16,7 @@
   - [`$cmd`](#cmd)
   - [`$path`](#path)
   - [`$env`](#env)
-  - [`$job_chain`](#job_chain)
+  - [`$jobs_serial`](#jobs_serial)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
@@ -181,7 +181,7 @@ In order to support more complicated resolution scenarios, we've provided the fo
 3. [`$cmd`](#cmd)
 4. [`$path`](#path)
 5. [`$env`](#env)
-6. [`$job_chain`](#job_chain)
+6. [`$jobs_serial`](#jobs_serial)
 
 ## `string`
 
@@ -318,17 +318,17 @@ Additional environment variables to resolve (added to global environment).
 ```yaml
 scripts:
   runme:
-    $job_chain:
+    $jobs_serial:
       - $env:
           GREETING: Hello
       - $cmd: echo ${GREETING} world!
 ```
 
-## `$job_chain`
+## `$jobs_serial`
 
 > Used for: Scripts
 
-Allows running multiple jobs, one after the other.
+Allows running multiple, sequential jobs.
 
 Environment variables will be accumulated, and passed on to future jobs.
 
@@ -344,7 +344,7 @@ Takes an array of any of the following parameters:
 ```yaml
 scripts:
   run all jobs:
-    $job_chain:
+    $jobs_serial:
       - aaa
       - bbb ccc
       - $cmd: echo all done!
