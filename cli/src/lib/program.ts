@@ -74,7 +74,8 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .addHelpText('afterAll', `
 Environment Variables:
   LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug")
-  SKIPCLEANUP          If 'true', doesn't cleanup old *.sh files. Useful for debugging.
+  SKIP_CLEANUP         If 'true', doesn't cleanup old *.sh files. Useful for debugging.
+  SKIP_VERSION_CHECK   If present, skips the version check at startup.
 
 Provided Environment Variables:
   HOOKED_FILE          The root hooked.yaml file that was run.

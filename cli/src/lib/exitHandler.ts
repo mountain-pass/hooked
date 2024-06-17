@@ -10,7 +10,7 @@ const onExit = (): void => {
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
     logger.debug(`Shutting down with exit code ${newExitCode}...`)
     // delete tmp files...
-    if (process.env.SKIPCLEANUP !== 'true') {
+    if (process.env.SKIP_CLEANUP !== 'true') {
       cleanupOldTmpFiles()
     }
     // kill child processes
