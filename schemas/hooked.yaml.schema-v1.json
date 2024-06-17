@@ -126,6 +126,14 @@
                 "type": "string"
               },
               {
+                "description": "A script path.",
+                "type": "number"
+              },
+              {
+                "description": "A script path.",
+                "type": "boolean"
+              },
+              {
                 "$ref": "#/$defs/WritePathScript"
               },
               {
