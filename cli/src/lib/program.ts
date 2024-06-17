@@ -14,7 +14,7 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { resolveCmdScript, resolveEnvScript, resolveInternalScript, resolveWritePathScript } from './scriptExecutors/ScriptExecutor.js'
+import { executeScriptsSequentially, resolveCmdScript, resolveEnvScript, resolveInternalScript, resolveJobsSerialScript, resolveScript, resolveScripts, resolveWritePathScript, verifyScriptsAreExecutable } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
   type Script,
@@ -26,7 +26,9 @@ import {
   isWritePathScript,
   type EnvironmentVariables,
   type SuccessfulScript,
-  isEnvScript
+  isEnvScript,
+  isNumber,
+  isBoolean
 } from './types.js'
 import { Environment, type RawEnvironment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
@@ -190,37 +192,9 @@ Provided Environment Variables:
       const rootScriptAndPaths = await findScript(config, scriptPath, options)
       const [script, paths] = rootScriptAndPaths
 
-      // executable scripts
-      type ScriptAndPaths = [Script, string[]]
-      let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
-
-      // check the script/s is executable...
-      if (isJobsSerialScript(script)) {
-        // optionaly resolve job, and return job definitions
-        executableScriptsAndPaths = await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
-          // resolve job by reference
-          if (isString(refOrJob)) {
-            return await findScript(config, refOrJob.split(' '), options)
-          } else {
-            return [refOrJob, [...paths, `${idx}`]]
-          }
-        }))
-      }
-
       // merge in the stdin...
       const stdin: RawEnvironment = HJSON.parse(options.stdin)
       mergeEnvVars(envVars, stdin)
-
-      // check executable scripts are actually executable
-      for (const scriptAndPaths of executableScriptsAndPaths) {
-        const [scriptx] = scriptAndPaths
-        if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
-          // all good
-        } else {
-          // uknown
-          throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
-        }
-      }
 
       const providedEnvNames = options.env.split(',')
       // fetch the environment variables...
@@ -231,7 +205,23 @@ Provided Environment Variables:
         envVars
       )
 
-      // generate rerun command
+      // executable scripts
+      type ScriptAndPaths = [Script, string[]]
+      let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
+
+      if (isJobsSerialScript(script)) {
+        // resolve job definitions
+        executableScriptsAndPaths = await resolveScripts(paths, script, config, options)
+      }
+
+      // check executable scripts are actually executable
+      verifyScriptsAreExecutable(executableScriptsAndPaths)
+
+      // execute scripts sequentially
+      await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars)
+
+      // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)
+      // Or should we ONLY store succesful scripts? I mean... it's in there in the name.
       const successfulScript: SuccessfulScript = {
         ts: Date.now(),
         scriptPath: paths,
@@ -243,26 +233,6 @@ Provided Environment Variables:
       const notRequestingLogs = paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
-      }
-
-      // execute scripts synchronously
-      for (const scriptAndPaths of executableScriptsAndPaths) {
-        const [scriptx, pathsx] = scriptAndPaths
-        if (isCmdScript(scriptx)) {
-          // run cmd script
-          await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-        } else if (isInternalScript(scriptx)) {
-          // run internal script
-          await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-        } else if (isWritePathScript(scriptx)) {
-          // write files
-          await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
-        } else if (isEnvScript(scriptx)) {
-          // write files
-          await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
-        } else if (options.printenv === true) {
-          throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
-        }
       }
 
       // NOTE - update history file AFTER script is run... (otherise `git porcelain` complains about file changes)

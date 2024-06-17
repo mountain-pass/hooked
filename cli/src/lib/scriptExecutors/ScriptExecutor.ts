@@ -22,7 +22,6 @@ import {
   type EnvironmentVariables,
   type InternalScript,
   type ResolveScript,
-  type ResolvedEnv,
   type SSHCmdScript,
   type Script,
   type StdinResponses,
@@ -33,7 +32,9 @@ import {
   type WritePathScript,
   isJobsSerialScript,
   type JobsSerialScript,
-  isEnvScript
+  isEnvScript,
+  isNumber,
+  isBoolean
 } from '../types.js'
 import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
@@ -299,6 +300,71 @@ export const resolveEnvScript = async (
   await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 }
 
+export type ScriptAndPaths = [Script, string[]]
+
+/**
+ * Converts all script paths to their Script objects.
+ */
+export const resolveScripts = async (
+  parentPath: string[],
+  script: JobsSerialScript,
+  config: YamlConfig,
+  options: ProgramOptions
+): Promise<ScriptAndPaths[]> => {
+  return await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
+  // resolve job by reference
+    if (isString(refOrJob) || isNumber(refOrJob) || isBoolean(refOrJob)) {
+      return await findScript(config, String(refOrJob).split(' '), options)
+    } else {
+      return [refOrJob, [...parentPath, `${idx}`]]
+    }
+  }))
+}
+
+/**
+ * Throws an error, if any of the provided jobs are not executable.
+ */
+export const verifyScriptsAreExecutable = (executableScriptsAndPaths: ScriptAndPaths[]): void => {
+  // check executable scripts are actually executable
+  for (const scriptAndPaths of executableScriptsAndPaths) {
+    const [scriptx, pathx] = scriptAndPaths
+    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
+      // all good
+    } else {
+      // uknown
+      throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" at path "${pathx.join(' ')}": ${JSON.stringify(scriptx)}`)
+    }
+  }
+}
+
+export const executeScriptsSequentially = async (
+  executableScriptsAndPaths: ScriptAndPaths[],
+  stdin: StdinResponses,
+  env: Environment,
+  config: YamlConfig,
+  options: ProgramOptions,
+  envVars: EnvironmentVariables = {}
+): Promise<void> => {
+  for (const scriptAndPaths of executableScriptsAndPaths) {
+    const [scriptx, pathsx] = scriptAndPaths
+    if (isCmdScript(scriptx)) {
+      // run cmd script
+      await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+    } else if (isInternalScript(scriptx)) {
+      // run internal script
+      await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+    } else if (isWritePathScript(scriptx)) {
+      // write files
+      await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+    } else if (isEnvScript(scriptx)) {
+      // write files
+      await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
+    } else if (options.printenv === true) {
+      throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
+    }
+  }
+}
+
 /**
  * Resolves all environment variables, and writes the file.
  * @param key
@@ -320,47 +386,14 @@ export const resolveJobsSerialScript = async (
   options: ProgramOptions,
   envVars: EnvironmentVariables = {}
 ): Promise<void> => {
-  // optionaly resolve job, and return job definitions
-  type ScriptAndPaths = [Script, string[]]
-  const executableScriptsAndPaths: ScriptAndPaths[] = await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
-    // resolve job by reference
-    if (isString(refOrJob)) {
-      return await findScript(config, refOrJob.split(' '), options)
-    } else {
-      return [refOrJob, [key, `${idx}`]]
-    }
-  }))
+  // resolve job definitions
+  const executableScriptsAndPaths = await resolveScripts([key], script, config, options)
 
   // check executable scripts are actually executable
-  for (const scriptAndPaths of executableScriptsAndPaths) {
-    const [scriptx] = scriptAndPaths
-    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
-      // all good
-    } else {
-      // uknown
-      throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" : ${JSON.stringify(scriptx)}`)
-    }
-  }
+  verifyScriptsAreExecutable(executableScriptsAndPaths)
 
-  // execute scripts synchronously
-  for (const scriptAndPaths of executableScriptsAndPaths) {
-    const [scriptx, pathsx] = scriptAndPaths
-    if (isCmdScript(scriptx)) {
-      // run cmd script
-      await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-    } else if (isInternalScript(scriptx)) {
-      // run internal script
-      await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
-    } else if (isWritePathScript(scriptx)) {
-      // write files
-      await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
-    } else if (isEnvScript(scriptx)) {
-      // write files
-      await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
-    } else if (options.printenv === true) {
-      throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
-    }
-  }
+  // execute scripts sequentially
+  await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars)
 }
 
 class InvalidConfigError extends Error {

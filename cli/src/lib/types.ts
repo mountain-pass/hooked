@@ -32,11 +32,6 @@ export interface YamlConfig {
 
 // export type EnvScripts = Record<string, Script>
 
-/**
- * @deprecated Please use Environment
- */
-export type ResolvedEnv = Record<string, string>
-
 export type StdinResponses = Record<string, string>
 
 export interface SuccessfulScript {
