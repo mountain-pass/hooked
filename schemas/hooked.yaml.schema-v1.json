@@ -244,7 +244,7 @@
       "additionalProperties": false,
       "description": "Provides a prompt to the user, to select from a set of choices.",
       "properties": {
-        "$stdin": {
+        "$ask": {
           "description": "The prompt provided to the user.",
           "type": "string"
         },
@@ -274,7 +274,7 @@
         }
       },
       "required": [
-        "$stdin"
+        "$ask"
       ]
     },
     "stdinChoicesValue": {

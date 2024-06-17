@@ -18,7 +18,7 @@ env:
     OUTPUT: text
   ask-DO_MACHINE:
     DO_MACHINE:
-      $stdin: Choose a server
+      $ask: Choose a server
       $choices:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
@@ -30,7 +30,7 @@ env:
     OUTPUT: text
   ask-DO_MACHINEIP:
     DO_MACHINEIP:
-      $stdin: Choose a server
+      $ask: Choose a server
       $choices:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
@@ -41,7 +41,7 @@ env:
       $sort: alpha
   ask-DO_MACHINENAME:
     DO_MACHINENAME:
-      $stdin: Choose a server
+      $ask: Choose a server
       $choices:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
@@ -52,7 +52,7 @@ env:
       $sort: alpha
   ask-DO_SSHKEY:
     DO_SSHKEY:
-      $stdin: Please choose a SSH key
+      $ask: Please choose a SSH key
       $choices:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
@@ -63,7 +63,7 @@ env:
       $sort: alpha
   ask-AREYOUSURE:
     AREYOUSURE:
-      $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
+      $ask: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
 
 scripts:
   digitalocean (cloud servers):
@@ -82,7 +82,7 @@ scripts:
         generate ssh key (public/private):
           $env:
             EMAIL:
-              $stdin: What is your email address?
+              $ask: What is your email address?
             DATE:
               $cmd: date +%Y%m%d
           $image: mountainpass/docker-git-curl
@@ -90,7 +90,7 @@ scripts:
         install ssh key on local machine:
           $env:
             FILE:
-              $stdin: Please choose the private key to install
+              $ask: Please choose the private key to install
               $choices:
                 $cmd: ls -1t
           $cmd: |
@@ -106,10 +106,10 @@ scripts:
         import ssh key from local machine into digital ocean:
           $env:
             NAME:
-              $stdin: Please enter an SSH key name (please use your email)
+              $ask: Please enter an SSH key name (please use your email)
               $default: ${USER}
             PUBKEYFILE:
-              $stdin: Please choose a public ssh key
+              $ask: Please choose a public ssh key
               $choices:
                 $cmd: ls -1t ${HOME}/.ssh
             COPYFILE:
@@ -183,7 +183,7 @@ scripts:
         $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
           NEWNAME:
-            $stdin: Please enter a new name
+            $ask: Please enter a new name
         $image: digitalocean/doctl
         $cmd: /app/doctl compute droplet-action rename ${DO_MACHINE} --droplet-name ${NEWNAME} --wait
 
@@ -191,7 +191,7 @@ scripts:
         $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
           NEWNAME:
-            $stdin: Please enter a new tag
+            $ask: Please enter a new tag
         $image: digitalocean/doctl
         $cmd: /app/doctl compute droplet tag ${DO_MACHINE} --tag-name ${NEWNAME}
 
@@ -199,14 +199,14 @@ scripts:
         $envNames: [DO_SECRETS, ask-DO_MACHINE]
         $env:
           NEWNAME:
-            $stdin: Please enter a tag to remove
+            $ask: Please enter a tag to remove
         $image: digitalocean/doctl
         $cmd: /app/doctl compute droplet untag --tag-name ${NEWNAME} ${DO_MACHINE}
 
       create:
         $env:
           IMAGE:
-            $stdin: Please choose an image
+            $ask: Please choose an image
             $choices:
               $envNames: [DO_SECRETS]
               $image: digitalocean/doctl
@@ -217,7 +217,7 @@ scripts:
             $filter: Docker.*Ubuntu
             $sort: alpha
           SIZE:
-            $stdin: Please choose a size
+            $ask: Please choose a size
             $choices:
               $envNames: [DO_SECRETS]
               $image: digitalocean/doctl
@@ -227,7 +227,7 @@ scripts:
               value: slug
               short: description
           REGION:
-            $stdin: Please choose a region
+            $ask: Please choose a region
             $choices:
               $envNames: [DO_SECRETS]
               $image: digitalocean/doctl
@@ -237,7 +237,7 @@ scripts:
               value: slug
             $sort: alpha
           NAME:
-            $stdin: Please enter a server name
+            $ask: Please enter a server name
         $envNames: [DO_SECRETS, ask-DO_SSHKEY]
         $image: digitalocean/doctl
         $cmd: |

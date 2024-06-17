@@ -42,7 +42,7 @@ scripts:
 env:
   default:
     GREETING:
-      $stdin: What country do you prefer?
+      $ask: What country do you prefer?
       $choices:
         germany: Guten tag
         france: Bonjour
@@ -50,7 +50,7 @@ env:
         england: Good day
       $sort: alpha
     YOURNAME:
-      $stdin: "What is your name? (Hint: set YOURNAME to avoid prompt):"
+      $ask: "What is your name? (Hint: set YOURNAME to avoid prompt):"
       $default: Bob
     HOMEPATH:
       $cmd: set -u && echo $HOME

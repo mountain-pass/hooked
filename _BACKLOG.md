@@ -24,7 +24,7 @@
 - [x] keep a history log (incl timestamp)
 - [x] don't include process.env in the `--printenv`
 - [x] throw error if $cmd is missing required environment variables
-- [x] $stdin > $choices (include populate from $cmd etc)
+- [x] $ask > $choices (include populate from $cmd etc)
 - [x] env vars specific to the script being run
 - [x] $imports - extend from other yaml configs
 - [x] --init script (also happens if no config file)
@@ -93,14 +93,14 @@
 - [ ] `imports` > add github.com (shorthand for https://raw.githubusercontent.com)
 - [ ] `imports` > use etag to check if changed
 - [ ] `scripts` > add regex search to cli and inapp selection - e.g. "build zip" => "build.*zip" => "build platform image to local zip"
-- [ ] `$stdin` > check that defaults work for text and choices
-- [ ] (cli args) > document reason we want `$stdin` option to be explicitly defined, and not just an environment variable
+- [ ] `$ask` > check that defaults work for text and choices
+- [ ] (cli args) > document reason we want `$ask` option to be explicitly defined, and not just an environment variable
 
 <!-- - [ ] precalc options if no env inputs? ?? <0 No idea wath this means -->
 - [ ] add dynamic scripts for npm
 - [ ] add ability to specify `requiredEnvNames: <ENV_NAME>: <string error message>`
 - [ ] hooked.yaml version validation - yml: `version: >1.0.20`
-- [ ] update "rerun" command with inputs (JUST IN TIME, after $stdin resolution!) (in yellow!)
+- [ ] update "rerun" command with inputs (JUST IN TIME, after $ask resolution!) (in yellow!)
 - [ ] cleanup .env and .tmp on startup
 
 

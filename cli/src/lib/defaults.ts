@@ -82,7 +82,7 @@ const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
     env: {
       default: {
         GREETING: {
-          $stdin: 'What country do you prefer?',
+          $ask: 'What country do you prefer?',
           $choices: {
             germany: 'Guten tag',
             france: 'Bonjour',
@@ -92,7 +92,7 @@ const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
           $sort: 'alpha'
         },
         YOURNAME: {
-          $stdin: 'What is your name? (Hint: set YOURNAME to avoid prompt):',
+          $ask: 'What is your name? (Hint: set YOURNAME to avoid prompt):',
           $default: 'Bob'
         },
         HOMEPATH: {
@@ -117,7 +117,7 @@ const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
       HELLO: { $cmd: 'printf "Hello"' },
       WORLD: 'world',
       FIRSTNAME: {
-        $stdin: 'What is your name?',
+        $ask: 'What is your name?',
         $default: 'Bob'
       },
       NAME: { $resolve: '${FIRSTNAME} (${username})' }

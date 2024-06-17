@@ -45,7 +45,7 @@ scripts:
         $envNames: [CLOUDFLARE_SECRETS]
         $env:
           zone_id:
-            $stdin: Please choose a zone
+            $ask: Please choose a zone
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
               $cmd: j cloudflare zones list
@@ -60,21 +60,21 @@ scripts:
         $envNames: [CLOUDFLARE_SECRETS]
         $env:
           zone_id:
-            $stdin: Please choose a zone
+            $ask: Please choose a zone
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
               $cmd: j cloudflare zones list
           NAME:
-            $stdin: Please enter a Name
+            $ask: Please enter a Name
           IPADDR:
-            $stdin: Please enter an IP Address
+            $ask: Please enter an IP Address
           PROXIED:
-            $stdin: Please choose a Proxy type
+            $ask: Please choose a Proxy type
             $choices:
               - true
               - false
           TYPE:
-            $stdin: Please choose a DNS Type
+            $ask: Please choose a DNS Type
             $choices:
               - A
               - CNAME
@@ -98,12 +98,12 @@ scripts:
         $envNames: [CLOUDFLARE_SECRETS]
         $env:
           zone_id:
-            $stdin: Please choose a zone
+            $ask: Please choose a zone
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
               $cmd: j cloudflare zones list
           dns_id:
-            $stdin: Please choose a dns record
+            $ask: Please choose a dns record
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
               $cmd: |
@@ -113,7 +113,7 @@ scripts:
                   | jq -M "[.result[] | { name: \"[\(.type)] \(.name) = \(.content)\", value: .id }]"
               $sort: alpha
           AREYOUSURE:
-            $stdin: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
+            $ask: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
         $cmd: |
           ${CURL_SCRIPT} \
             -v \
@@ -124,7 +124,7 @@ scripts:
         $envNames: [CLOUDFLARE_SECRETS]
         $env:
           zone_id:
-            $stdin: Please choose a zone
+            $ask: Please choose a zone
             $choices:
               $envNames: [CLOUDFLARE_SECRETS]
               $cmd: j cloudflare zones list

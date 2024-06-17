@@ -142,13 +142,13 @@ describe('program', () => {
   })
 
   it('--stdin should support strict json', async () => {
-    writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}})
+    writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $ask: 'hello there'}}}}})
     await program.parseAsync(["node", "index.ts","-b","--printenv","test", "--stdin", '{"FOO":"cat"}'])
     sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'cat', ...DEFAULT_ENV_VARS}))
   })
 
   it('--stdin should support relaxed json', async () => {
-    writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $stdin: 'hello there'}}}}})
+    writeConfig({...BASE_CONFIG, ...{env: { default: { FOO: { $ask: 'hello there'}}}}})
     await program.parseAsync(["node", "index.ts","-b","--printenv","test", "--stdin", "{FOO:'dog'}"])
     sinon.assert.calledOnceWithExactly(spylog, JSON.stringify({FOO:'dog', ...DEFAULT_ENV_VARS}))
   })

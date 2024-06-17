@@ -12,7 +12,7 @@
   - [`scripts:` (optional)](#scripts-optional)
 - [Environment Variables and Resolvers](#environment-variables-and-resolvers)
   - [`string`](#string)
-  - [`$stdin`](#stdin)
+  - [`$ask`](#stdin)
   - [`$cmd`](#cmd)
   - [`$path`](#path)
   - [`$env`](#env)
@@ -149,7 +149,7 @@ scripts:
     $env:
       GREETING: Hello
       NAME:
-        $stdin: What is your name?
+        $ask: What is your name?
         $default: I don't know my name
     $cmd: echo ${GREETING} ${NAME}!
 ````
@@ -177,7 +177,7 @@ All environment variables need to resolve to key `string` and value `string` pai
 In order to support more complicated resolution scenarios, we've provided the following three resolvers:
 
 1. [`string`](#string)
-2. [`$stdin`](#stdin)
+2. [`$ask`](#stdin)
 3. [`$cmd`](#cmd)
 4. [`$path`](#path)
 5. [`$env`](#env)
@@ -206,7 +206,7 @@ env:
     NAME: ${USER}
 ```
 
-## `$stdin`
+## `$ask`
 
 > Used for: Environment Variables
 
@@ -214,7 +214,7 @@ Requests input from the user.
 
 **Parameters:**
 
-- `$stdin` - (`string`) the prompt to ask the user.
+- `$ask` - (`string`) the prompt to ask the user.
 - `$default` - (`string` - optional) the default value to present to the user.
 - `$choices` - (`string[]` | `EnvironmentResolver` | `string` (JSON array) | `string` (newline delimited) - optional) a list of choices to ask the user. If not provided, user is prompted to enter freetext.
   - `EnvironmentResolver` - any [EnvironmentResolver](#environment-variables-and-resolvers) can be provided as child.
@@ -230,7 +230,7 @@ Requests input from the user.
 env:
   default:
     FAV_COLOUR:
-      $stdin: Please choose a colour
+      $ask: Please choose a colour
       $default: blue
       $choices:
         $cmd: curl https://somejsonendpoint.com/getPastelColours

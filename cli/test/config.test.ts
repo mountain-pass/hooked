@@ -346,13 +346,13 @@ describe('config', () => {
 
   })
 
-  describe('$stdin', () => {
+  describe('$ask', () => {
 
-    it('$stdin - env should resolve $stdin', async () => {
+    it('$ask - env should resolve $ask', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?' } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
       const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
@@ -364,11 +364,11 @@ describe('config', () => {
       sinon.assert.calledOnce(inqspy)
     })
 
-    it('$stdin - $stdin value should resolve env vars', async () => {
+    it('$ask - $ask value should resolve env vars', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'Is your name "${USER}"?' } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'Is your name "${USER}"?' } } }, scripts: { } }
       const env = new Environment().putAllGlobal({ USER: 'jill' })
       const stdin = {}
       const [envVars] = await fetchGlobalEnvVars(config, ['default'])
@@ -384,11 +384,11 @@ describe('config', () => {
       }])
     })
 
-    it('$stdin - $default value should resolve env vars', async () => {
+    it('$ask - $default value should resolve env vars', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'Is your name ...?', $default: '${USER}' } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'Is your name ...?', $default: '${USER}' } } }, scripts: { } }
       const stdin = {}
       const env = new Environment().putAllGlobal({ USER: 'jill' })
       const [envVars] = await fetchGlobalEnvVars(config, ['default'])
@@ -404,11 +404,11 @@ describe('config', () => {
       }])
     })
 
-    it('$stdin - env should resolve $stdin from defaults', async () => {
+    it('$ask - env should resolve $ask from defaults', async () => {
       // stub
       const inqspy = sinon.spy(inquirer, 'prompt')
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?' } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?' } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], { name: 'fred' })
     const stdin = { name: 'fred' }
     const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
@@ -420,11 +420,11 @@ describe('config', () => {
       sinon.assert.notCalled(inqspy)
     })
 
-    it('$stdin - $stdin should support $choices string array', async () => {
+    it('$ask - $ask should support $choices string array', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: ['one', 'two'] } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?', $choices: ['one', 'two'] } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
       const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
@@ -447,11 +447,11 @@ describe('config', () => {
       }])
     })
 
-    it('$stdin - $stdin should support $choices boolean array', async () => {
+    it('$ask - $ask should support $choices boolean array', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: [true, false] } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?', $choices: [true, false] } } }, scripts: { } }
       // const [env, stdin, envNames] = await resolveEnv(config, ['default'], {})
       const stdin = {}
       const env = new Environment().putAllGlobal({ aaa: '111', bbb: '222', ccc: '333' })
@@ -474,11 +474,11 @@ describe('config', () => {
       }])
     })
 
-    it('$stdin - $stdin should support $choices number array', async () => {
+    it('$ask - $ask should support $choices number array', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: [1,2,3] } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?', $choices: [1,2,3] } } }, scripts: { } }
       
       const stdin = {}
       const env = new Environment()
@@ -502,11 +502,11 @@ describe('config', () => {
       }])
     })
 
-    it('$stdin - $stdin should support $choices $cmd', async () => {
+    it('$ask - $ask should support $choices $cmd', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
-      const config: YamlConfig = { env: { default: { name: { $stdin: 'what is your name?', $choices: { $envFromHost: false, $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
+      const config: YamlConfig = { env: { default: { name: { $ask: 'what is your name?', $choices: { $envFromHost: false, $cmd: 'printf "one\ntwo\nthree\n"'} } } }, scripts: { } }
       
       const stdin = {}
       const env = new Environment()

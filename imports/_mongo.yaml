@@ -28,7 +28,7 @@ scripts:
     takeBackup (NOTE does not maintain the atomicity guarantees of transactions across shards):
       $env:
         ARCHIVE_PREFIX:
-          $stdin: Please enter an archive prefix
+          $ask: Please enter an archive prefix
           $default: mongodump
       $cmd: |
         set -ve
@@ -36,7 +36,7 @@ scripts:
     restoreBackupToLocal:
       $env:
         MONGO_ARCHIVE:
-          $stdin: "Please select an archive to restore:"
+          $ask: "Please select an archive to restore:"
           $choices:
             $cmd: |
               set -ve

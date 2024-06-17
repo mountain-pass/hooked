@@ -151,7 +151,7 @@ export const generateAbiScripts = async (): Promise<any> => {
           // map each solidity file
           return [file.filePath, Object.fromEntries(fns.map((fn: Abi) => {
             const contractArgs = Object.fromEntries(fn.inputs.map((input: AbiInput) => {
-              return [input.name, { $stdin: `Please enter a ${input.name} (type = ${input.type})?` }]
+              return [input.name, { $ask: `Please enter a ${input.name} (type = ${input.type})?` }]
             }))
             // map each function to a script
             return [`${fn.name}(${fn.inputs.map(i => i.name).join(', ')}) [${fn.stateMutability}]`, {

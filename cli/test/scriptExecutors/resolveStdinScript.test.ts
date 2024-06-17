@@ -20,10 +20,10 @@ describe('resolveStdinScript', () => {
 
   describe('no options', () => {
 
-    it('should accept just $stdin', async () => {
+    it('should accept just $ask', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:" }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:" }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'text',
         name: 'name',
@@ -39,7 +39,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a newline delimited string', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: "Bob\nAlice\nCharlie" }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: "Bob\nAlice\nCharlie" }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -55,7 +55,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a string[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: ["Bob", "Alice", "Charlie"] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: ["Bob", "Alice", "Charlie"] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -71,7 +71,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a boolean[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [true, false] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [true, false] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -87,7 +87,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a number[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [1,2,3] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [1,2,3] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -103,7 +103,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a string|boolean|number[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: ['foo',true,3] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: ['foo',true,3] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -119,7 +119,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a {name,value}[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [{ name: 'yes', value: 'true' }, { name: 'no', value: 'false' }] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [{ name: 'yes', value: 'true' }, { name: 'no', value: 'false' }] } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -135,7 +135,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a {key,value}', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: { yes: 'true', no: 'false' } } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: { yes: 'true', no: 'false' } } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -152,7 +152,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => "foo\ntrue\n3" }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -169,7 +169,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '[{ "name": "foo", "value": "foo" }, { "name": "true", "value": "true" }, { "name": "3", "value": "3" }]' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -186,7 +186,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '{ "yes": "true", "no": "false" }' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -203,7 +203,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '["Bob", "Alice", "Charlie"]' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -223,10 +223,10 @@ describe('resolveStdinScript', () => {
   describe('filters, defaults and sort', () => {
 
 
-    it('should accept just $stdin', async () => {
+    it('should accept just $ask', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $default: 'Bob' }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $default: 'Bob' }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'text',
         name: 'name',
@@ -242,7 +242,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a newline delimited string', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: "Bob\nAlice\nCharlie", $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: "Bob\nAlice\nCharlie", $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -258,7 +258,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a string[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: ["Bob", "Alice", "Charlie"], $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: ["Bob", "Alice", "Charlie"], $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -274,7 +274,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a boolean[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [true, false], $default: 'true', $filter: '/true/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [true, false], $default: 'true', $filter: '/true/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -290,7 +290,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a number[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [1,2,3], $default: '3', $filter: '/3/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [1,2,3], $default: '3', $filter: '/3/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -306,7 +306,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a string|boolean|number[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: ['foo',true,3], $default: 'foo', $filter: '/foo|true/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: ['foo',true,3], $default: 'foo', $filter: '/foo|true/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -322,7 +322,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a {name,value}[]', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: [{ name: 'yes', value: 'true' }, { name: 'no', value: 'false' }], $default: 'yes', $filter: '/yes/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: [{ name: 'yes', value: 'true' }, { name: 'no', value: 'false' }], $default: 'yes', $filter: '/yes/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -338,7 +338,7 @@ describe('resolveStdinScript', () => {
     it('should accept $choices as a {key,value}', async () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: { yes: 'true', no: 'false' }, $default: 'yes', $filter: '/yes/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: { yes: 'true', no: 'false' }, $default: 'yes', $filter: '/yes/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -355,7 +355,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => "foo\ntrue\n3" }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript, $default: 'foo', $filter: '/foo/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript, $default: 'foo', $filter: '/foo/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -372,7 +372,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '[{ "name": "foo", "value": "foo" }, { "name": "true", "value": "true" }, { "name": "3", "value": "3" }]' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript, $default: 'foo', $filter: '/foo/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript, $default: 'foo', $filter: '/foo/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -389,7 +389,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '{ "yes": "true", "no": "false" }' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript, $default: 'yes', $filter: '/yes/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript, $default: 'yes', $filter: '/yes/i', $sort: 'alpha' }, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -406,7 +406,7 @@ describe('resolveStdinScript', () => {
       const inqStub = sinon.stub(inquirer, 'prompt').resolves({ name: 'Alice' })
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '["Bob", "Alice", "Charlie"]' }
-      await resolveStdinScript("name", { $stdin: "What is your name?:", $choices: choicesScript, $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
+      await resolveStdinScript("name", { $ask: "What is your name?:", $choices: choicesScript, $default: 'Bob', $filter: '/bob|alice/i', $sort: 'alpha' } as StdinScript, stdinResponses, new Environment(), {} as any, {} as any, {})
       sinon.assert.calledOnceWithExactly(inqStub, [{
         type: 'list',
         name: 'name',
@@ -430,7 +430,7 @@ describe('resolveStdinScript', () => {
       const stdinResponses: any = {}
       const choicesScript: InternalScript = { $internal: async () => '[{ "id": "foo", "label": "foo" }, { "id": "true", "label": "true" }, { "id": "3", "label": "3" }]' }
       await resolveStdinScript("name", {
-        $stdin: "What is your name?:",
+        $ask: "What is your name?:",
         $choices: choicesScript,
         $default: 'foo',
         $filter: '/foo/i',

@@ -511,11 +511,11 @@ export const resolveStdinScript = async (
         `Could not retrieve stdin for key '${key}'.`)
     }
     // resolve env vars in name and default...
-    const newMessage = resolveResolveScript('', { $resolve: script.$stdin }, env, false)
+    const newMessage = resolveResolveScript('', { $resolve: script.$ask }, env, false)
     const newDefault = isString(script.$default)
       ? resolveResolveScript('', { $resolve: script.$default }, env, false)
       : script.$default
-    // otherwise prompt user for an answer to the $stdin question
+    // otherwise prompt user for an answer to the $ask question
     await inquirer
       .prompt([
         {

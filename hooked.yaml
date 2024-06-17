@@ -14,7 +14,7 @@ env:
     # GIT_COMMIT:
     #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
     # RECENT_DOWNLOAD:
-    #   $stdin: "Please choose a recently Downloaded file:"
+    #   $ask: "Please choose a recently Downloaded file:"
     #   $choices:
     #     $cmd: ls -1t ~/Downloads | head -10
     # NOW:

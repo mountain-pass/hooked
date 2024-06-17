@@ -106,7 +106,7 @@ export interface StdinScriptFieldsMapping {
 /** Provides a prompt to the user, to select from a set of choices. */
 export interface StdinScript {
   /** The prompt provided to the user. */
-  $stdin: string
+  $ask: string
   /** The default value provided to the user. */
   $default?: string
   /** Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc. */
@@ -165,7 +165,7 @@ export const isResolveScript = (script: Script): script is ResolveScript => {
 }
 
 export const isStdinScript = (script: Script): script is StdinScript => {
-  return typeof (script as any).$stdin === 'string'
+  return typeof (script as any).$ask === 'string'
 }
 export const isStdinScriptFieldsMapping = (script: any): script is StdinScriptFieldsMapping => {
   return typeof script !== 'undefined' &&
