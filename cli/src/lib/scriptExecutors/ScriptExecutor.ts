@@ -173,6 +173,7 @@ export const resolveCmdScript = async (
 
     // run the actual command
     let newValue = await executeCmd(
+      key,
       script,
       { env: env.resolved },
       env,

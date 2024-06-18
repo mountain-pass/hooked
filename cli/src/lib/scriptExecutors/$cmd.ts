@@ -87,12 +87,14 @@ export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, 
 
 /**
  * Executes the provided multiline command, and returns the stdout as a string.
+ * @param paths - the script paths
  * @param multilineCommand
  * @param dockerImage - optional - if provided, runs the command in a docker container.
  * @param opts
  * @returns
  */
 export const executeCmd = async (
+  key: string,
   script: CmdScript,
   opts: any = undefined,
   env: Environment,
@@ -101,7 +103,7 @@ export const executeCmd = async (
 ): Promise<string> => {
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
-    const rand = randomString()
+    const rand = `${key}-${randomString()}`
     const filepath = fileUtils.resolvePath(`.tmp-${rand}.sh`)
     const envfile = fileUtils.resolvePath(`.env-${rand}.txt`)
     const parent = path.dirname(filepath)

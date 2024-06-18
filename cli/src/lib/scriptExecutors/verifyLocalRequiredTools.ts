@@ -15,6 +15,7 @@ const verifyLatestVersion = async (env: Environment): Promise<void> => {
     logger.debug('Checking if latest version...')
     // eslint-disable-next-line max-len
     const latestPublishedVersion = (await executeCmd(
+      'system',
       { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
       { env: env.getAll() },
       env,
@@ -40,6 +41,7 @@ const verifyDockerExists = async (env: Environment): Promise<void> => {
   if (!isDefined(lazyCheckDockerExists)) {
     try {
       const version = await executeCmd(
+        '-',
         // eslint-disable-next-line no-template-curly-in-string
         { $cmd: '${DOCKER_BIN=docker} -v' },
         { env: env.resolved },
@@ -62,7 +64,7 @@ const verifyDockerExists = async (env: Environment): Promise<void> => {
 }
 
 const verifyDockerKilled = async (dockerName: string): Promise<string> => {
-  return await executeCmd({ $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {},
+  return await executeCmd('-', { $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {},
     new Environment(), { printStdio: false, captureStdout: false }, 5000)
 }
 
