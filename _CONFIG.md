@@ -291,7 +291,7 @@ Writes a file/folder to the filesystem.
 
 - `$path` - (`string`) Sets the file/folder location.
 - `$content` - (`string`) Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder. Content is utf-8.
-- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder (default `644`).
+- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder.
 - `$owner` - (`string[]` - optional) Sets the 'uid:gid' of the file/folder. (Note: must be numerical).
 - `$image` - (`string` - optional) If supplied, file will be written in this docker image container.
 - `$ssh` - (`string` - optional) If supplied, file will be written in this remote server.
