@@ -216,7 +216,7 @@
       "additionalProperties": false,
       "properties": {
         "$envNames": {
-          "description": "Additional environment group names to resolve ONLY when executing command. Resolved after $env.",
+          "description": "Additional environment group names to resolve ONLY when executing command.",
           "type": "array",
           "items": {
             "type": "string"

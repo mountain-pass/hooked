@@ -256,7 +256,7 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 - `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
 - `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
 - `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
-- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command. (Resolved after `$env`)
+- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command.
 - `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
 
 **Example:**
@@ -297,14 +297,17 @@ Writes a file/folder to the filesystem.
 **Example:**
 
 ```yaml
-env:
-  default:
-    WELCOME_MESSAGE:
-      $cmd: echo Hello world!
-    ANOTHER_MESSAGE:
-      $cmd: |
-        #!/bin/sh -ve
-        echo Hello world!
+script:
+  write_file:
+    $path: /tmp/somedir/hello.txt
+    $permissions: 644
+    $owner: 100:100
+    $content: Hello world!
+    $encoding: utf-8
+  write_directory:
+    $path: /tmp/foo/bar
+    $permissions: 755
+    $owner: 100:100
 ```
 
 ## `$env`
