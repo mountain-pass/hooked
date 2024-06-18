@@ -216,22 +216,22 @@
       "additionalProperties": false,
       "properties": {
         "$envNames": {
-          "description": "Additional environment group names to resolve ONLY when executing command.",
+          "description": "Additional environment group names to resolve ONLY when executing this command.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "$envFromHost": {
-          "description": "If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands (i.e. local).",
+          "description": "If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands.",
           "type": "boolean"
         },
         "$cmd": {
-          "description": "The command to execute. Supports multiline.",
+          "description": "The command to run. Supports multiline.",
           "type": "string"
         },
         "$errorMessage": {
-          "description": "The message to show, if an error occurs.",
+          "description": "An error message to display, when the `$cmd` exits with a non-zero exit code.",
           "type": "string"
         },
         "$image": {
@@ -239,7 +239,7 @@
           "type": "string"
         },
         "$ssh": {
-          "description": "If supplied, command will execute in this remote server.",
+          "description": "If supplied, command will execute in this remote server",
           "type": "string"
         }
       },

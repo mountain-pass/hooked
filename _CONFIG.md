@@ -253,11 +253,12 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 
 **Parameters:**
 
-- `$cmd` - (`string`) The command to run. Supports multiline. (Supports environment resolution)
-- `$image` - (`string` - optional) If supplied, command will execute in this docker image container. (No environment resolution)
-- `$ssh` - (`string` - optional) If supplied, command will execute in a remote server. (No environment resolution)
-- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing command.
-- `$errorMessage` - (`string` - optional) An error message, displayed when the `$cmd` exits with a non-zero exit code. (No environment resolution)
+- `$cmd` - (`string`) The command to run. Supports multiline.
+- `$image` - (`string` - optional) If supplied, command will execute in this docker image container.
+- `$ssh` - (`string` - optional) If supplied, command will execute in this remote server.
+- `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing this command.
+- `$envFromHost` - (`string`) - If `true`, includes all environment variables from the host machine. (`true` by default for non-`$ssh` and non-`$image` commands.
+- `$errorMessage` - (`string` - optional) An error message to display, when the `$cmd` exits with a non-zero exit code.
 
 **Example:**
 
@@ -290,9 +291,9 @@ Writes a file/folder to the filesystem.
 
 - `$path` - (`string`) Sets the file/folder location.
 - `$content` - (`string`) Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder.
-- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder (default '644').
-- `$encoding` - (`object` - optional) Sets file encoding (default 'utf-8').
-- `$owner` - (`string[]` - optional) Sets the 'uid:gid' of the file/folder. (Note: must be numerical!).
+- `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder (default `644`).
+- `$encoding` - (`object` - optional) Sets file encoding (default `utf-8`).
+- `$owner` - (`string[]` - optional) Sets the 'uid:gid' of the file/folder. (Note: must be numerical).
 
 **Example:**
 
@@ -300,14 +301,14 @@ Writes a file/folder to the filesystem.
 script:
   write_file:
     $path: /tmp/somedir/hello.txt
-    $permissions: 644
-    $owner: 100:100
+    $permissions: '644'
+    $owner: '100:100'
     $content: Hello world!
     $encoding: utf-8
   write_directory:
     $path: /tmp/foo/bar
-    $permissions: 755
-    $owner: 100:100
+    $permissions: '755'
+    $owner: '100:100'
 ```
 
 ## `$env`
@@ -321,8 +322,9 @@ Additional environment variables to resolve (added to global environment).
 ```yaml
 scripts:
   setup_environment_variables:
-    GREETING: Hello
-    TimeOfDay: Afternoon
+    $env:
+      GREETING: Hello
+      TimeOfDay: Afternoon
 ```
 
 ## `$jobs_serial`
@@ -352,7 +354,7 @@ scripts:
 
   this_is_a_reference:
     $cmd: echo aaa
-    
+
   bbb:
     cccddd:
       $cmd: echo bbbccc
@@ -360,7 +362,7 @@ scripts:
 
 # Conventions
 
-Environment variables defined with curly braces e.g. `${SOME_VALUE}` will be checked before script execution, to validate that they are present. Environment variables referenced without curly braces e.g. `$SOME_VALUE` will still be resolved at runtime, but no validation will be performed that they are present.
+Environment variables defined with curly braces e.g. `${SOME_VALUE}` will be checked before script execution, to verify that they are present. Environment variables referenced without curly braces e.g. `$SOME_VALUE` will still be resolved at runtime, but no validation will be performed that they are present.
 
 The default environment name (if not specified with `--env`), is `default`.
 
@@ -372,10 +374,8 @@ The default environment name (if not specified with `--env`), is `default`.
 
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
-```yaml
-env:
-  default:
-    DOCKER_SCRIPT: docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"
+```shell
+DOCKER_SCRIPT='docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
 ```
 
 ## Custom SSH Command
@@ -384,10 +384,8 @@ env:
 
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
-```yaml
-env:
-  default:
-    SSH_SCRIPT: ssh -T "${user_at_server}" < "${filepath}"
+```shell
+SSH_SCRIPT='ssh -T "${user_at_server}" < "${filepath}"'
 ```
 
 ## Custom NPM Command
@@ -396,10 +394,8 @@ The `plugin: npm: true` plugin, will execute npm scripts. To change the command 
 
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
-```yaml
-env:
-  default:
-    NPM_SCRIPT: npm run ${NPM_COMMAND}
+```shell
+NPM_SCRIPT='npm run ${NPM_COMMAND}'
 ```
 
 ## Custom Makefile Command
@@ -408,9 +404,7 @@ The `plugin: makefile: true` plugin, will execute Makefile scripts. To change th
 
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
-```yaml
-env:
-  default:
-    MAKE_FILE: Makefile
-    MAKE_SCRIPT: make -s -f ${MAKE_FILE} ${MAKE_COMMAND}
+```shell
+MAKE_FILE='Makefile'
+MAKE_SCRIPT='make -s -f ${MAKE_FILE} ${MAKE_COMMAND}'
 ```
