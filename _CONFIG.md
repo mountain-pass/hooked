@@ -12,7 +12,7 @@
   - [`scripts:` (optional)](#scripts-optional)
 - [Environment Variables and Resolvers](#environment-variables-and-resolvers)
   - [`string`](#string)
-  - [`$ask`](#stdin)
+  - [`$ask`](#ask)
   - [`$cmd`](#cmd)
   - [`$path`](#path)
   - [`$env`](#env)
