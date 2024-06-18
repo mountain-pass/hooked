@@ -320,11 +320,9 @@ Additional environment variables to resolve (added to global environment).
 
 ```yaml
 scripts:
-  runme:
-    $jobs_serial:
-      - $env:
-          GREETING: Hello
-      - $cmd: echo ${GREETING} world!
+  setup_environment_variables:
+    GREETING: Hello
+    TimeOfDay: Afternoon
 ```
 
 ## `$jobs_serial`
@@ -348,11 +346,13 @@ Takes an array of any of the following parameters:
 scripts:
   run all jobs:
     $jobs_serial:
-      - aaa
+      - this_is_a_reference
       - bbb ccc
       - $cmd: echo all done!
-  aaa:
+
+  this_is_a_reference:
     $cmd: echo aaa
+    
   bbb:
     cccddd:
       $cmd: echo bbbccc
