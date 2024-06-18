@@ -171,7 +171,7 @@ export const resolveCmdScript = async (
       await verifyLocalRequiredTools.verifyDockerExists(env)
     }
 
-    // run the actual command
+    // !!! run the actual command !!!
     let newValue = await executeCmd(
       key,
       script,
@@ -196,52 +196,6 @@ export const resolveCmdScript = async (
 }
 
 /**
- * Writes the given file definition.
- */
-const writeFileOrFolder = async (def: WritePathScript, env: Environment): Promise<void> => {
-  const filepath = fileUtils.resolvePath(def.$path)
-  if (isDefined(def.$content)) {
-    // is file
-    let content = ''
-    if (isString(def.$content)) {
-      // write string
-      content = def.$content
-    } else if (/.ya?ml$/i.test(def.$path)) {
-      // treat as yaml
-      content = YAML.stringify(def.$content)
-    } else {
-      // treat as json
-      content = JSON.stringify(def.$content)
-    }
-    logger.debug(`Writing file - ${filepath}`)
-    // NOTE ensure parent directory exists!
-    await fsPromise.mkdir(path.dirname(filepath), { recursive: true })
-    await fsPromise.writeFile(filepath, env.resolve(content), {
-      encoding: isDefined(def.$encoding) ? env.resolve(def.$encoding) as BufferEncoding : 'utf-8',
-      flag: 'w'
-    })
-  } else {
-    // is folder
-    logger.debug(`Writing folder - ${filepath}`)
-    await fsPromise.mkdir(filepath, { recursive: true })
-  }
-  // set mode if present
-  if (isString(def.$permissions)) {
-    await fsPromise.chmod(filepath, env.resolve(def.$permissions))
-  }
-  // set owner if present
-  if (isString(def.$owner)) {
-    const tmp = env.resolve(def.$owner)
-    if (/^\d+:\d+$/.test(tmp)) {
-      const [uid, gid] = tmp.split(':')
-      await fsPromise.chown(filepath, parseInt(uid), parseInt(gid))
-    } else {
-      throw new Error('"$owner" must be a numerical uid and gid. e.g. "1000:1000"')
-    }
-  }
-}
-
-/**
  * Resolves all environment variables, and writes the file.
  * @param key
  * @param script
@@ -262,25 +216,39 @@ export const resolveWritePathScript = async (
   options: ProgramOptions,
   envVars: EnvironmentVariables = {}
 ): Promise<void> => {
-  // actually resolve the environment variables... (cmd script)
-  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
+  const parentDir = path.dirname(script.$path)
 
-  const missingKeys = new Set<string>()
-  env.getMissingRequiredKeys(script.$path).forEach(missingKeys.add)
-  if (isString(script.$content)) env.getMissingRequiredKeys(script.$content).forEach(missingKeys.add)
-  if (isString(script.$encoding)) env.getMissingRequiredKeys(script.$encoding).forEach(missingKeys.add)
-  if (isString(script.$owner)) env.getMissingRequiredKeys(script.$owner).forEach(missingKeys.add)
-  if (isString(script.$permissions)) env.getMissingRequiredKeys(script.$permissions).forEach(missingKeys.add)
-  if (missingKeys.size > 0) {
-    // eslint-disable-next-line max-len
-    const foundString = toJsonString(env.getAll(), true)
-    // const envVarsString = toJsonString(envVars, true)
-    // eslint-disable-next-line max-len
-    throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify([...missingKeys].sort())}\nFound: ${foundString}`)
+  // is file
+  let content: string | undefined
+  if (isString(script.$content)) {
+    // write string
+    content = script.$content
+  } else if (/.ya?ml$/i.test(script.$path)) {
+    // treat as yaml
+    content = YAML.stringify(script.$content)
+  } else {
+    // treat as json
+    content = JSON.stringify(script.$content, null, 2)
   }
 
-  // wait until all files have been written...
-  await writeFileOrFolder(script, env)
+  // convert to a CmdScript
+  const cmdScript: CmdScript = {
+    $cmd: `
+#!/bin/sh -e
+
+${isString(content) && isString(parentDir) && parentDir.length > 0 ? `mkdir -p ${parentDir}` : ''}
+${isString(content)
+  ? `cat > ${script.$path} << EOL\n${content}\nEOL`
+  : `mkdir -p ${script.$path}`
+}
+${isString(script.$permissions) ? `chmod ${script.$permissions} ${script.$path}` : ''}
+${isString(script.$owner) ? `chown ${script.$owner} ${script.$path}` : ''}
+`
+  }
+  if (isString(script.$image)) (cmdScript as DockerCmdScript).$image = script.$image
+  if (isString(script.$ssh)) (cmdScript as SSHCmdScript).$ssh = script.$ssh
+
+  await resolveCmdScript(key, cmdScript, stdin, env, config, options, envVars, true)
 }
 
 export const resolveEnvScript = async (

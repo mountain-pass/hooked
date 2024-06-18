@@ -121,7 +121,13 @@ export const executeCmd = async (
       const dockerName = rand
       const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env.global
-      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment().putAllGlobal({ envfile, filepath: dockerfilepath, dockerImage: script.$image, dockerName, parent }), false)
+      const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment().putAllGlobal({
+        envfile,
+        filepath: dockerfilepath,
+        dockerImage: script.$image,
+        dockerName,
+        parent
+      }), false)
       dockerNames.push(dockerName)
 
       // write a script to run the docker (include system env vars - these may be required e.g. DOCKER_HOST)...
@@ -133,10 +139,15 @@ export const executeCmd = async (
       // run on remote machine
       const sshfilepath = fileUtils.resolvePath(`.tmp-ssh-${rand}.sh`)
       writeScript(sshfilepath, script.$cmd, env)
-      const DEFAULT_SSH_SCRIPT = 'ssh -T "${user_at_server}" < "${filepath}"'
+      const DEFAULT_SSH_SCRIPT = 'ssh -q -T "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
       const sshConnection = resolveResolveScript('-', { $resolve: script.$ssh }, env, false)
-      const cmd = resolveResolveScript('-', { $resolve: sshScript }, new Environment().putAllGlobal({ envfile, filepath: sshfilepath, user_at_server: sshConnection, parent }), false)
+      const cmd = resolveResolveScript('-', { $resolve: sshScript }, new Environment().putAllGlobal({
+        envfile,
+        filepath: sshfilepath,
+        user_at_server: sshConnection,
+        parent
+      }), false)
       // write a script to execute the shell script on the remote machine... (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)

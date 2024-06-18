@@ -290,21 +290,22 @@ Writes a file/folder to the filesystem.
 **Parameters:**
 
 - `$path` - (`string`) Sets the file/folder location.
-- `$content` - (`string`) Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder.
+- `$content` - (`string`) Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder. Content is utf-8.
 - `$permissions` - (`string` - optional) Sets the read/write/execute access permissions on the file/folder (default `644`).
-- `$encoding` - (`object` - optional) Sets file encoding (default `utf-8`).
 - `$owner` - (`string[]` - optional) Sets the 'uid:gid' of the file/folder. (Note: must be numerical).
+- `$image` - (`string` - optional) If supplied, file will be written in this docker image container.
+- `$ssh` - (`string` - optional) If supplied, file will be written in this remote server.
 
 **Example:**
 
 ```yaml
-script:
+scripts:
   write_file:
     $path: /tmp/somedir/hello.txt
     $permissions: '644'
     $owner: '100:100'
     $content: Hello world!
-    $encoding: utf-8
+    $ssh: bob@server.com
   write_directory:
     $path: /tmp/foo/bar
     $permissions: '755'
@@ -385,7 +386,7 @@ DOCKER_SCRIPT='docker run -t --rm --network host --entrypoint "" --env-file "${e
 Here is an example, using the default command as a baseline. Note: the `${...}` variables are reserved, and are only resolved internally before execution.
 
 ```shell
-SSH_SCRIPT='ssh -T "${user_at_server}" < "${filepath}"'
+SSH_SCRIPT='ssh -q -T "${user_at_server}" < "${filepath}"'
 ```
 
 ## Custom NPM Command

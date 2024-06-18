@@ -51,14 +51,17 @@ export interface WritePathScript {
    * Sets the contents of the file to match the string.
    * If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension).
    * If absent, treats the path as a folder.
+   * Content is utf-8.
    */
   $content?: string | object
   /** Sets the read/write/execute access permissions on the file/folder (default '644'). */
   $permissions?: Mode
-  /** Sets file encoding (default 'utf-8'). */
-  $encoding?: BufferEncoding
   /** Sets the 'uid:gid' of the file/folder. (Note: must be numerical!). */
   $owner?: string
+  /** If supplied, command will execute in this docker image container. */
+  $image?: string
+  /** If supplied, command will execute in this remote server. */
+  $ssh?: string
 }
 
 /**
