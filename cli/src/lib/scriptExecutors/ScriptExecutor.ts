@@ -36,7 +36,7 @@ import {
   isNumber,
   isBoolean
 } from '../types.js'
-import { toJsonString, type Environment } from '../utils/Environment.js'
+import { type Environment, toJsonString } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
@@ -223,12 +223,16 @@ export const resolveWritePathScript = async (
 ): Promise<void> => {
   const parentDir = path.dirname(script.$path)
 
-  // is file
+  // actually resolve the environment variables... (cmd script)
+  await resolveEnvironmentVariables(config, envVars, stdin, env, options)
+
+  // we need the resolved path, to do the yaml/json check
+  const resolvedPath = env.resolve(script.$path, 'path')
   let content: string | undefined
   if (isString(script.$content)) {
     // write string
     content = script.$content
-  } else if (/.ya?ml$/i.test(script.$path)) {
+  } else if (/.ya?ml$/i.test(resolvedPath)) {
     // treat as yaml
     content = YAML.stringify(script.$content)
   } else {
@@ -242,6 +246,10 @@ export const resolveWritePathScript = async (
 #!/bin/sh -e
 
 ${isString(content) && isString(parentDir) && parentDir.length > 0 ? `mkdir -p ${parentDir}` : ''}
+${isString(content)
+  ? `echo Writing file: ${script.$path}`
+  : `echo Creating dir: ${script.$path}`
+}
 ${isString(content)
   ? `cat > ${script.$path} << EOL\n${content}\nEOL`
   : `mkdir -p ${script.$path}`
@@ -529,6 +537,17 @@ export const resolveResolveScript = (key: string, script: ResolveScript, env: En
   }
 }
 
+/**
+ * Attempt to resolve environment variables.
+ * @param key
+ * @param script
+ * @param stdin
+ * @param env
+ * @param config
+ * @param options
+ * @param envVars
+ * @returns
+ */
 export const resolveScript = async (
   key: string,
   script: Script,
