@@ -1,7 +1,7 @@
 # 🪝🪝 @mountainpass/hooked (aka "j") 🪝🪝 <!-- omit in toc -->
 
 - [Install](#install)
-- [Rationale](#rationale)
+- [Why](#why)
   - [Existing tools](#existing-tools)
 - [Usage](#usage)
   - [Getting started](#getting-started)
@@ -21,13 +21,7 @@
 npm i -g @mountainpass/hooked-cli
 ```
 
-If cached, you may need to force download:
-
-```
-npm i -g --prefer-online --force @mountainpass/hooked-cli
-```
-
-# Rationale
+# Why
 
 I want to be able to setup advanced build server scripts, that can be run:
 - by anyone

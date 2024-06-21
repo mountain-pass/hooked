@@ -256,6 +256,7 @@ Throws an error if an environment variable is missing i.e. `${..}`.
 - `$cmd` - (`string`) The command to run. Supports multiline.
 - `$image` - (`string` - optional) If supplied, command will execute in this docker image container.
 - `$ssh` - (`string` - optional) If supplied, command will execute in this remote server.
+- `$env` - (`object` - optional) Additional environment variables to resolve (added to global environment). (Resolved before `$envNames`)
 - `$envNames` - (`string[]` - optional) Additional environment group names to resolve ONLY when executing this command.
 - `$envFromHost` - (`string`) - If `true`, includes all environment variables from the host machine. (`true` by default for non-`$ssh` and non-`$image` commands.
 - `$errorMessage` - (`string` - optional) An error message to display, when the `$cmd` exits with a non-zero exit code.

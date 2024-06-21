@@ -123,6 +123,11 @@ export const resolveCmdScript = async (
   envVars: EnvironmentVariables = {},
   isFinalScript = false
 ): Promise<string> => {
+  // if "step" $env is defined, merge environment variables
+  if (isDefined(script.$env)) {
+    mergeEnvVars(envVars, script.$env)
+  }
+
   // include environments defined in $envNames
   if (isDefined(script.$envNames) && Array.isArray(script.$envNames) && script.$envNames.length > 0) {
     await fetchGlobalEnvVars(
@@ -317,6 +322,10 @@ export const executeScriptsSequentially = async (
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx, pathsx] = scriptAndPaths
     if (isCmdScript(scriptx)) {
+      // resolve $cmd $env vars (if any)
+      if (isDefined(scriptx.$env)) {
+        mergeEnvVars(envVars, scriptx.$env)
+      }
       // run cmd script
       await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
     } else if (isInternalScript(scriptx)) {

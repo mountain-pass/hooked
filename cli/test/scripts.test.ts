@@ -87,8 +87,10 @@ describe('scripts', () => {
 
     it('$cmd - with $env resolution', async () => {
       const env = new Environment()
-      env.putResolved("USER", "bob")
       const result = await resolveCmdScript('-', {
+        $env: {
+          USER: 'bob'
+        },
         $cmd: 'echo "Hello ${USER}"'
       }, {}, env, CONFIG, OPTIONS)
       expect(result).to.eql('Hello bob')
@@ -143,9 +145,11 @@ describe('scripts', () => {
     it('$cmd - with $image and $env', async () => {
       sinon.stub(docker, 'verifyDockerExists').resolves()
       const env = new Environment()
-      env.putResolved("USER", "bob")
       const result = await resolveCmdScript('-', {
         $image: 'alpine',
+        $env: {
+          USER: 'bob'
+        },
         $cmd: 'echo "Hello ${USER}"'
       }, {}, env, CONFIG, OPTIONS)
       expect(result).to.eql('Hello bob')
@@ -162,11 +166,13 @@ describe('scripts', () => {
     it('$cmd - with $image and $env and $envNames', async () => {
       // Given the secret USER env is "bob"...
       const env = new Environment()
-      env.putResolved("GREETING", "Hola")
       // N.B. we do not want to treat this as a "Final" script - so that we can capture the output (otherwise it is streamed to stdout)
       const IS_FINAL_SCRIPT = false
       // when we resolve the script...
       const result = await resolveCmdScript('-', {
+        $env: {
+          GREETING: 'Hola'
+        },
         $envNames: ['secr'],
         $image: 'alpine',
         $cmd: 'echo "${GREETING} ${USER}"' // <-- !!! USER IS A SECRET, ONLY SHOULD ONLY BE USED TEMPORARILY !!!

@@ -219,6 +219,10 @@
       "description": "Executes a command, and optionally provides output to environment variables or stdin.",
       "additionalProperties": false,
       "properties": {
+        "$env": {
+          "description": "Additional environment variables to resolve (added to global environment). Resolved before $envNames",
+          "type": "#/$defs/envGroup"
+        },
         "$envNames": {
           "description": "Additional environment group names to resolve ONLY when executing this command.",
           "type": "array",

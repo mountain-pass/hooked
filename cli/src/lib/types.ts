@@ -73,6 +73,8 @@ export interface JobsSerialScript {
 }
 
 export interface CmdScript {
+  /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
+  $env?: EnvironmentVariables
   /** Additional environment group names to resolve ONLY when executing command. */
   $envNames?: string[]
   /** If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands (i.e. local). */

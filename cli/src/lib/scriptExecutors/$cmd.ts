@@ -103,9 +103,10 @@ export const executeCmd = async (
 ): Promise<string> => {
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
-    const rand = `${key}-${randomString()}`
-    const filepath = fileUtils.resolvePath(`.tmp-${rand}.sh`)
-    const envfile = fileUtils.resolvePath(`.env-${rand}.txt`)
+    const rand = randomString()
+    const scriptName = `${key}-${rand}`
+    const filepath = fileUtils.resolvePath(`.tmp-${scriptName}.sh`)
+    const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
     const parent = path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
@@ -115,7 +116,7 @@ export const executeCmd = async (
     // run script based on underlying implementations
     if (isDockerCmdScript(script)) {
       // write a docker file, and an env file...
-      const dockerfilepath = fileUtils.resolvePath(`.tmp-docker-${rand}.sh`)
+      const dockerfilepath = fileUtils.resolvePath(`.tmp-docker-${scriptName}.sh`)
       writeScript(dockerfilepath, script.$cmd)
       writeScript(envfile, env.envToDockerEnvfile())
       const dockerName = rand
@@ -137,7 +138,7 @@ export const executeCmd = async (
       // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
-      const sshfilepath = fileUtils.resolvePath(`.tmp-ssh-${rand}.sh`)
+      const sshfilepath = fileUtils.resolvePath(`.tmp-ssh-${scriptName}.sh`)
       writeScript(sshfilepath, script.$cmd, env)
       const DEFAULT_SSH_SCRIPT = 'ssh -q -T "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
