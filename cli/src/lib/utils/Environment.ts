@@ -1,4 +1,4 @@
-import { isDefined, type EnvironmentVariables, isString } from '../types.js'
+import { isDefined, type EnvironmentVariables, isString, sortCaseInsensitive } from '../types.js'
 import logger from './logger.js'
 
 /**
@@ -21,7 +21,8 @@ export const getEnvVarRefs = (str: string): string[] => {
 }
 
 export function toJsonString (env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
-  const sorted = Object.fromEntries(Object.entries(env).sort((a, b) => a[0].localeCompare(b[0])))
+  const sorted = Object.fromEntries(Object.entries(env)
+    .sort((a, b) => sortCaseInsensitive(a[0], b[0])))
   return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
 }
 
@@ -189,7 +190,9 @@ export class Environment {
     if (missingKeys.length > 0) {
       // eslint-disable-next-line max-len
       const foundString = `Found: ${toJsonString(this.getAll(), true)}`
-      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}.\n${foundString}`)
+      throw new Error(`Environment '${key}' is missing required environment variables: ${JSON.stringify(missingKeys
+        .sort(sortCaseInsensitive)
+      )}.\n${foundString}`)
     }
 
     // use string replacement to resolve from the resolvedEnv
@@ -239,7 +242,9 @@ export class Environment {
    * @returns
    */
   envToDockerEnvfile (): string {
-    return Object.entries(this.resolved).map(([k, v]) => `${k}=${v}\n`).sort().join('')
+    return Object.entries(this.resolved).map(([k, v]) => `${k}=${v}\n`)
+      .sort(sortCaseInsensitive)
+      .join('')
   }
 
   /**
@@ -249,7 +254,9 @@ export class Environment {
   envToShellExports (): string {
     const entries = Object.entries(this.resolved)
     if (entries.length === 0) return ''
-    return '\n' + entries.map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`).sort().join('') + '\n'
+    return '\n' + entries.map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`)
+      .sort(sortCaseInsensitive)
+      .join('') + '\n'
   }
 
   toJsonStringResolved (pretty: boolean = false): string {

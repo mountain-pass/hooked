@@ -8,7 +8,7 @@ export interface Plugins {
   abi: boolean
   icons: boolean
   npm: boolean
-  make: boolean
+  makefile: boolean
 }
 
 /** Are unresolved "raw" environment variables. e.g. "${HELLO}" */
@@ -215,4 +215,8 @@ export const isScript = (script: any): script is Script => {
     isResolveScript(script) ||
     isInternalScript(script)
   )
+}
+
+export const sortCaseInsensitive = (a: string, b: string): number => {
+  return a.localeCompare(b, undefined, { sensitivity: 'base' })
 }

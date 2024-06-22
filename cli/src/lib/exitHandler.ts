@@ -7,23 +7,24 @@ import { cleanupOldTmpFiles } from './utils/fileUtils.js'
 
 const onExit = (): void => {
   nodeCleanup((exitCode, signal) => {
-    const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 99 : 0
-    logger.debug(`Shutting down with exit code ${newExitCode}...`)
+    const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 1 : 0
     // delete tmp files...
     if (process.env.SKIP_CLEANUP !== 'true') {
+      logger.debug('Cleaning up .tmp and .env files...')
       cleanupOldTmpFiles()
     }
     // kill child processes
-    // logger.debug('Cleaning up child processes...')
+    logger.debug(`Cleaning up child processes... [${childProcesses.length}]`)
     for (const child of childProcesses) {
       child.kill('SIGKILL') // SIGKILL 9 / SIGTERM 15
     }
     // kill docker containers
-    // logger.debug('Cleaning up docker containers...')
+    logger.debug(`Cleaning up docker containers... [${dockerNames.length}]`)
     Promise.all(dockerNames.map(async (dockerName): Promise<string> => {
       return await verifyLocalRequiredTools.verifyDockerKilled(dockerName)
     }))
       .then(() => {
+        logger.debug(`Shutting down hooked with exit code [${newExitCode}]`)
         process.kill(process.pid, newExitCode)
       })
       .catch((err) => {

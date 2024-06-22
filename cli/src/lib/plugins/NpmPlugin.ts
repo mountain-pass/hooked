@@ -6,6 +6,7 @@ import { isDefined } from '../types.js'
 import { Environment } from '../utils/Environment.js'
 import { loadPackageJsonSync } from '../utils/packageJson.js'
 import defaults from '../defaults.js'
+import logger from '../utils/logger.js'
 
 export const generateNpmScripts = (env: Environment): any => {
   // environment variables, that can be overridden by the user
@@ -15,6 +16,7 @@ export const generateNpmScripts = (env: Environment): any => {
   } = env.global
 
   if (fs.existsSync(path.resolve(defaults.getDefaults().HOOKED_DIR, packageJsonFile))) {
+    logger.debug('plugin: Loading NPM package.json...')
     const packageJson = loadPackageJsonSync(packageJsonFile)
     if (isDefined(packageJson.scripts) && Object.keys(packageJson.scripts).length > 0) {
       const npmScripts = {

@@ -4,6 +4,7 @@ import path from 'path'
 import { resolveResolveScript } from '../scriptExecutors/ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
 import defaults from '../defaults.js'
+import logger from '../utils/logger.js'
 
 export const generateMakefileScripts = (env: Environment): any => {
   // environment variables, that can be overridden by the user
@@ -13,6 +14,7 @@ export const generateMakefileScripts = (env: Environment): any => {
   } = env.global
 
   if (fs.existsSync(makefile)) {
+    logger.debug('plugin: Loading Makefile...')
     const scriptNames = fs.readFileSync(path.join(defaults.getDefaults().HOOKED_DIR, makefile), 'utf8').match(/^\w[^:]+/gm)
     if (scriptNames !== null && Array.isArray(scriptNames) && scriptNames.length > 0) {
       const makefileScripts = scriptNames.reduce((prev: any, curr: string) => {

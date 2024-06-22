@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import { Command, Option } from 'commander'
 import fs from 'fs'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
@@ -14,26 +14,22 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { executeScriptsSequentially, resolveCmdScript, resolveEnvScript, resolveInternalScript, resolveJobsSerialScript, resolveScript, resolveScripts, resolveWritePathScript, verifyScriptsAreExecutable } from './scriptExecutors/ScriptExecutor.js'
+import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
-  type Script,
-  isCmdScript,
   isDefined,
-  isInternalScript,
   isJobsSerialScript,
-  isString,
-  isWritePathScript,
-  type EnvironmentVariables,
-  type SuccessfulScript,
-  isEnvScript,
   isNumber,
-  isBoolean
+  type EnvironmentVariables,
+  type Script,
+  type SuccessfulScript
 } from './types.js'
 import { Environment, type RawEnvironment } from './utils/Environment.js'
 import { mergeEnvVars } from './utils/envVarUtils.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
+import express from 'express'
+import router from './server/router.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -50,6 +46,7 @@ export interface ProgramOptions {
   batch?: boolean
   config?: string
   help?: boolean
+  server?: number
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
@@ -70,7 +67,12 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-u, --update', 'updates to the latest version of hooked')
     .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
     .option('-c, --config <config>', 'specify the hooked configuration file to use')
-    .argument('[scriptPath...]', 'the script path to run')
+    .addOption(new Option('-s, --server [port]', 'runs hooked in server mode. Enables cron jobs, rest api and web ui.')
+      .argParser(parseInt)
+      .preset(4000)
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update', 'batch'])
+    )
+    .argument('[scriptPath...]', 'the script path to run', '')
     .addHelpText('afterAll', `
 Environment Variables:
   LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug")
@@ -150,7 +152,7 @@ Provided Environment Variables:
       )
 
       // setup default plugins...
-      config.plugins = { ...{ abi: false, icons: true, npm: true, make: true }, ...(config.plugins ?? {}) }
+      config.plugins = { ...{ abi: false, icons: true, npm: true, makefile: true }, ...(config.plugins ?? {}) }
 
       // check for newer versions
       if (options.batch !== true && !env.isResolvableByKey('SKIP_VERSION_CHECK') && !isDefined(envVars.SKIP_VERSION_CHECK)) {
@@ -176,7 +178,7 @@ Provided Environment Variables:
       }
 
       // check for Makefile
-      if (config.plugins?.make) {
+      if (config.plugins?.makefile) {
         config.scripts = {
           ...generateMakefileScripts(env),
           ...config.scripts
@@ -186,6 +188,29 @@ Provided Environment Variables:
       // show environment names...
       if (options.listenvs === true) {
         logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
+        return
+      }
+
+      // check if we should run a server
+      const port = options.server
+      if (isNumber(port)) {
+        const app = express()
+        app.use(await router.router(options, config))
+        const server = app.listen(port, () => { logger.debug(`Server listening: http://localhost:${port}`) })
+        const shutdownServer = (): void => {
+          if (server.listening) {
+            logger.debug('Server shutting down...')
+            server.close((err) => {
+              if (err != null) {
+                console.error(`Error stopping server: ${err.message}`)
+                process.exit(1)
+              } else {
+                logger.debug('Server shutdown successfully.')
+              }
+            })
+          }
+        }
+        process.on('SIGINT', shutdownServer)
         return
       }
 

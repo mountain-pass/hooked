@@ -108,6 +108,9 @@ Globally defined environment variables, which can be referenced inside `scripts`
   - `<EnvironmentName>:` - the name of a environment (active when matches the `--env` parameter).
     - `<EnvironmentVariable>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-variables-and-resolvers) as a value.
 
+> NOTE: Environment variables that have the word `SECRET` in the name, will be treated as a secret value.
+> This means it's value will only be used for resolution. It will not be added scripts.
+
 Example:
 ```yaml
 env:
