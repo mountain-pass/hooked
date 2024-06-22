@@ -109,15 +109,15 @@ Globally defined environment variables, which can be referenced inside `scripts`
     - `<EnvironmentVariable>:` - the name of an environment variable to set. It can have any [Environment Resolver](#environment-variables-and-resolvers) as a value.
 
 > NOTE: Environment variables that have the word `SECRET` in the name, will be treated as a secret value.
-> This means it's value will only be used for resolution. It will not be added scripts.
+> This means it's value will only be used for resolution. It will not be added to Shell or Docker scripts.
 
 Example:
 ```yaml
 env:
   test:
-    PASSWORD: jellybeans
+    SECRET_PASSWORD: jellybeans
   production:
-    PASSWORD: fluffydog
+    SECRET_PASSWORD: fluffydog
     USER:
       $cmd: echo "root"
 ```
