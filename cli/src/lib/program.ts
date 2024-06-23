@@ -17,6 +17,7 @@ import { generateNpmScripts } from './plugins/NpmPlugin.js'
 import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from './scriptExecutors/ScriptExecutor.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import {
+  type ScriptAndPaths,
   isDefined,
   isJobsSerialScript,
   isNumber,
@@ -69,8 +70,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .option('-c, --config <config>', 'specify the hooked configuration file to use')
     .addOption(new Option('-s, --server [port]', 'runs hooked in server mode. Enables cron jobs, rest api and web ui.')
       .argParser(parseInt)
+      .implies({ batch: true })
       .preset(4000)
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update', 'batch'])
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
     .argument('[scriptPath...]', 'the script path to run', '')
     .addHelpText('afterAll', `
@@ -195,8 +197,9 @@ Provided Environment Variables:
       const port = options.server
       if (isNumber(port)) {
         const app = express()
-        app.use(await router.router(options, config))
-        const server = app.listen(port, () => { logger.debug(`Server listening: http://localhost:${port}`) })
+        app.use(express.json())
+        app.use(await router.router(options, config, envVars))
+        const server = app.listen(port, () => { logger.info(`Server listening: http://localhost:${port}`) })
         const shutdownServer = (): void => {
           if (server.listening) {
             logger.debug('Server shutting down...')
@@ -232,7 +235,6 @@ Provided Environment Variables:
       )
 
       // executable scripts
-      type ScriptAndPaths = [Script, string[]]
       let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
 
       if (isJobsSerialScript(script)) {
@@ -244,7 +246,7 @@ Provided Environment Variables:
       verifyScriptsAreExecutable(executableScriptsAndPaths)
 
       // execute scripts sequentially
-      await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars)
+      await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars, true, false)
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)
       // Or should we ONLY store succesful scripts? I mean... it's in there in the name.

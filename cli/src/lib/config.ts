@@ -93,8 +93,7 @@ export const findScript = async (
       Object.keys(script).length === 0
     ) {
       const availableScripts = `\t- ${stringifyScripts(config).join('\t- ')}`
-      const scriptStr = scriptPath.join(' ')
-      throw new Error(`No scripts found at path: ${JSON.stringify(scriptStr)}\nDid you mean?\n${availableScripts}`)
+      throw new Error(`No scripts found at path: ${JSON.stringify(scriptPath)}\nDid you mean?\n${availableScripts}`)
     }
     let choices: string[] = []
     const modifiedScripts: any = {}
@@ -286,7 +285,7 @@ export const resolveEnvironmentVariables = async (
     // attempt to resolve variables, sequentially...
     for (const [key, script] of remainingAttempts) {
       try {
-        await resolveScript(key, script, stdin, env, config, options, envVars)
+        await resolveScript(key, script, stdin, env, config, options, envVars, false, true)
       } catch (err: any) {
         // could not resolve, add to retry list
         errors.push(err)

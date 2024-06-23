@@ -186,7 +186,7 @@ describe('scripts', () => {
       // and the global environment should have the secret env "USER" defined in the "secret" environment
       expect(env.global).to.eql({})
       expect(env.resolved).to.eql({
-        "-": "Hola bob",
+        // "-": "Hola bob", <-- NOTE we no longer want to store $cmd output implicitly by the 'key'... it must be explicit!
         "GREETING": "Hola",
         "HOOKED_ROOT": "false",
         "USER": "bob"

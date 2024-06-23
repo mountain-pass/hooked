@@ -73,7 +73,8 @@ export const resolveInternalScript = async (
   config: YamlConfig,
   options: ProgramOptions,
   envVars: EnvironmentVariables,
-  isFinalScript = false
+  isFinalScript = false,
+  storeResultAsEnv = false
 ): Promise<string> => {
   // if "step" env is defined, resolve environment variables
   if (isDefined(script.$env)) {
@@ -92,8 +93,7 @@ export const resolveInternalScript = async (
   // execute the script
   const result = await script.$internal({ key, stdin, env })
 
-  if (!isFinalScript && isString(result)) {
-    // envVars[key] = result
+  if (storeResultAsEnv && isString(result)) {
     env.putResolved(key, result)
   }
   return result
@@ -108,7 +108,7 @@ export const resolveInternalScript = async (
  * @param config
  * @param options
  * @param envVars
- * @param isFinalScript - used to determine if this is the end of a process (i.e. don't capture output)
+ * @param isFinalScript - used to determine if this is the end of a process (i.e. if final script, don't capture output)
  * @returns
  */
 export const resolveCmdScript = async (
@@ -119,7 +119,8 @@ export const resolveCmdScript = async (
   config: YamlConfig,
   options: ProgramOptions,
   envVars: EnvironmentVariables = {},
-  isFinalScript = false
+  isFinalScript: boolean = false,
+  storeResultAsEnv: boolean = false
 ): Promise<string> => {
   // if "step" $env is defined, merge environment variables
   if (isDefined(script.$env)) {
@@ -181,12 +182,13 @@ export const resolveCmdScript = async (
       { env: env.resolved },
       env,
       // N.B. we do NOT want to capture output if this is the final script, we want it to be streamed to stdout!
-      { printStdio: true, captureStdout: !isFinalScript }
+      { printStdio: true, captureStdout: true }
     )
     // remove trailing newlines
     newValue = newValue.replace(/(\r?\n)*$/, '')
-    if (!isFinalScript && isString(newValue)) {
-      // envVars[key] = newValue
+
+    // if not the final script,
+    if (storeResultAsEnv && isString(newValue)) {
       env.putResolved(key, newValue)
     }
     return newValue
@@ -323,20 +325,24 @@ export const executeScriptsSequentially = async (
   env: Environment,
   config: YamlConfig,
   options: ProgramOptions,
-  envVars: EnvironmentVariables = {}
-): Promise<void> => {
+  envVars: EnvironmentVariables = {},
+  isFinalScript: boolean,
+  storeResultAsEnv: boolean
+): Promise<string[]> => {
+  const outputs: string[] = []
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx, pathsx] = scriptAndPaths
     if (isCmdScript(scriptx)) {
       // resolve $cmd $env vars (if any)
       if (isDefined(scriptx.$env)) {
-        mergeEnvVars(envVars, scriptx.$env)
+        mergeEnvVars(envVars, scriptx.$env ?? {})
       }
+      logger.debug(`Merged environment: ${JSON.stringify(envVars)}`)
       // run cmd script
-      await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+      outputs.push(await resolveCmdScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, isFinalScript, storeResultAsEnv))
     } else if (isInternalScript(scriptx)) {
       // run internal script
-      await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, true)
+      outputs.push(await resolveInternalScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars, isFinalScript, storeResultAsEnv))
     } else if (isWritePathScript(scriptx)) {
       // write files
       await resolveWritePathScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
@@ -347,6 +353,7 @@ export const executeScriptsSequentially = async (
       throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
     }
   }
+  return outputs
 }
 
 /**
@@ -369,7 +376,7 @@ export const resolveJobsSerialScript = async (
   config: YamlConfig,
   options: ProgramOptions,
   envVars: EnvironmentVariables = {}
-): Promise<void> => {
+): Promise<string[]> => {
   // resolve job definitions
   const executableScriptsAndPaths = await resolveScripts([key], script, config, options)
 
@@ -377,7 +384,7 @@ export const resolveJobsSerialScript = async (
   verifyScriptsAreExecutable(executableScriptsAndPaths)
 
   // execute scripts sequentially
-  await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars)
+  return await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars, true, false)
 }
 
 class InvalidConfigError extends Error {
@@ -408,7 +415,7 @@ export const resolveStdinScript = async (
     let choices: any = script.$choices
     // resolve choices if they are a script
     if (isScript(choices)) {
-      choices = await resolveScript(key, choices, stdin, env, config, options, envVars)
+      choices = await resolveScript(key, choices, stdin, env, config, options, envVars, false, false)
       if (typeof choices === 'string') {
         try {
           // try (STRICT!) json to parse input...
@@ -490,6 +497,13 @@ export const resolveStdinScript = async (
       }
     }
 
+    // check if already resolved in environment variables...
+    if (env.isResolvableByKey(key)) {
+      // nothing more to do
+      logger.debug(`Key '${key}' is already resolvable - value=${env.resolveByKey(key)}`)
+      return
+    }
+
     if (options.batch === true) {
       throw new Error('Interactive prompts not supported in batch mode. ' +
         `Could not retrieve stdin for key '${key}'.`)
@@ -553,21 +567,24 @@ export const resolveScript = async (
   env: Environment,
   config: YamlConfig,
   options: ProgramOptions,
-  envVars: EnvironmentVariables
+  envVars: EnvironmentVariables,
+  isFinalScript: boolean,
+  storeResultAsEnv: boolean
 ): Promise<string> => {
   // ensure we're only dealing with strings... (from the yaml config)
   if (typeof script === 'number' || typeof script === 'boolean') {
     script = String(script)
   }
   // perform environment variable resolution
+  // NOTE do not store environment variable - rather, return the string value.
   if (isInternalScript(script)) {
-    await resolveInternalScript(key, script, stdin, env, config, options, envVars)
+    return await resolveInternalScript(key, script, stdin, env, config, options, envVars, isFinalScript, storeResultAsEnv)
   } else if (isWritePathScript(script)) {
     await resolveWritePathScript(key, script, stdin, env, config, options, envVars)
   } else if (isJobsSerialScript(script)) {
-    await resolveJobsSerialScript(key, script, stdin, env, config, options, envVars)
+    return (await resolveJobsSerialScript(key, script, stdin, env, config, options, envVars)).join('\n')
   } else if (isCmdScript(script)) {
-    await resolveCmdScript(key, script, stdin, env, config, options)
+    return await resolveCmdScript(key, script, stdin, env, config, options, {}, isFinalScript, storeResultAsEnv)
   } else if (isStdinScript(script)) {
     await resolveStdinScript(key, script, stdin, env, config, options, envVars)
   } else if (isString(script)) {

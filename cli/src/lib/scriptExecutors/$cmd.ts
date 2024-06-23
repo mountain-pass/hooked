@@ -104,7 +104,7 @@ export const executeCmd = async (
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
     const rand = randomString()
-    const scriptName = `${key.replace(/[^a-zA-Z0-9-]+/, '')}-${rand}`
+    const scriptName = `${key.replace(/[^\w\d-]+/g, '')}-${rand}`
     const filepath = fileUtils.resolvePath(`.tmp-${scriptName}.sh`)
     const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
     const parent = path.dirname(filepath)

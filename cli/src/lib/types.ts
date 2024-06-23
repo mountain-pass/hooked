@@ -141,6 +141,8 @@ export type Script = string
 | WritePathScript
 | JobsSerialScript
 
+export type ScriptAndPaths = [Script, string[]]
+
 export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {
   return Array.isArray((script as any).$jobs_serial)
 }
@@ -187,6 +189,10 @@ export const isDefined = (o: any): o is object => {
   return typeof o !== 'undefined' && o !== null
 }
 
+export const isDefinedAny = (o: any): o is any => {
+  return typeof o !== 'undefined' && o !== null
+}
+
 export const isString = (o: any): o is string => {
   return typeof o === 'string'
 }
@@ -201,6 +207,12 @@ export const isBoolean = (o: any): o is boolean => {
 
 export const isObject = (o: any): o is object => {
   return typeof o === 'object'
+}
+
+type FunctionX = () => any
+
+export const isFunction = (o: any): o is FunctionX => {
+  return typeof o === 'function'
 }
 
 export const isScript = (script: any): script is Script => {

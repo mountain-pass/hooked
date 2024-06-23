@@ -36,8 +36,8 @@
     "dist"
   ],
   "scripts": {
-    "start": "SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",
-    "start:server": "SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s'",
+    "start": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",
+    "start:server": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s'",
     "build": "tsc --build",
     "build:clean": "tsc --build --clean",
     "postbuild": "chmod 755 dist/index.js",
@@ -45,7 +45,7 @@
     "prej": "yarn workspace cli build",
     "j": "node ./dist/index.js",
     "initialPublish": "npm publish --access public",
-    "test": "DEBUG=mocha:* ts-mocha",
+    "test": "LOG_LEVEL=debug DEBUG=mocha:* ts-mocha",
     "test:watch": "nodemon",
     "test:watch:wip": "nodemon --exec 'npm run test -- --grep wip'",
     "test:coverage": "nyc --reporter=html --reporter=text --reporter=text-summary npm test",

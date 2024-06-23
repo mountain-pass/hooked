@@ -262,4 +262,8 @@ export class Environment {
   toJsonStringResolved (pretty: boolean = false): string {
     return toJsonString(this.resolved, pretty)
   }
+
+  toString (): string {
+    return JSON.stringify(this.getAll())
+  }
 }

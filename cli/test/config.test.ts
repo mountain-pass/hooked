@@ -502,7 +502,7 @@ describe('config', () => {
       }])
     })
 
-    it('$ask - $ask should support $choices $cmd', async () => {
+    it('wip $ask - $ask should support $choices $cmd', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test
@@ -512,10 +512,7 @@ describe('config', () => {
       const env = new Environment()
       const [envVars, envNames] = await fetchGlobalEnvVars(config, ['default'])
       await resolveEnvironmentVariables(config, envVars, stdin, env)
-      expect(env.global).to.eql({  })
-      expect(env.resolved).to.eql({ HOOKED_ROOT: "false", name: 'jack' })
-      expect(stdin).to.eql({ name: 'jack' })
-      expect(envNames).to.eql(['default'])
+      // assert
       sinon.assert.calledOnceWithExactly(inqspy, [{
         type: 'list',
         name: 'name',
@@ -525,6 +522,10 @@ describe('config', () => {
         choices: [{ name: 'one', value: 'one' }, { name: 'two', value: 'two' }, { name: 'three', value: 'three' }],
         loop: true
       }])
+      expect(env.global).to.eql({  })
+      expect(env.resolved).to.eql({ HOOKED_ROOT: "false", name: 'jack' })
+      expect(stdin).to.eql({ name: 'jack' })
+      expect(envNames).to.eql(['default'])
     })
 
   })
@@ -574,7 +575,7 @@ describe('config', () => {
 
   describe('yaml config', () => {
 
-    it('wip base config should allow string, number and boolean', async () => {
+    it('base config should allow string, number and boolean', async () => {
       // setup
       const importedConfig: YamlConfig = { 
         env: { default: { aaa: 'zzz', bbb: 123 as any, ccc: true as any } }, 

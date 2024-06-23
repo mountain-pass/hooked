@@ -7,7 +7,7 @@ export const isLogLevel = (level: string | undefined): level is LogLevel => {
   return ['error', 'warn', 'info', 'debug'].includes(level as string)
 }
 
-const logLevel = isLogLevel(process.env.LOG_LEVEL) ? process.env.LOG_LEVEL : 'debug'
+const logLevel = isLogLevel(process.env.LOG_LEVEL) ? process.env.LOG_LEVEL : 'info'
 
 const logError = ['debug', 'info', 'warn', 'error'].includes(logLevel)
 const logWarn = ['debug', 'info', 'warn'].includes(logLevel)
