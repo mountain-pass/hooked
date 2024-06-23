@@ -10,9 +10,9 @@ workers - deploy / view logs
 - [x] Ability to see env/scripts/imports/plugins from API
 - [x] Ability to run jobs via api
 - [x] Ability to post stdin when running a job
+- [x] Ability to reload hooked.yaml on modification date change
 - [ ] Ability to cron schedule jobs
 - [ ] Ability to secure api endpoints (https & api key)
-- [ ] Ability to reload hooked.yaml on changes / vs reload endpoint
 
 # NICE TO HAVE
 - [ ] Perform all actions through web ui (& mobile compatible)

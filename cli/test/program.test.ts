@@ -91,7 +91,7 @@ describe('program', () => {
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
     sinon.stub(defaults, 'setDefaultConfigurationFilepath').returns()
     spylog = sinon.spy(logger, 'info')
-    program = newProgram(SYSTEM_ENVIRONMENT_VARIABLES, false)
+    program = newProgram(SYSTEM_ENVIRONMENT_VARIABLES)
   })
 
   afterEach(() => {

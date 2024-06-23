@@ -9,9 +9,10 @@ import {
   type StdinResponses,
   type YamlConfig
 } from '../types.js'
-import { type Environment } from '../utils/Environment.js'
+import { type RawEnvironment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
+import loaders from './loaders.js'
 
 /**
  * Contains the result of invoking a script.
@@ -24,7 +25,7 @@ export interface InvocationResult {
   /** ISO Date when Script finished. */
   finishedAt: number
   /** The resolved Env Names. */
-  env: string[]
+  envNames: string[]
   /** The resolved Script Path. */
   paths: string[]
   /** The resolved Environment Variables. */
@@ -40,17 +41,16 @@ export interface InvocationResult {
    * @returns
    */
 const invoke = async (
+  systemProcessEnvs: RawEnvironment,
   options: ProgramOptions,
   config: YamlConfig,
-  parentEnvVars: EnvironmentVariables,
-  parentEnvironment: Environment,
   providedEnvNames: string[],
   scriptPath: string[],
   stdin: StdinResponses,
   isFinalScript: boolean,
   storeResultAsEnv: boolean
 ): Promise<InvocationResult> => {
-  const envVars: EnvironmentVariables = { ...parentEnvVars }
+  const { env, envVars } = await loaders.initialiseEnvironment(systemProcessEnvs, options, config)
   logger.debug(`Running script: env=${providedEnvNames.join(',')} script=${scriptPath.join(',')}`)
 
   // find the script to execute...
@@ -84,7 +84,7 @@ const invoke = async (
   const outputs = await executeScriptsSequentially(
     executableScriptsAndPaths,
     stdin,
-    parentEnvironment.clone(),
+    env,
     config,
     options,
     envVars,
@@ -95,7 +95,7 @@ const invoke = async (
   return {
     success: true,
     finishedAt: Date.now(),
-    env: resolvedEnvNames,
+    envNames: resolvedEnvNames,
     paths,
     envVars,
     outputs

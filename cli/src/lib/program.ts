@@ -4,7 +4,6 @@ import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
 import {
   fetchGlobalEnvVars,
-  findScript,
   loadConfig
 } from './config.js'
 import defaults from './defaults.js'
@@ -14,24 +13,20 @@ import { init } from './init.js'
 import { generateAbiScripts } from './plugins/AbiPlugin.js'
 import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
 import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from './scriptExecutors/ScriptExecutor.js'
+import common from './common/invoke.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
+import server from './server/server.js'
 import {
-  type ScriptAndPaths,
   isDefined,
-  isJobsSerialScript,
   isNumber,
+  isString,
   type EnvironmentVariables,
-  type Script,
   type SuccessfulScript
 } from './types.js'
 import { Environment, type RawEnvironment } from './utils/Environment.js'
-import { mergeEnvVars } from './utils/envVarUtils.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import express from 'express'
-import router from './server/router.js'
-import common from './runtime/common.js'
+import loaders from './common/loaders.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -51,7 +46,7 @@ export interface ProgramOptions {
   server?: number
 }
 
-export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true): Command => {
+export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
   const program = new Command()
 
   program
@@ -78,6 +73,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, exitOnError = true
     .argument('[scriptPath...]', 'the script path to run', '')
     .addHelpText('afterAll', `
 Environment Variables:
+  CI                   If present, enables non-interactive "batch" mode.
   LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug")
   SKIP_CLEANUP         If 'true', doesn't cleanup old *.sh files. Useful for debugging.
   SKIP_VERSION_CHECK   If present, skips the version check at startup.
@@ -89,22 +85,23 @@ Provided Environment Variables:
     `)
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
-      // set the default configuration location
+      // set the default configuration location (should be first step!)
       defaults.setDefaultConfigurationFilepath(options.config)
 
-      const env = new Environment()
-      env.doNotResolveList = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
-      env.putAllGlobal(systemProcessEnvs)
-      env.putResolved('HOOKED_DIR', defaults.getDefaults().HOOKED_DIR)
-      env.putResolved('HOOKED_FILE', defaults.getDefaults().HOOKED_FILE)
+      // show update command...
+      if (options.update === true) {
+        logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
+        return
+      }
 
+      // print help
       if (options.help === true) {
         program.help()
         return
       }
 
       // if CI env var is set, then set batch mode...
-      if (env.isResolvableByKey('CI') && options.batch !== true) {
+      if (isString(process.env.CI) && options.batch !== true) {
         logger.debug('CI environment variable detected. Setting batch mode...')
         options.batch = true
       }
@@ -132,61 +129,15 @@ Provided Environment Variables:
         return
       }
 
-      // load imports...
-      const config = await loadConfig(defaults.getDefaults().HOOKED_FILE, options.pull)
-
-      // show update command...
-      if (options.update === true) {
-        logger.info(`Please run the command: ${cyan('npm i -g --prefer-online --force @mountainpass/hooked-cli')}`)
-      }
-
-      // exit if pull or update...
-      if (options.pull === true || options.update === true) {
-        return
-      }
-
-      // load default env...
-      const envVars: EnvironmentVariables = {}
-      await fetchGlobalEnvVars(
-        config,
-        ['default'],
-        options,
-        envVars
-      )
-
-      // setup default plugins...
-      config.plugins = { ...{ abi: false, icons: true, npm: true, makefile: true }, ...(config.plugins ?? {}) }
-
       // check for newer versions
-      if (options.batch !== true && !env.isResolvableByKey('SKIP_VERSION_CHECK') && !isDefined(envVars.SKIP_VERSION_CHECK)) {
-        await verifyLocalRequiredTools.verifyLatestVersion(env)
+      if (options.batch !== true && isString(process.env.SKIP_VERSION_CHECK)) {
+        await verifyLocalRequiredTools.verifyLatestVersion()
       } else {
         logger.debug('Skipping version check...')
       }
 
-      // check for abi files
-      if (config.plugins?.abi) {
-        config.scripts = {
-          ...(await generateAbiScripts()),
-          ...config.scripts
-        }
-      }
-
-      // check for package.json (npm)
-      if (config.plugins?.npm) {
-        config.scripts = {
-          ...generateNpmScripts(env),
-          ...config.scripts
-        }
-      }
-
-      // check for Makefile
-      if (config.plugins?.makefile) {
-        config.scripts = {
-          ...generateMakefileScripts(env),
-          ...config.scripts
-        }
-      }
+      // load configuration
+      const config = await loaders.loadConfiguration(systemProcessEnvs, options)
 
       // show environment names...
       if (options.listenvs === true) {
@@ -194,46 +145,28 @@ Provided Environment Variables:
         return
       }
 
-      // check if we should run a server
+      // run the api server...
       const port = options.server
       if (isNumber(port)) {
-        const app = express()
-        app.use(express.json())
-        app.use(await router.router(options, config, envVars, env))
-        const server = app.listen(port, () => { logger.info(`Server listening: http://localhost:${port}`) })
-        const shutdownServer = (): void => {
-          if (server.listening) {
-            logger.debug('Server shutting down...')
-            server.close((err) => {
-              if (err != null) {
-                console.error(`Error stopping server: ${err.message}`)
-                process.exit(1)
-              } else {
-                logger.debug('Server shutdown successfully.')
-              }
-            })
-          }
-        }
-        process.on('SIGINT', shutdownServer)
+        await server.startServer(port, systemProcessEnvs, options, config)
         return
       }
 
-      // merge in the stdin...
+      // otherwise execute the script...
       const providedEnvNames = options.env.split(',')
       const stdin: RawEnvironment = HJSON.parse(options.stdin)
-
-      const result = await common.invoke(options, config, envVars, env, providedEnvNames, scriptPath, stdin, true, false)
+      const result = await common.invoke(systemProcessEnvs, options, config, providedEnvNames, scriptPath, stdin, true, false)
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)
       // Or should we ONLY store succesful scripts? I mean... it's in there in the name.
       const successfulScript: SuccessfulScript = {
         ts: Date.now(),
         scriptPath: result.paths,
-        envNames: [...new Set(['default', ...result.env])],
-        stdin
+        envNames: [...new Set(['default', ...result.envNames])],
+        stdin: result.envVars
       }
       // store and log "Rerun" command in history (if successful and not the _logs_ option!)
-      const isRoot = !env.isResolvableByKey('HOOKED_ROOT') && !isDefined(envVars.HOOKED_ROOT)
+      const isRoot = result.envVars.HOOKED_ROOT === 'true'
       const notRequestingLogs = result.paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)

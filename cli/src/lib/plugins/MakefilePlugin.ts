@@ -2,16 +2,16 @@
 import fs from 'fs'
 import path from 'path'
 import { resolveResolveScript } from '../scriptExecutors/ScriptExecutor.js'
-import { Environment } from '../utils/Environment.js'
+import { Environment, type RawEnvironment } from '../utils/Environment.js'
 import defaults from '../defaults.js'
 import logger from '../utils/logger.js'
 
-export const generateMakefileScripts = (env: Environment): any => {
+export const generateMakefileScripts = (systemProcessEnvs: RawEnvironment): any => {
   // environment variables, that can be overridden by the user
   const {
     MAKE_FILE: makefile = 'Makefile',
     MAKE_SCRIPT: makeScript = 'make -s -f ${MAKE_FILE} ${MAKE_COMMAND}'
-  } = env.global
+  } = systemProcessEnvs
 
   if (fs.existsSync(makefile)) {
     logger.debug('plugin: Loading Makefile...')

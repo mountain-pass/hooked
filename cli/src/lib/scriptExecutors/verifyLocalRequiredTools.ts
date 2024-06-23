@@ -1,5 +1,5 @@
 import { isDefined } from '../types.js'
-import { Environment } from '../utils/Environment.js'
+import { Environment, type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import { loadRootPackageJsonSync } from '../utils/packageJson.js'
 import { executeCmd } from './$cmd.js'
@@ -9,15 +9,17 @@ let lazyCheckDockerExists: boolean | undefined
 
 const packageJson = loadRootPackageJsonSync()
 
-const verifyLatestVersion = async (env: Environment): Promise<void> => {
+const verifyLatestVersion = async (): Promise<void> => {
   try {
     // eslint-disable-next-line no-template-curly-in-string
     logger.debug('Checking if latest version...')
+    const env = new Environment()
+    env.putAllGlobal(process.env as RawEnvironment)
     // eslint-disable-next-line max-len
     const latestPublishedVersion = (await executeCmd(
       'system',
       { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
-      { env: env.getAll() },
+      { env: process.env },
       env,
       { printStdio: false, captureStdout: true },
       5000
