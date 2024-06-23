@@ -65,7 +65,6 @@ const CONFIG_BLANK = (): YamlConfig => {
   return {
     env: {
       default: {
-        SKIP_VERSION_CHECK: 'true',
         GREETING: 'Hello'
       }
     },
@@ -74,8 +73,11 @@ const CONFIG_BLANK = (): YamlConfig => {
         $cmd: 'echo "${GREETING}!"'
       },
       generate_ssl_certificates: {
-        $docker: 'alpine',
-        $cmd: 'openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650'
+        $image: 'alpine',
+        $cmd: `#!/bin/sh -e
+apk add --no-cache openssl
+openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650
+echo Files hooked-cert.pem and hooked-key.pem successfully written!`
       }
     }
   }
@@ -107,39 +109,6 @@ const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
     scripts: {
       say: {
         $cmd: 'echo "${GREETING} ${YOURNAME}! There is no place like ${HOMEPATH}."'
-      },
-      generate_ssl_certificates: {
-        $docker: 'alpine',
-        $cmd: 'openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650'
-      }
-    }
-  }
-}
-
-const CONFIG_ENVIRONMENTS_EXAMPLE: YamlConfig = {
-  env: {
-    default: {
-      username: { $env: 'USER' }
-    },
-    english: {
-      HELLO: { $cmd: 'printf "Hello"' },
-      WORLD: 'world',
-      FIRSTNAME: {
-        $ask: 'What is your name?',
-        $default: 'Bob'
-      },
-      NAME: { $resolve: '${FIRSTNAME} (${username})' }
-    },
-    spanish: {
-      HELLO: 'Hola',
-      WORLD: 'Mundo',
-      NAME: 'Amigo'
-    }
-  },
-  scripts: {
-    say: {
-      hello: {
-        $cmd: 'echo "${HELLO} ${WORLD}, ${NAME}!"'
       }
     }
   }
@@ -150,6 +119,5 @@ export default {
   setDefaultConfigurationFilepath,
   getLocalImportsCachePath,
   CONFIG_BLANK,
-  CONFIG_ENVIRONMENTS_EXAMPLE,
   CONFIG_ADVANCED_GREETING
 }

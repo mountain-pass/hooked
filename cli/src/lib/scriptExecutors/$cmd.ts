@@ -36,6 +36,7 @@ export const injectEnvironmentInScript = (content: string, env?: Environment): s
  */
 const writeScript = (filepath: string, content: string, env?: Environment): void => {
   const newContent = injectEnvironmentInScript(content, env)
+  logger.debug(`Writing file - ${filepath}`)
   fs.writeFileSync(filepath, newContent, 'utf-8')
   fs.chmodSync(filepath, 0o755)
 }
@@ -107,7 +108,7 @@ export const executeCmd = async (
     const scriptName = `${key.replace(/[^\w\d-]+/g, '')}-${rand}`
     const filepath = fileUtils.resolvePath(`.tmp-${scriptName}.sh`)
     const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
-    const parent = path.dirname(filepath)
+    const parent = process.env.DOCKER_HOOKED_DIR ?? path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
     // add "HOOKED_ROOT=false" to all child environments...
@@ -120,11 +121,11 @@ export const executeCmd = async (
       writeScript(dockerfilepath, script.$cmd)
       writeScript(envfile, env.envToDockerEnvfile())
       const dockerName = rand
-      const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "chmod 755 ${filepath} && ${filepath}"'
+      const DEFAULT_DOCKER_SCRIPT = 'docker run -t --rm --network host --entrypoint "" --env-file "${envfile}" -w "${parent}" -v "${parent}:${parent}" --name ${dockerName} ${dockerImage} /bin/sh -c "${filepath}"'
       const { DOCKER_SCRIPT: dockerScript = DEFAULT_DOCKER_SCRIPT } = env.global
       const cmd = resolveResolveScript('-', { $resolve: dockerScript }, new Environment().putAllGlobal({
         envfile,
-        filepath: dockerfilepath,
+        filepath: path.join(parent, path.basename(dockerfilepath)),
         dockerImage: script.$image,
         dockerName,
         parent

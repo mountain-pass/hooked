@@ -25,6 +25,7 @@ const CONFIG: YamlConfig = {
 const OPTIONS: ProgramOptions = {
   env: 'default',
   stdin: '{}',
+  force: false
 }
 
 describe('scripts', () => {

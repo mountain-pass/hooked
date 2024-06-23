@@ -14,10 +14,12 @@ workers - deploy / view logs
 - [x] Ability to set --ssl , --ssl-cert , --ssl-key
 - [x] Ability to set --api-key
 - [x] Example ssh cert in example config
+- [x] Dockerise - but how will it interact with Docker / SSH?
 - [ ] Ability to cron schedule jobs
-- [ ] Document SSL usage
 
 # NICE TO HAVE
+- [ ] Ability to run commands in already running docker containers
+- [ ] Document SSL usage
 - [ ] Perform all actions through web ui (& mobile compatible)
 - [ ] Ability to view logs, and rerun jobs
 - [ ] Ability to flag scripts as interactive (e.g. polling log) - And don't allow through web interfae

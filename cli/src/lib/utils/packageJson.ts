@@ -2,7 +2,7 @@
 import { fileURLToPath } from 'url'
 import fs from 'fs'
 import path from 'path'
-import { type Dictionary } from '../types'
+import { isString, type Dictionary } from '../types.js'
 
 export interface PackageJson {
   name: string
@@ -15,7 +15,18 @@ export interface PackageJson {
 export const loadRootPackageJsonSync = (): PackageJson => {
   const filename = fileURLToPath(import.meta.url)
   const dirname = path.dirname(filename)
-  return loadPackageJsonSync(path.resolve(dirname, '../../../package.json'))
+  // find package.json
+  let i = 0
+  let filepath
+  for (; i < 5; i++) {
+    const tmp = path.resolve(dirname, '../'.repeat(i), 'package.json')
+    if (!fs.existsSync(tmp)) continue
+    filepath = tmp
+  }
+  if (!isString(filepath)) {
+    throw new Error(`Could not find package.json in parent directories! baseDir=${dirname}`)
+  }
+  return loadPackageJsonSync(filepath)
 }
 
 export const loadPackageJsonSync = (packageJsonPath: string): PackageJson => {

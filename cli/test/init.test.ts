@@ -21,15 +21,17 @@ describe('init', () => {
 
 env:
   default:
-    SKIP_VERSION_CHECK: "true"
     GREETING: Hello
 scripts:
   say:
     $cmd: echo "$\{GREETING\}!"
   generate_ssl_certificates:
-    $docker: alpine
-    $cmd: openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out
-      hooked-cert.pem -subj /CN=localhost -days 3650
+    $image: alpine
+    $cmd: |-
+      #!/bin/sh -e
+      apk add --no-cache openssl
+      openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650
+      echo Files hooked-cert.pem and hooked-key.pem successfully written!
 `)
     })
 
@@ -61,10 +63,6 @@ env:
 scripts:
   say:
     $cmd: echo "\${GREETING} \${YOURNAME}! There is no place like \${HOMEPATH}."
-  generate_ssl_certificates:
-    $docker: alpine
-    $cmd: openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out
-      hooked-cert.pem -subj /CN=localhost -days 3650
 `)
     })
 

@@ -2,31 +2,22 @@ import { Command, Option } from 'commander'
 import fs from 'fs'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
-import {
-  fetchGlobalEnvVars,
-  loadConfig
-} from './config.js'
+import common from './common/invoke.js'
+import loaders from './common/loaders.js'
 import defaults from './defaults.js'
 import exitHandler from './exitHandler.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
 import { init } from './init.js'
-import { generateAbiScripts } from './plugins/AbiPlugin.js'
-import { generateMakefileScripts } from './plugins/MakefilePlugin.js'
-import { generateNpmScripts } from './plugins/NpmPlugin.js'
-import common from './common/invoke.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import server from './server/server.js'
 import {
-  isDefined,
   isNumber,
   isString,
-  type EnvironmentVariables,
   type SuccessfulScript
 } from './types.js'
-import { Environment, type RawEnvironment } from './utils/Environment.js'
+import { type RawEnvironment } from './utils/Environment.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import loaders from './common/loaders.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -47,6 +38,7 @@ export interface ProgramOptions {
   sslCert?: string
   sslKey?: string
   apiKey?: string
+  force: boolean
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
@@ -56,7 +48,8 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .name('hooked')
     .description('CLI to execute preconfigured scripts.\n\nUpdate: npm i -g --prefer-online --force @mountainpass/hooked-cli')
     .version(packageJson.version, '-v, --version')
-    .option('--init', 'Runs the initialisation wizard')
+    .option('-i, --init', 'Runs the initialisation wizard')
+    .addOption(new Option('-f, --force', 'Forces the operation - usually with regard to overwriting a file').default(false))
     .option('-e, --env <env>', 'Accepts a comma separated list of environment names ("default" is always on)', 'default')
     .option('-in, --stdin <json>', 'Allows predefining stdin responses', '{}')
     .option('--printenv', 'Print the resolved environment, and exits')
@@ -95,9 +88,10 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .addHelpText('afterAll', `
 Environment Variables:
   CI                   If present, enables non-interactive "batch" mode.
-  LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug")
+  LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug").
   SKIP_CLEANUP         If 'true', doesn't cleanup old *.sh files. Useful for debugging.
   SKIP_VERSION_CHECK   If present, skips the version check at startup.
+  DOCKER_HOOKED_DIR    Used to override the HOOKED directory (in relation to the Docker host).
 
 Provided Environment Variables:
   HOOKED_FILE          The root hooked.yaml file that was run.

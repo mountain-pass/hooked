@@ -30,7 +30,7 @@ describe('config', () => {
     const [script, scriptPath] = await findScript(
       { env: { default: { }}, scripts: { foo: { "Ça été Mičić": { $cmd: 'echo "FOO"'} }}}, 
       inputScriptPath, 
-      { env: 'default', stdin: '{}' }
+      { env: 'default', stdin: '{}', force: false }
     )
     expect(scriptPath).to.eql(['foo', "Ça été Mičić"])
   })
@@ -39,7 +39,7 @@ describe('config', () => {
 
     const inqspy = sinon.stub(inquirer, 'prompt').resolves({ next: 'foo' })
 
-    const [script, scriptPath] = await findScript({ env: { default: { }}, scripts: { foo: { $cmd: 'echo "FOO"'}}}, [], { env: 'default', stdin: '{}' })
+    const [script, scriptPath] = await findScript({ env: { default: { }}, scripts: { foo: { $cmd: 'echo "FOO"'}}}, [], { env: 'default', stdin: '{}', force: false })
 
     sinon.assert.calledOnceWithExactly(inqspy, [
       {
@@ -304,7 +304,8 @@ describe('config', () => {
 
     const OPTIONS: ProgramOptions = {
       env: 'default',
-      stdin: '{}'
+      stdin: '{}',
+      force: false
     }
 
     it('executing a $cmd with satisfied env should succeed', async () => {

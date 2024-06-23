@@ -19,7 +19,7 @@ const HEADER = `#
  * Generates a blank hooked.yaml file contents.
  */
 export const generateBlankTemplateFileContents = (): string => {
-  return `${HEADER}${YAML.stringify(defaults.CONFIG_BLANK())}`
+  return `${HEADER}${YAML.stringify(defaults.CONFIG_BLANK(), { blockQuote: 'literal' })}`
 }
 
 export const generateAdvancedBlankTemplateFileContents = (): string => {
@@ -30,7 +30,26 @@ export const generateAdvancedBlankTemplateFileContents = (): string => {
  * Facilitates creating configuration files.
  */
 export const init = async (options: ProgramOptions): Promise<void> => {
-  if (options.batch === true) throw new Error('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
+  /** Writes the config to the file location. */
+  const writeConfig = async (contents: string, force: boolean): Promise<void> => {
+    const filepath = defaults.getDefaults().HOOKED_FILE
+    if (!force && fs.existsSync(filepath)) {
+      throw new Error(`Cannot create - file already exists '${filepath}'`)
+    }
+    logger.info(`Writing config file - ${filepath}`)
+    fs.writeFileSync(filepath, contents, { encoding: 'utf-8' })
+  }
+
+  if (options.batch === true) {
+    // initialise a basic config...
+    if (options.init === true) {
+      await writeConfig(generateBlankTemplateFileContents(), options.force)
+      return
+    } else {
+      // throw error
+      throw new Error('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
+    }
+  }
 
   // ask user which hooked.yaml template to use (NOTE: even if only one option, still ask user the chance to escape without creating a file!)
   await inquirer.prompt([
@@ -45,14 +64,10 @@ export const init = async (options: ProgramOptions): Promise<void> => {
       ],
       loop: true
     }
-  ]).then((answers) => {
+  ]).then(async (answers) => {
     if (['blank', 'advanced'].includes(answers.init)) {
       const contents = answers.init === 'advanced' ? generateAdvancedBlankTemplateFileContents() : generateBlankTemplateFileContents()
-      const filepath = defaults.getDefaults().HOOKED_FILE
-      if (fs.existsSync(filepath)) {
-        throw new Error(`Cannot create - file already exists '${filepath}'`)
-      }
-      fs.writeFileSync(filepath, contents, { encoding: 'utf-8' })
+      await writeConfig(contents, options.force)
     }
   })
 }

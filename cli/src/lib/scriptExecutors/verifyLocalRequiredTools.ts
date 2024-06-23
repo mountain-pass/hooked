@@ -7,10 +7,9 @@ import { executeCmd } from './$cmd.js'
 // lazy initialise variable, but then cache it for future invocations
 let lazyCheckDockerExists: boolean | undefined
 
-const packageJson = loadRootPackageJsonSync()
-
 const verifyLatestVersion = async (): Promise<void> => {
   try {
+    const packageJson = loadRootPackageJsonSync()
     // eslint-disable-next-line no-template-curly-in-string
     logger.debug('Checking if latest version...')
     const env = new Environment()
