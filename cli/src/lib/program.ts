@@ -31,6 +31,7 @@ import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import express from 'express'
 import router from './server/router.js'
+import common from './runtime/common.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -198,7 +199,7 @@ Provided Environment Variables:
       if (isNumber(port)) {
         const app = express()
         app.use(express.json())
-        app.use(await router.router(options, config, envVars))
+        app.use(await router.router(options, config, envVars, env))
         const server = app.listen(port, () => { logger.info(`Server listening: http://localhost:${port}`) })
         const shutdownServer = (): void => {
           if (server.listening) {
@@ -217,48 +218,23 @@ Provided Environment Variables:
         return
       }
 
-      // find the script to execute...
-      const rootScriptAndPaths = await findScript(config, scriptPath, options)
-      const [script, paths] = rootScriptAndPaths
-
       // merge in the stdin...
-      const stdin: RawEnvironment = HJSON.parse(options.stdin)
-      mergeEnvVars(envVars, stdin)
-
       const providedEnvNames = options.env.split(',')
-      // fetch the environment variables...
-      const [, resolvedEnvNames] = await fetchGlobalEnvVars(
-        config,
-        providedEnvNames,
-        options,
-        envVars
-      )
+      const stdin: RawEnvironment = HJSON.parse(options.stdin)
 
-      // executable scripts
-      let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
-
-      if (isJobsSerialScript(script)) {
-        // resolve job definitions
-        executableScriptsAndPaths = await resolveScripts(paths, script, config, options)
-      }
-
-      // check executable scripts are actually executable
-      verifyScriptsAreExecutable(executableScriptsAndPaths)
-
-      // execute scripts sequentially
-      await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars, true, false)
+      const result = await common.invoke(options, config, envVars, env, providedEnvNames, scriptPath, stdin, true, false)
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)
       // Or should we ONLY store succesful scripts? I mean... it's in there in the name.
       const successfulScript: SuccessfulScript = {
         ts: Date.now(),
-        scriptPath: paths,
-        envNames: [...new Set(['default', ...resolvedEnvNames])],
+        scriptPath: result.paths,
+        envNames: [...new Set(['default', ...result.env])],
         stdin
       }
       // store and log "Rerun" command in history (if successful and not the _logs_ option!)
       const isRoot = !env.isResolvableByKey('HOOKED_ROOT') && !isDefined(envVars.HOOKED_ROOT)
-      const notRequestingLogs = paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
+      const notRequestingLogs = result.paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
       if (isRoot && notRequestingLogs) {
         logger.debug(`Rerun: ${displaySuccessfulScript(successfulScript)}`)
       }

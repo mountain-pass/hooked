@@ -1,18 +1,20 @@
 import express, { type Router } from 'express'
-import HJSON from 'hjson'
-import { fetchGlobalEnvVars, findScript } from '../config.js'
+import { findScript } from '../config.js'
 import { type ProgramOptions } from '../program.js'
-import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from '../scriptExecutors/ScriptExecutor.js'
-import { type StdinResponses, isDefined, isJobsSerialScript, sortCaseInsensitive, type EnvironmentVariables, type ScriptAndPaths, type YamlConfig } from '../types.js'
-import { Environment, type RawEnvironment } from '../utils/Environment.js'
-import { mergeEnvVars } from '../utils/envVarUtils.js'
+import common from '../runtime/common.js'
+import {
+  sortCaseInsensitive,
+  type EnvironmentVariables,
+  type YamlConfig
+} from '../types.js'
 import { globalErrorHandler } from './globalErrorHandler.js'
-import logger from '../utils/logger.js'
+import { type Environment } from '../utils/Environment.js'
 
 const router = async (
   options: ProgramOptions,
   config: YamlConfig,
-  parentEnvVars: EnvironmentVariables
+  parentEnvVars: EnvironmentVariables,
+  parentEnvironment: Environment
 ): Promise<Router> => {
   const app = express.Router()
 
@@ -29,21 +31,20 @@ const router = async (
   })
 
   app.get('/imports', (req, res) => {
-    res.json(isDefined(config.imports) ? config.imports : [])
+    res.json(config.imports ?? [])
   })
 
   app.get('/plugins', (req, res) => {
-    res.json(isDefined(config.plugins) ? config.plugins : {})
+    res.json(config.plugins ?? {})
   })
 
   app.get('/scripts', (req, res) => {
-    res.json(isDefined(config.scripts) ? config.scripts : {})
+    res.json(config.scripts ?? {})
   })
 
   app.get('/scripts/:scriptPath', globalErrorHandler(async (req, res) => {
     const scriptPath = req.params.scriptPath.split(' ')
-    const rootScriptAndPaths = await findScript(config, scriptPath, options)
-    const [script, paths] = rootScriptAndPaths
+    const [script, paths] = await findScript(config, scriptPath, options)
     res.json({ script, paths })
   }))
 
@@ -53,8 +54,7 @@ const router = async (
   app.get('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
     const providedEnvNames = req.params.env.split(',')
     const scriptPath = req.params.scriptPath.split(' ')
-    const result = await invoke(providedEnvNames, scriptPath, {})
-    res.json(result)
+    res.json(await common.invoke(options, config, parentEnvVars, parentEnvironment, providedEnvNames, scriptPath, {}, false, false))
   }))
 
   /**
@@ -64,68 +64,8 @@ const router = async (
     const providedEnvNames = req.params.env.split(',')
     const scriptPath = req.params.scriptPath.split(' ')
     const stdin = req.body ?? {}
-    const result = await invoke(providedEnvNames, scriptPath, stdin)
-    res.json(result)
+    res.json(await common.invoke(options, config, parentEnvVars, parentEnvironment, providedEnvNames, scriptPath, stdin, false, false))
   }))
-
-  /**
-   * Invokes a script with the provided environment names.
-   * @param providedEnvNames
-   * @param scriptPath
-   * @returns
-   */
-  const invoke = async (providedEnvNames: string[], scriptPath: string[], stdin: StdinResponses): Promise<any> => {
-    const envVars: EnvironmentVariables = { ...parentEnvVars }
-    logger.debug(`Running script: env=${providedEnvNames.join(',')} script=${scriptPath.join(',')}`)
-
-    // find the script to execute...
-    const rootScriptAndPaths = await findScript(config, scriptPath, options)
-    const [script, paths] = rootScriptAndPaths
-
-    // merge in the stdin...
-    mergeEnvVars(envVars, stdin)
-
-    // fetch the environment variables...
-    await fetchGlobalEnvVars(
-      config,
-      providedEnvNames,
-      options,
-      envVars
-    )
-    logger.debug(`Resolved environment: ${JSON.stringify(envVars)}`)
-
-    // executable scripts
-    let executableScriptsAndPaths: ScriptAndPaths[] = [rootScriptAndPaths]
-
-    if (isJobsSerialScript(script)) {
-      // resolve job definitions
-      executableScriptsAndPaths = await resolveScripts(paths, script, config, options)
-    }
-
-    // check executable scripts are actually executable
-    verifyScriptsAreExecutable(executableScriptsAndPaths)
-
-    // execute scripts sequentially
-    const outputs = await executeScriptsSequentially(
-      executableScriptsAndPaths,
-      stdin,
-      new Environment(),
-      config,
-      options,
-      envVars,
-      false,
-      false
-    )
-
-    return {
-      success: true,
-      finishedAt: new Date().toISOString(),
-      env: providedEnvNames,
-      paths,
-      envVars,
-      outputs
-    }
-  }
 
   return app
 }
