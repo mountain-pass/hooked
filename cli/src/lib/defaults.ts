@@ -38,7 +38,7 @@ interface Defaults {
 
 const defaults: Defaults = {
   HOOKED_FILE: '/tmp/hooked.yaml',
-  HOOKED_DIR: '/tmp',
+  HOOKED_DIR: '',
   HISTORY_PATH: '/tmp/.hooked_history.log',
   PAGE_SIZE: 10,
   LOGS_MENU_OPTION: '🪵  _logs_',
@@ -72,6 +72,10 @@ const CONFIG_BLANK = (): YamlConfig => {
     scripts: {
       say: {
         $cmd: 'echo "${GREETING}!"'
+      },
+      generate_ssl_certificates: {
+        $docker: 'alpine',
+        $cmd: 'openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650'
       }
     }
   }
@@ -103,6 +107,10 @@ const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
     scripts: {
       say: {
         $cmd: 'echo "${GREETING} ${YOURNAME}! There is no place like ${HOMEPATH}."'
+      },
+      generate_ssl_certificates: {
+        $docker: 'alpine',
+        $cmd: 'openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650'
       }
     }
   }

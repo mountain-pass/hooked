@@ -11,8 +11,11 @@ workers - deploy / view logs
 - [x] Ability to run jobs via api
 - [x] Ability to post stdin when running a job
 - [x] Ability to reload hooked.yaml on modification date change
+- [x] Ability to set --ssl , --ssl-cert , --ssl-key
+- [x] Ability to set --api-key
+- [x] Example ssh cert in example config
 - [ ] Ability to cron schedule jobs
-- [ ] Ability to secure api endpoints (https & api key)
+- [ ] Document SSL usage
 
 # NICE TO HAVE
 - [ ] Perform all actions through web ui (& mobile compatible)

@@ -26,6 +26,10 @@ env:
 scripts:
   say:
     $cmd: echo "$\{GREETING\}!"
+  generate_ssl_certificates:
+    $docker: alpine
+    $cmd: openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out
+      hooked-cert.pem -subj /CN=localhost -days 3650
 `)
     })
 
@@ -57,6 +61,10 @@ env:
 scripts:
   say:
     $cmd: echo "\${GREETING} \${YOURNAME}! There is no place like \${HOMEPATH}."
+  generate_ssl_certificates:
+    $docker: alpine
+    $cmd: openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out
+      hooked-cert.pem -subj /CN=localhost -days 3650
 `)
     })
 

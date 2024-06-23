@@ -1,4 +1,5 @@
 
 does*.yaml
 hooked*.yaml
+hooked*.pem
 Makefile

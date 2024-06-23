@@ -44,6 +44,9 @@ export interface ProgramOptions {
   config?: string
   help?: boolean
   server?: number
+  sslCert?: string
+  sslKey?: string
+  apiKey?: string
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
@@ -53,21 +56,39 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .name('hooked')
     .description('CLI to execute preconfigured scripts.\n\nUpdate: npm i -g --prefer-online --force @mountainpass/hooked-cli')
     .version(packageJson.version, '-v, --version')
-    .option('--init', 'runs the initialisation wizard')
-    .option('-e, --env <env>', 'accepts a comma separated list of environment names ("default" is always on)', 'default')
-    .option('-in, --stdin <json>', 'allows predefining stdin responses', '{}')
-    .option('--printenv', 'print the resolved environment, and exits')
-    .option('--pretty', 'prints the output (printenv) in pretty format')
-    .option('--listenvs', 'lists the available environments, and exits')
-    .option('-l, --log', 'print the log of previous scripts')
-    .option('-p, --pull', 'force download all imports from remote to local cache')
-    .option('-u, --update', 'updates to the latest version of hooked')
-    .option('-b, --batch', 'non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
-    .option('-c, --config <config>', 'specify the hooked configuration file to use')
-    .addOption(new Option('-s, --server [port]', 'runs hooked in server mode. Enables cron jobs, rest api and web ui.')
+    .option('--init', 'Runs the initialisation wizard')
+    .option('-e, --env <env>', 'Accepts a comma separated list of environment names ("default" is always on)', 'default')
+    .option('-in, --stdin <json>', 'Allows predefining stdin responses', '{}')
+    .option('--printenv', 'Print the resolved environment, and exits')
+    .option('--pretty', 'Prints the output (printenv) in pretty format')
+    .option('--listenvs', 'Lists the available environments, and exits')
+    .option('-l, --log', 'Print the log of previous scripts')
+    .option('-p, --pull', 'Force download all imports from remote to local cache')
+    .option('-u, --update', 'Updates to the latest version of hooked')
+    .option('-b, --batch', 'Non-interactive "batch" mode - errors if an interactive prompt is required (also enabled using CI environment variable)')
+    .option('-c, --config <config>', 'Specify the hooked configuration file to use')
+    .addOption(new Option('-s, --server [port]', 'Runs hooked in server mode. Enables cron jobs, rest api and web ui.')
       .argParser(parseInt)
       .implies({ batch: true })
       .preset(4000)
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+    )
+    .addOption(new Option('--ssl', 'Enable SSL, using the default hooked-cert.pem and hooked-key.pem files.')
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .implies({
+        sslKey: 'hooked-key.pem',
+        sslCert: 'hooked-cert.pem'
+      })
+    )
+    .addOption(new Option('--ssl-key [sslKey]', 'The private keys in PEM format. (todo: add passphrase support?)')
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .preset('hooked-key.pem')
+    )
+    .addOption(new Option('--ssl-cert [sslCert]', 'The certificate chains in PEM format.')
+      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .preset('hooked-cert.pem')
+    )
+    .addOption(new Option('--api-key <apiKey>', 'The "Authorization" Bearer token, that must be present to access API endpoints.')
       .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
     .argument('[scriptPath...]', 'the script path to run', '')
@@ -116,7 +137,7 @@ Provided Environment Variables:
 
       // no config? initialise a new project...
       if (!fs.existsSync(defaults.getDefaults().HOOKED_FILE)) {
-        logger.debug(`No config file found at '${defaults.getDefaults().HOOKED_FILE}'. Launching setup...`)
+        logger.error(`No config file found at '${defaults.getDefaults().HOOKED_FILE}'. Launching setup...`)
         await init(options)
         return
       } else {
