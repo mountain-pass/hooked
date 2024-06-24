@@ -59,7 +59,7 @@ const useExecuteScript = (baseUrl: string, bearerToken: string) => {
 
 export default function Home() {
 
-  const baseUrl = process.env.NEXT_PUBLIC_NODE_ENV === 'production' ? '' : 'https://localhost:4000'
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
   const [searchScripts, setSearchScripts] = React.useState('')
   const [apiKey, setApiKey] = React.useState('')
@@ -125,7 +125,7 @@ export default function Home() {
         <section className={`border card-border w-full p-4 flex flex-col gap-4 ${showLogin ? 'visible' : 'hidden'}`}>
           <div className="w-full flex items-center justify-between">
             <h2>Api Key</h2>
-            <span>🔑</span>
+            {/* <span>🔑</span> */}
           </div>
           <input
             type="text"
@@ -155,7 +155,7 @@ export default function Home() {
                 return (
                   <div key={name} className="border card-border w-full px-4 py-3 text-sm text-left flex gap-2 items-center justify-between hover:bg-black/5 dark:hover:bg-white/5">
                     <span className="truncate">{name}</span>
-                    <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10" onClick={() => executeScript([...filteredObjects.parentPath, name].join(' '))}>Execute</button>
+                    <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10" onClick={() => executeScript([...filteredObjects.parentPath, name.split(' ')[0]].join(' '))}>Execute</button>
                   </div>
                 )
               } else {
@@ -195,6 +195,7 @@ export default function Home() {
           </pre>
         </section>
 
+        <i className="text-gray-400 text-sm">{process.env.NEXT_PUBLIC_VERSION}</i>
       </div>
     </main>
   );

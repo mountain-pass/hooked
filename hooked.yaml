@@ -47,11 +47,13 @@ scripts:
         npm i -g --force .
     global:
       $cmd: npm i -g --prefer-online --force @mountainpass/hooked-cli
+
   uninstall:
     local:
       $cmd: npm uninstall -g --force hooked
     global:
       $cmd: npm uninstall -g --force @mountainpass/hooked-cli
+
   lerna:
     graph:
       $cmd: npx nx graph
@@ -65,29 +67,45 @@ scripts:
       $cmd: npx lerna version patch --yes --force-publish --message '%s [skip ci]'
     publish:
       $cmd: npx lerna publish from-package --yes
-  publish:
-    $cmd: |
-      #!/bin/sh -ve
-      if [[ `git status --porcelain` ]]; then
-        >&2 echo "Local git changes found, please commit before releasing."
-        exit 99
-      fi
-      npx lerna exec --scope @mountainpass/* npm install
-      npx lerna run --scope @mountainpass/* test
-      rm cli/.tmp-*.sh || true
-      npx lerna run --scope @mountainpass/* build
-      npx lerna version patch --yes --force-publish --message '%s [skip ci]'
-      npx lerna publish from-package --yes
 
-  ui:
-    build:
-      $cmd: cd ui && npm run build
+  cli:
+    publish:
+      $cmd: |
+        #!/bin/sh -ve
+        if [[ `git status --porcelain` ]]; then
+          >&2 echo "Local git changes found, please commit before releasing."
+          exit 99
+        fi
+        npx lerna exec --scope @mountainpass/* npm install
+        npx lerna run --scope @mountainpass/* test
+        rm cli/.tmp-*.sh || true
+        npx lerna run --scope @mountainpass/* build
+        npx lerna version patch --yes --force-publish --message '%s [skip ci]'
+        npx lerna publish from-package --yes
 
-  local:
+  local_build:
     $jobs_serial:
       - ui build
       - docker build
 
+  publish_all:
+    $jobs_serial:
+      - cli publish
+      - ui build
+      - docker publish
+
+  # ui build for production
+  ui:
+    build:
+      $env:
+        NEXT_PUBLIC_VERSION:
+          $cmd: grep "version" cli/package.json | sed -e 's/[^0-9.]//g'
+      $cmd: |
+        #!/bin/sh -e
+        echo Building UI - version: \"${NEXT_PUBLIC_VERSION}\"
+        cd ui && npm run build
+
+  # docker build for production
   docker:
     build:
       $cmd: |
