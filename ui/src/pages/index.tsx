@@ -59,7 +59,7 @@ const useExecuteScript = (baseUrl: string, bearerToken: string) => {
 
 export default function Home() {
 
-  const baseUrl = 'https://localhost:4000'
+  const baseUrl = process.env.NEXT_PUBLIC_NODE_ENV === 'production' ? '' : 'https://localhost:4000'
 
   const [searchScripts, setSearchScripts] = React.useState('')
   const [apiKey, setApiKey] = React.useState('')
@@ -108,7 +108,7 @@ export default function Home() {
       }
       return { parentPath, scripts: current }
     }
-    return []
+    return { parentPath: [], scripts: {} }
   }, [scripts, searchScripts])
 
   return (
@@ -153,14 +153,14 @@ export default function Home() {
             {scripts.isSuccess && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
               if (isScript(groupOrJob)) {
                 return (
-                  <div className="border card-border w-full px-4 py-3 text-sm text-left flex gap-2 items-center justify-between hover:bg-black/5 dark:hover:bg-white/5">
+                  <div key={name} className="border card-border w-full px-4 py-3 text-sm text-left flex gap-2 items-center justify-between hover:bg-black/5 dark:hover:bg-white/5">
                     <span className="truncate">{name}</span>
                     <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10" onClick={() => executeScript([...filteredObjects.parentPath, name].join(' '))}>Execute</button>
                   </div>
                 )
               } else {
                 return (
-                  <button className="border card-border w-full p-4 text-sm text-left flex gap-2 items-center hover:bg-black/5 dark:hover:bg-white/5"
+                  <button key={name} className="border card-border w-full p-4 text-sm text-left flex gap-2 items-center hover:bg-black/5 dark:hover:bg-white/5"
                     onClick={() => setSearchScripts(ps => `${ps} ${name}`.trim())}>
                     <span className="truncate">{name}</span>
                     <span className="text-gray-300">({Object.values(groupOrJob).length})</span>
@@ -194,6 +194,7 @@ export default function Home() {
             {(doExecute.error as Error)?.message}
           </pre>
         </section>
+
       </div>
     </main>
   );
