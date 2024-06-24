@@ -10,7 +10,7 @@ RUN NODE_ENV=production npm ci --omit=dev
 
 # host it...
 FROM node:lts-alpine
-RUN apk add --no-cache openssl docker-cli
+RUN apk add --no-cache openssl curl docker-cli
 WORKDIR /project
 COPY --from=build /project/*.json /project/
 COPY --from=build /project/dist /project/
