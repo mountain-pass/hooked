@@ -17,7 +17,7 @@ workers - deploy / view logs
 - [x] Dockerise - but how will it interact with Docker / SSH?
 
 # NICE TO HAVE
-- [ ] Ability to cron schedule jobs (see inflight jobs, see job results, see job logs, cancel jobs)
+- [ ] Ability to cron schedule jobs and specify timezone (see inflight jobs, see job results, see job logs, cancel jobs)
 - [ ] Ability to run commands in already running docker containers
 - [ ] Document SSL usage
 - [ ] Perform all actions through web ui (& mobile compatible)
