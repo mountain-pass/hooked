@@ -19,11 +19,18 @@ export type TopLevelEnvironments = Record<string, EnvironmentVariables>
 // because this is a circular reference... any could be Script | TopLevelScripts again...
 export type TopLevelScripts = Record<string, any>
 
+export interface Triggers {
+  $timezone: string
+  $cron: Record<string, string>
+}
+
 export interface YamlConfig {
   /**  */
   plugins?: Plugins
   /**  */
   imports?: TopLevelImports
+  /**  */
+  triggers?: Triggers
   /**  */
   env: TopLevelEnvironments
   /**  */

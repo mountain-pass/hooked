@@ -14,6 +14,24 @@
         "type": "string"
       }
     },
+    "triggers": {
+      "description": "Provides the ability to trigger jobs.",
+      "type": "object",
+      "properties": {
+        "$timezone": {
+          "description": "The local timezone",
+          "type": "string"
+        },
+        "$cron": {
+          "description": "Key value pairs of cron expressions, to the script path.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "$timezone",
+        "$cron"
+      ]
+    },
     "plugin": {
       "description": "Provides the ability to use built-in plugins.",
       "type": "object",
