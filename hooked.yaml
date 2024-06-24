@@ -84,14 +84,16 @@ scripts:
       $cmd: |
         #!/bin/sh -e
         docker build --tag mountainpass/hooked cli
-    xbuild:
+    publish:
       $env:
         VERSION:
           $cmd: grep "version" cli/package.json | sed -e 's/[^0-9.]//g'
       $cmd: |
         #!/bin/sh -e
         echo Building and publishing - version: \"${VERSION}\"
-        docker buildx build --push \
+        docker buildx build \
+          --push \
+          --platform linux/amd64,linux/arm64/v8 \
           --tag mountainpass/hooked:latest \
           --tag mountainpass/hooked:${VERSION} \
           --output=type=registry \

@@ -19,6 +19,7 @@ workers - deploy / view logs
 
 # NICE TO HAVE
 - [ ] Document triggers
+- [ ] Rate limit to stop brute force API-KEY
 - [ ] Validate YAML config
 - [ ] Permanently enable NPM / Makefile / Icons - Remove Ethers/?
 - [ ] Support javascript? Just use node docker container
