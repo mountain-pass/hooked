@@ -15,9 +15,11 @@ workers - deploy / view logs
 - [x] Ability to set --api-key
 - [x] Example ssh cert in example config
 - [x] Dockerise - but how will it interact with Docker / SSH?
+- [ ] Ability to cron schedule jobs and specify timezone
 
 # NICE TO HAVE
-- [ ] Ability to cron schedule jobs and specify timezone
+- [ ] Permanently enable NPM / Makefile / Icons - Remove Ethers/?
+- [ ] Support javascript?
 - [ ] Reduce bundle size - https://bundlephobia.com/package/@mountainpass/hooked-cli
 - [ ] Fix security alerts
 - [ ] Ability to manage non-transient jobs (see inflight jobs, see job results, see job logs, cancel jobs)
