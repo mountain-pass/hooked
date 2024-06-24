@@ -183,15 +183,30 @@ export const isResolveScript = (script: Script): script is ResolveScript => {
 export const isStdinScript = (script: Script): script is StdinScript => {
   return typeof (script as any).$ask === 'string'
 }
+
+export const isInternalScript = (script: Script): script is InternalScript => {
+  return typeof (script as any).$internal === 'function'
+}
+
+export const isScript = (script: any): script is Script => {
+  return (typeof script === 'object' || typeof script === 'function') &&
+  script !== null &&
+  (
+    isWritePathScript(script) ||
+    isCmdScript(script) ||
+    isJobsSerialScript(script) ||
+    isStdinScript(script) ||
+    isEnvScript(script) ||
+    isResolveScript(script) ||
+    isInternalScript(script)
+  )
+}
+
 export const isStdinScriptFieldsMapping = (script: any): script is StdinScriptFieldsMapping => {
   return typeof script !== 'undefined' &&
     isString(script.name) &&
     isString(script.value) &&
     (isString(script.short) || typeof script.short === 'undefined')
-}
-
-export const isInternalScript = (script: Script): script is InternalScript => {
-  return typeof (script as any).$internal === 'function'
 }
 
 export const isDefined = (o: any): o is object => {
@@ -222,20 +237,6 @@ type FunctionX = () => any
 
 export const isFunction = (o: any): o is FunctionX => {
   return typeof o === 'function'
-}
-
-export const isScript = (script: any): script is Script => {
-  return (typeof script === 'object' || typeof script === 'function') &&
-  script !== null &&
-  (
-    isWritePathScript(script) ||
-    isCmdScript(script) ||
-    isJobsSerialScript(script) ||
-    isStdinScript(script) ||
-    isEnvScript(script) ||
-    isResolveScript(script) ||
-    isInternalScript(script)
-  )
 }
 
 export const sortCaseInsensitive = (a: string, b: string): number => {
