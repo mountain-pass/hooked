@@ -16,8 +16,10 @@ workers - deploy / view logs
 - [x] Example ssh cert in example config
 - [x] Dockerise - but how will it interact with Docker / SSH?
 - [x] Ability to cron schedule jobs and specify timezone
+- [x] UI - Ability to execute scripts
 
 # NICE TO HAVE
+- [ ] Package UI with the NPM release
 - [ ] Document triggers
 - [ ] Rate limit to stop brute force API-KEY
 - [ ] Validate YAML config
@@ -28,12 +30,11 @@ workers - deploy / view logs
 - [ ] Ability to manage non-transient jobs (see inflight jobs, see job results, see job logs, cancel jobs)
 - [ ] Ability to run commands in already running docker containers?
 - [ ] Document SSL usage
-- [ ] Perform all actions through web ui (& mobile compatible)
-- [ ] Ability to view logs, and rerun jobs
-- [ ] Ability to flag scripts as interactive (e.g. polling log) - And don't allow through web interfae
-- [ ] Ability to edit/organise jobs via web
-- [ ] Ability to delegate jobs to other servers
-- [ ] Ability to set max runtime on scripts
+- [ ] UI - Ability to view logs, and rerun jobs
+- [ ] UI - Ability to flag scripts as interactive (e.g. polling log) - And don't allow through web interfae
+- [ ] UI - Ability to edit/organise jobs via web
+- [ ] UI - Ability to delegate jobs to other servers
+- [ ] UI - Ability to set max runtime on scripts
 - [ ] Handle file inputs/outputs?
 - [ ] Keep historical logs (incl pass/fail)
 - [ ] User roles - Expose functions to groups of users

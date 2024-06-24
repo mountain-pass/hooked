@@ -28,7 +28,7 @@ const startServer = async (
 ): Promise<void> => {
   // determine public path
   const dirname = path.dirname(fileURLToPath(import.meta.url))
-  const publicPath = findFileInAncestors(dirname, 'public')
+  const publicPath = findFileInAncestors(dirname, 'public', false)
   logger.debug(`Serving static files from: ${publicPath}`)
 
   // setup express

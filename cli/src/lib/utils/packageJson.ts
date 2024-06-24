@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs'
 import path from 'path'
 import { isString, type Dictionary } from '../types.js'
+import logger from './logger.js'
 
 export interface PackageJson {
   name: string
@@ -11,7 +12,7 @@ export interface PackageJson {
   scripts?: Dictionary<string>
 }
 
-export const findFileInAncestors = (dirname: string, filename: string): string => {
+export const findFileInAncestors = (dirname: string, filename: string, throwError: boolean = true): string => {
   // find filename
   let i = 0
   let filepath
@@ -22,7 +23,12 @@ export const findFileInAncestors = (dirname: string, filename: string): string =
     filepath = tmp
   }
   if (!isString(filepath)) {
-    throw new Error(`Could not find ${filename} in parent directories! baseDir=${dirname}`)
+    if (throwError) {
+      throw new Error(`Could not find '${filename}' in parent directories! baseDir=${dirname}`)
+    } else {
+      logger.error(`Could not find '${filename}' in parent directories! baseDir=${dirname}`)
+      return dirname
+    }
   }
   return filepath
 }
@@ -30,7 +36,7 @@ export const findFileInAncestors = (dirname: string, filename: string): string =
 // all this just to load a json file... sigh ESM
 export const loadRootPackageJsonSync = (): PackageJson => {
   const dirname = path.dirname(fileURLToPath(import.meta.url))
-  const filepath = findFileInAncestors(dirname, 'package.json')
+  const filepath = findFileInAncestors(dirname, 'package.json', true)
   return loadPackageJsonSync(filepath)
 }
 
