@@ -69,7 +69,7 @@ const startServer = async (
       })
     }
   }
-  process.on('SIGINT', shutdownServer)
+  process.on('SIGTERM', shutdownServer)
 }
 
 export default { startServer }

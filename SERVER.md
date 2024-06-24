@@ -15,9 +15,9 @@ workers - deploy / view logs
 - [x] Ability to set --api-key
 - [x] Example ssh cert in example config
 - [x] Dockerise - but how will it interact with Docker / SSH?
-- [ ] Ability to cron schedule jobs
 
 # NICE TO HAVE
+- [ ] Ability to cron schedule jobs (see inflight jobs, see job results, see job logs, cancel jobs)
 - [ ] Ability to run commands in already running docker containers
 - [ ] Document SSL usage
 - [ ] Perform all actions through web ui (& mobile compatible)

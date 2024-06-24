@@ -81,11 +81,13 @@ scripts:
 
   docker:
     build:
-      $env:
-        DOCKER_IMAGE: mountainpass/hooked
       $cmd: |
         #!/bin/sh -e
-        docker buildx build --push --tag ${DOCKER_IMAGE} --output=type=registry cli
+        docker build --tag mountainpass/hooked cli
+    xbuild:
+      $cmd: |
+        #!/bin/sh -e
+        docker buildx build --push --tag mountainpass/hooked --output=type=registry cli
 
 # --file Dockerfile \
 # --output=type=registry
