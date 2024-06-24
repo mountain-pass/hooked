@@ -16,21 +16,7 @@
     },
     "triggers": {
       "description": "Provides the ability to trigger jobs.",
-      "type": "object",
-      "properties": {
-        "$timezone": {
-          "description": "The local timezone",
-          "type": "string"
-        },
-        "$cron": {
-          "description": "Key value pairs of cron expressions, to the script path.",
-          "type": "object"
-        }
-      },
-      "required": [
-        "$timezone",
-        "$cron"
-      ]
+      "$ref": "#/$defs/triggersGroup"
     },
     "plugin": {
       "description": "Provides the ability to use built-in plugins.",
@@ -64,6 +50,43 @@
     }
   },
   "$defs": {
+    "cronSchedule": {
+      "description": "A Cron schedule, including seconds. E.g. '0 0 * * * *'.",
+      "type": "string"
+    },
+    "scriptReference": {
+      "description": "A path to a script.",
+      "type": "string"
+    },
+    "CronTrigger": {
+      "description": "Used to trigger a job on a cron schedule.",
+      "type": "object",
+      "properties": {
+        "$cron": {
+          "$ref": "#/$defs/cronSchedule"
+        },
+        "$job": {
+          "$ref": "#/$defs/scriptReference"
+        }
+      },
+      "required": [
+        "$cron",
+        "$job"
+      ]
+    },
+    "triggersGroup": {
+      "description": "Organises triggers.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^.*$": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CronTrigger"
+            }
+          ]
+        }
+      }
+    },
     "scriptsGroup": {
       "description": "Organises `$cmd` objects, into a named hierarchy.",
       "additionalProperties": false,
@@ -140,16 +163,7 @@
           "items": {
             "anyOf": [
               {
-                "description": "A script path.",
-                "type": "string"
-              },
-              {
-                "description": "A script path.",
-                "type": "number"
-              },
-              {
-                "description": "A script path.",
-                "type": "boolean"
+                "$ref": "#/$defs/scriptReference"
               },
               {
                 "$ref": "#/$defs/WritePathScript"
@@ -159,9 +173,6 @@
               },
               {
                 "$ref": "#/$defs/CmdScript"
-              },
-              {
-                "$ref": "#/$defs/scriptsGroup"
               }
             ]
           }

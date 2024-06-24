@@ -19,8 +19,9 @@ workers - deploy / view logs
 
 # NICE TO HAVE
 - [ ] Document triggers
+- [ ] Validate YAML config
 - [ ] Permanently enable NPM / Makefile / Icons - Remove Ethers/?
-- [ ] Support javascript?
+- [ ] Support javascript? Just use node docker container
 - [ ] Reduce bundle size - https://bundlephobia.com/package/@mountainpass/hooked-cli
 - [ ] Fix security alerts
 - [ ] Ability to manage non-transient jobs (see inflight jobs, see job results, see job logs, cancel jobs)

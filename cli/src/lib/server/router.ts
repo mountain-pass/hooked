@@ -42,23 +42,22 @@ const rebuildCronJobs = async (
   const newJobs: Array<CronJob<any, JobContext>> = []
 
   if (isDefined(config.triggers)) {
-    const timeZone = config.triggers.$timezone
-    for (const [cronTime, script] of Object.entries(config.triggers.$cron)) {
-      const scriptPath = script.split(' ')
-      const name = `'${cronTime}' -> '${script}'`
+    for (const [name, cronJob] of Object.entries(config.triggers)) {
+      const { $cron: cronTime, $job } = cronJob
+      const scriptPath = $job.split(' ')
       // resolve script path
-      logger.debug(`Creating cron job - ${name}`)
       const job = CronJob.from({
         context: { name },
         cronTime,
         onTick: async function () {
-          logger.debug(`Running cron job - ${name}`)
+          logger.debug(`Running cron job - "${name}" - nextRun=${job.nextDate().toISO() ?? '<unknown>'}`)
           await common.invoke(systemProcessEnvs, options, config, ['default'], scriptPath, {}, true, false)
             .catch((err: Error) => { logger.error(`Error occurred running cron job - ${err.message}`) })
         },
         start: true,
-        timeZone
+        timeZone: process.env.TZ ?? 'UTC'
       })
+      logger.debug(`Created cron job - "${name}" - nextRun=${job.nextDate().toISO() ?? '<unknown>'}`)
       newJobs.push(job)
     }
   }

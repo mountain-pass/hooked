@@ -37,7 +37,7 @@
   ],
   "scripts": {
     "start": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",
-    "start:server": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml'",
+    "start:server": "TZ=Australia/Sydney LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml'",
     "build": "tsc --build",
     "build:clean": "tsc --build --clean",
     "postbuild": "chmod 755 dist/index.js",

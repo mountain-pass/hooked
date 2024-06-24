@@ -87,16 +87,17 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .argument('[scriptPath...]', 'the script path to run', '')
     .addHelpText('afterAll', `
 Environment Variables:
-  CI                   If present, enables non-interactive "batch" mode.
-  LOG_LEVEL            <info|debug|warn|error> Specifies the log level. (default: "debug").
-  SKIP_CLEANUP         If 'true', doesn't cleanup old *.sh files. Useful for debugging.
-  SKIP_VERSION_CHECK   If present, skips the version check at startup.
-  DOCKER_HOOKED_DIR    Used to override the HOOKED directory (in relation to the Docker host).
+  CI                     If present, enables non-interactive "batch" mode.
+  LOG_LEVEL              <info|debug|warn|error> Specifies the log level. (default: "debug").
+  SKIP_CLEANUP           If 'true', doesn't cleanup old *.sh files. Useful for debugging.
+  SKIP_VERSION_CHECK     If present, skips the version check at startup.
+  DOCKER_HOOKED_DIR      Used to specify the HOOKED directory in relation to the Docker host. (Note: Required for Docker jobs!)
+  TZ                     The timezone to use for Cron triggers. e.g. 'Australia/Sydney'
 
 Provided Environment Variables:
-  HOOKED_FILE          The root hooked.yaml file that was run.
-  HOOKED_DIR           The parent directory of the HOOKED_FILE.
-  HOOKED_ROOT          <true|false> True if the current script is the root file.
+  HOOKED_FILE            The root hooked.yaml file that was run.
+  HOOKED_DIR             The parent directory of the HOOKED_FILE.
+  HOOKED_ROOT            <true|false> True if the current script is the root file.
     `)
     .usage('[options]')
     .action(async (scriptPath: string[], options: ProgramOptions) => {
