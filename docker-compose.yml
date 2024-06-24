@@ -1,7 +1,7 @@
 
 #
 # Setup: run the following commands, to initialise config and ssl certificates.
-# DOCKER_HOOKED_DIR=/tmp/hooked3
+# DOCKER_HOOKED_DIR=/tmp/hooked
 # docker run --rm -v ${DOCKER_HOOKED_DIR}:/hooked mountainpass/hooked --init --batch
 # docker run --rm -v ${DOCKER_HOOKED_DIR}:/hooked mountainpass/hooked generate_ssl_certificates
 #
@@ -15,7 +15,7 @@ services:
     container_name: hooked
     environment:
       - DOCKER_HOOKED_DIR=/tmp/hooked
-      - LOG_LEVEL=info
+      - LOG_LEVEL=debug
       - TZ=Australia/Sydney
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -23,7 +23,7 @@ services:
     command:
       - --server
       - --ssl
-      # - --api-key=ABCD
+      - --api-key=ABCD
     ports:
       - 4000:4000
     restart: unless-stopped

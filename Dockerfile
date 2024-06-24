@@ -2,9 +2,9 @@
 # build the project...
 FROM node:lts-alpine as build
 WORKDIR /project
-COPY *.json /project/
+COPY cli/*.json /project/
 RUN npm i --verbose
-COPY src src
+COPY cli/src src
 RUN npm run build
 RUN NODE_ENV=production npm ci --omit=dev
 
@@ -15,6 +15,7 @@ WORKDIR /project
 COPY --from=build /project/*.json /project/
 COPY --from=build /project/dist /project/
 COPY --from=build /project/node_modules /project/node_modules
+COPY ui/out/ /project/public
 RUN mkdir /hooked
 WORKDIR /hooked
 

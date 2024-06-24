@@ -79,11 +79,20 @@ scripts:
       npx lerna version patch --yes --force-publish --message '%s [skip ci]'
       npx lerna publish from-package --yes
 
+  ui:
+    build:
+      $cmd: cd ui && npm run build
+
+  local:
+    $jobs_serial:
+      - ui build
+      - docker build
+
   docker:
     build:
       $cmd: |
         #!/bin/sh -e
-        docker build --tag mountainpass/hooked cli
+        docker build --tag mountainpass/hooked .
     publish:
       $env:
         VERSION:
@@ -97,4 +106,4 @@ scripts:
           --tag mountainpass/hooked:latest \
           --tag mountainpass/hooked:${VERSION} \
           --output=type=registry \
-          cli
+          .

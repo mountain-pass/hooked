@@ -1,0 +1,4 @@
+*
+!cli/src/
+!cli/*.json
+!ui/out/

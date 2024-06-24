@@ -89,11 +89,14 @@ const router = async (
     cronJobs
   )
 
-  // watcher for configuration change
-  fs.watchFile(filepath, { interval: 3000 }, (curr, prev) => {
+  // watcher for file configuration changes
+  const fileChangeListener = (curr: fs.Stats, prev: fs.Stats): void => {
     checkIfConfigHasChanged(curr)
       .catch((err: Error) => { logger.error(`Error occurred checking config change - ${err.message}`) })
-  })
+  }
+  // watch for changes
+  fs.watchFile(filepath, { interval: 3000 }, fileChangeListener)
+  process.on('SIGTERM', () => { fs.unwatchFile(filepath, fileChangeListener) })
 
   /** Checks whether the root config file modification time is newer, and reloads the configuration. (Max once per second) */
   const checkIfConfigHasChanged = async (curr: fs.Stats): Promise<void> => {

@@ -11,21 +11,26 @@ export interface PackageJson {
   scripts?: Dictionary<string>
 }
 
-// all this just to load a json file... sigh ESM
-export const loadRootPackageJsonSync = (): PackageJson => {
-  const filename = fileURLToPath(import.meta.url)
-  const dirname = path.dirname(filename)
-  // find package.json
+export const findFileInAncestors = (dirname: string, filename: string): string => {
+  // find filename
   let i = 0
   let filepath
-  for (; i < 5; i++) {
-    const tmp = path.resolve(dirname, '../'.repeat(i), 'package.json')
+  const maxDepth = 5
+  for (; i < maxDepth; i++) {
+    const tmp = path.resolve(dirname, '../'.repeat(i), filename)
     if (!fs.existsSync(tmp)) continue
     filepath = tmp
   }
   if (!isString(filepath)) {
-    throw new Error(`Could not find package.json in parent directories! baseDir=${dirname}`)
+    throw new Error(`Could not find ${filename} in parent directories! baseDir=${dirname}`)
   }
+  return filepath
+}
+
+// all this just to load a json file... sigh ESM
+export const loadRootPackageJsonSync = (): PackageJson => {
+  const dirname = path.dirname(fileURLToPath(import.meta.url))
+  const filepath = findFileInAncestors(dirname, 'package.json')
   return loadPackageJsonSync(filepath)
 }
 

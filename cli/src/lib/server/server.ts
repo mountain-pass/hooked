@@ -8,6 +8,9 @@ import logger from '../utils/logger.js'
 import router from './router.js'
 import fsPromise from 'fs/promises'
 import cors from 'cors'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { findFileInAncestors } from '../utils/packageJson.js'
 
 /**
  * Starts the REST API server.
@@ -23,6 +26,12 @@ const startServer = async (
   options: ProgramOptions,
   config: YamlConfig
 ): Promise<void> => {
+  // determine public path
+  const dirname = path.dirname(fileURLToPath(import.meta.url))
+  const publicPath = findFileInAncestors(dirname, 'public')
+  logger.debug(`Serving static files from: ${publicPath}`)
+
+  // setup express
   const app = express()
   app.use(cors())
 
@@ -39,8 +48,9 @@ const startServer = async (
     })
   }
   app.use(express.json())
-  app.get('/', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+  app.get('/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
   app.use('/api', await router.router(systemProcessEnvs, options, config))
+  app.use('/', express.static(publicPath))
 
   // ssl setup
   if ((isString(options.sslCert) && !isString(options.sslKey)) || (!isString(options.sslCert) && isString(options.sslKey))) {
