@@ -19,6 +19,7 @@ workers - deploy / view logs
 - [x] UI - Ability to execute scripts
 
 # NICE TO HAVE
+- [ ] Server - Clean up .tmp files
 - [ ] Package UI with the NPM release
 - [ ] Document triggers
 - [ ] Rate limit to stop brute force API-KEY
