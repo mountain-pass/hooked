@@ -7,6 +7,7 @@ import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import router from './router.js'
 import fsPromise from 'fs/promises'
+import cors from 'cors'
 
 /**
  * Starts the REST API server.
@@ -23,12 +24,13 @@ const startServer = async (
   config: YamlConfig
 ): Promise<void> => {
   const app = express()
+  app.use(cors())
 
   // api-key verification
   const apiKey = options.apiKey
   if (isString(apiKey)) {
     const requiredAuthorizationHeader = `Bearer ${apiKey}`
-    app.use((req, res, next) => {
+    app.use('/api', (req, res, next) => {
       if (req.header('authorization') !== requiredAuthorizationHeader) {
         res.status(401).json({ message: 'Invalid authorization token.' }).end()
       } else {
@@ -37,7 +39,8 @@ const startServer = async (
     })
   }
   app.use(express.json())
-  app.use(await router.router(systemProcessEnvs, options, config))
+  app.get('/', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+  app.use('/api', await router.router(systemProcessEnvs, options, config))
 
   // ssl setup
   if ((isString(options.sslCert) && !isString(options.sslKey)) || (!isString(options.sslCert) && isString(options.sslKey))) {

@@ -28,7 +28,7 @@ export const generateNpmScripts = (systemProcessEnvs: RawEnvironment): any => {
         prev[curr] = { $cmd: cmd }
         return prev
       }, npmScripts)
-      return { '🪚  npm': npm }
+      return { npm }
     }
   }
   return {}

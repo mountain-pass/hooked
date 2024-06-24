@@ -113,11 +113,6 @@ const router = async (
   }
 
   /**
-   * Endpoint for verification.
-   */
-  app.get('/', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
-
-  /**
    * Prints the different environments available (and their environment variable names).
    */
   app.get('/env', globalErrorHandler(async (req, res) => {
