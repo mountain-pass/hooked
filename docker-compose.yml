@@ -5,6 +5,9 @@
 # docker run --rm -v ${DOCKER_HOOKED_DIR}:/hooked mountainpass/hooked --init --batch
 # docker run --rm -v ${DOCKER_HOOKED_DIR}:/hooked mountainpass/hooked generate_ssl_certificates
 #
+# To show the version:
+# docker run --rm mountainpass/hooked -v
+#
 
 services:
   hooked:
