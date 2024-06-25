@@ -131,7 +131,6 @@ Provided Environment Variables:
         // ensure the default configuration file path is ${HOOKED_DIR}/hooked.yaml, and not ~/hooked.yaml!
         defaults.setDefaultConfigurationFilepath('hooked.yaml')
         await init(options)
-        return
       }
 
       // no config? initialise a new project...
@@ -176,6 +175,14 @@ Provided Environment Variables:
       }
 
       // otherwise execute the script...
+      if (isString(scriptPath)) {
+        if (scriptPath.trim().length > 0) {
+          scriptPath = [scriptPath]
+        } else {
+          // blank string = no input, return
+          return
+        }
+      }
       const providedEnvNames = options.env.split(',')
       const stdin: RawEnvironment = HJSON.parse(options.stdin)
       const result = await common.invoke(systemProcessEnvs, options, config, providedEnvNames, scriptPath, stdin, true, false)
