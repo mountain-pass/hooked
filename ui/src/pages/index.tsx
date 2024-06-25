@@ -178,18 +178,18 @@ export default function Home() {
         </section>
 
         {/* Results */}
-        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
+        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${true || doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
           <h2>Results</h2>
           {/* shimmer */}
-          <div className={`${doExecute.isPending ? 'visible' : 'hidden'} animate-pulse flex space-x-4`}>
-            <div className="min-h-[44px] w-full bg-slate-900 rounded"></div>
+          <div className={`${true || doExecute.isPending ? 'visible' : 'hidden'} animate-pulse flex space-x-4`}>
+            <div className="min-h-[44px] w-full bg-slate-200 dark:bg-slate-900"></div>
           </div>
           {/* results - success */}
-          <pre className={`${doExecute.isSuccess ? 'visible' : 'hidden'} text-sm text-blue-700 p-3 bg-black/5 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+          <pre className={`${doExecute.isSuccess ? 'visible' : 'hidden'} text-sm text-blue-700 p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
             {doExecute.data?.outputs.join('\n')}
           </pre>
           {/* results - error */}
-          <pre className={`${doExecute.isError ? 'visible' : 'hidden'} text-sm text-red-700 bg-black/5 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+          <pre className={`${doExecute.isError ? 'visible' : 'hidden'} text-sm text-red-700 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
             {(doExecute.error as Error)?.message}
           </pre>
         </section>
