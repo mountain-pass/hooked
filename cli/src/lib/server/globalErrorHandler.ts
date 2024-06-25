@@ -6,7 +6,9 @@ export type AsyncRequestHandler = (req: Request, res: Response, next?: any) => P
 
 const handleError = (err: Error, res: Response): void => {
   console.error(`Caught: ${err.message} - stack=${err.stack ?? ''}`)
+  res.status(500)
   res.json({ message: `A server error occurred. ${err.message}${err.message.endsWith('.') ? '' : '.'}` })
+  res.end()
 }
 
 export const globalErrorHandler = (delegateFunction: RequestHandler | AsyncRequestHandler): any =>

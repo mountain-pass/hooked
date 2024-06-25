@@ -15,7 +15,9 @@ const useGet = (url: string, bearerToken: string) => {
     queryFn: () => {
       return fetch(url, { method: 'get', headers: { 'Authorization': `Bearer ${bearerToken}` } }).then(async res => {
         if (res.status !== 200) {
-          throw new Error(`Failed to fetch data from ${url}: ${res.statusText}`)
+          const error: any = new Error(`Failed to fetch data from ${url}: ${res.statusText}`);
+          error.body = await res.json();
+          throw error
         }
         const newData = await res.json();
         const oldData = queryClient.getQueryData([url]);
@@ -49,7 +51,10 @@ const useExecuteScript = (baseUrl: string, bearerToken: string) => {
         body: JSON.stringify(postData.env ?? {})
       }).then(async res => {
         if (res.status !== 200) {
-          throw new Error(`Failed to post data to ${url}: ${res.statusText}`)
+          const error: any = new Error(`Failed to post data to ${url}: ${res.statusText}`);
+          error.body = await res.json();
+          console.error(error.message, error.body)
+          throw error
         }
         return res.json()
       })
@@ -90,7 +95,7 @@ export default function Home() {
     if (useScripts.isSuccess) {
       console.log('Reevaluating filteredScripts...')
       const parentPath: string[] = []
-      const filters = searchScripts.split(' ').filter(f => f.length > 0)
+      const filters = searchScripts.trim().split(' ').filter(f => f.length > 0)
       let current: Record<string, any> = useScripts.data
       for (const filter of filters) {
         const filtered = Object.entries(current).filter(([name, groupOrJob]) => {
@@ -98,9 +103,12 @@ export default function Home() {
         })
         if (filtered.length === 1) {
           parentPath.push(filter)
-          current = filtered[0][1]
-          if (isScript(current)) {
+          const tmp = filtered[0][1]
+          if (isScript(tmp)) {
+            current = Object.fromEntries(filtered)
             break
+          } else {
+            current = tmp
           }
         } else {
           current = Object.fromEntries(filtered)
@@ -126,8 +134,11 @@ export default function Home() {
           <div className="w-full flex items-center justify-between">
             <h2>Api Key</h2>
             {useScripts.isSuccess
-              ? <span>✅</span>
-              : <span><span className="text-gray-400">{useScripts.error?.message}</span> ❌</span>}
+              ? <div>✅</div>
+              : <div className="flex gap-2 items-center">
+                <div className="text-gray-400 max-w-[200px] truncate">{useScripts.error?.message}</div>
+                <div>❌</div>
+              </div>}
           </div>
           <input
             type="text"
@@ -158,7 +169,7 @@ export default function Home() {
                 return (
                   <div key={name} className="border card-border w-full px-4 py-3 text-sm text-left flex gap-2 items-center justify-between hover:bg-black/5 dark:hover:bg-white/5">
                     <span className="truncate">{name}</span>
-                    <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10" onClick={() => executeScript([...filteredObjects.parentPath, name.split(' ')[0]].join(' '))}>Execute</button>
+                    <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10 text-sm" onClick={() => executeScript([...filteredObjects.parentPath, name.split(' ')[0]].join(' '))}>Execute</button>
                   </div>
                 )
               } else {
@@ -179,18 +190,28 @@ export default function Home() {
 
         {/* Results */}
         <section className={`border card-border w-full p-4 flex flex-col gap-4 ${doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
-          <h2>Results</h2>
+          <div className="flex items-center justify-between">
+            <h2>Results</h2>
+            <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10 text-sm" onClick={() => doExecute.reset()}>Clear</button>
+          </div>
+
           {/* shimmer */}
           <div className={`${doExecute.isPending ? 'visible' : 'hidden'} animate-pulse flex space-x-4`}>
             <div className="min-h-[44px] w-full bg-slate-200 dark:bg-slate-900"></div>
           </div>
+
           {/* results - success */}
           <pre className={`${doExecute.isSuccess ? 'visible' : 'hidden'} text-sm text-blue-700 p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
-            {doExecute.data?.outputs.join('\n')}
+            {'Success:\n'}
+            {(doExecute.data?.outputs ?? []).join('\n')}
           </pre>
+
           {/* results - error */}
-          <pre className={`${doExecute.isError ? 'visible' : 'hidden'} text-sm text-red-700 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+          <pre className={`${doExecute.isError ? 'visible' : 'hidden'} text-sm text-red-700 p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+            {'Error:\n'}
             {(doExecute.error as Error)?.message}
+            {'\n'}
+            {(doExecute.error as any)?.body?.message}
           </pre>
         </section>
 
