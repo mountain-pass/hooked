@@ -32,8 +32,9 @@
     "j": "./dist/index.js",
     "hooked": "./dist/index.js"
   },
-  "files": [
-    "dist"
+  "dir": [
+    "dist",
+    "public"
   ],
   "scripts": {
     "start": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",

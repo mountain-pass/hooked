@@ -90,9 +90,10 @@ scripts:
 
   publish_all:
     $jobs_serial:
-      - cli publish
       - ui build
-      - docker publish
+      - $cmd: rm -rf cli/public || true && mv ui/out cli/public
+      - cli publish
+      # - docker publish
 
   # ui build for production
   ui:
