@@ -1,4 +1,4 @@
-public/
+package/
 does*.yaml
 hooked*.yaml
 hooked*.pem

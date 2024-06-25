@@ -23,8 +23,7 @@ import { findFileInAncestors } from '../utils/packageJson.js'
 const startServer = async (
   port: number,
   systemProcessEnvs: RawEnvironment,
-  options: ProgramOptions,
-  config: YamlConfig
+  options: ProgramOptions
 ): Promise<void> => {
   // determine public path
   const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -49,7 +48,7 @@ const startServer = async (
   }
   app.use(express.json())
   app.get('/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
-  app.use('/api', await router.router(systemProcessEnvs, options, config))
+  app.use('/api', await router.router(systemProcessEnvs, options))
   app.use('/', express.static(publicPath))
 
   // ssl setup

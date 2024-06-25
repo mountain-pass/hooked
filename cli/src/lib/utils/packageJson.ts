@@ -1,7 +1,7 @@
 
-import { fileURLToPath } from 'url'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import { isString, type Dictionary } from '../types.js'
 import logger from './logger.js'
 
@@ -19,8 +19,11 @@ export const findFileInAncestors = (dirname: string, filename: string, throwErro
   const maxDepth = 10
   for (; i < maxDepth; i++) {
     const tmp = path.resolve(dirname, '../'.repeat(i), filename)
-    if (!fs.existsSync(tmp)) continue
-    filepath = tmp
+    if (fs.existsSync(tmp)) {
+      logger.debug(`Found '${filename}' at ${tmp}, ${i} folder/s up from ${dirname}.`)
+      filepath = tmp
+      break
+    }
   }
   if (!isString(filepath)) {
     if (throwError) {

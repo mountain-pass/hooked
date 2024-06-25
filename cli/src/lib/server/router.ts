@@ -70,17 +70,17 @@ const rebuildCronJobs = async (
 
 const router = async (
   systemProcessEnvs: RawEnvironment,
-  options: ProgramOptions,
-  yamlConfig: YamlConfig
+  options: ProgramOptions
 ): Promise<Router> => {
   const app = express.Router()
 
   const filepath = defaults.getDefaults().HOOKED_FILE
-  let config = yamlConfig
+  let config = {} as any as YamlConfig
   let lastModified = -1
   let cronJobs: Array<CronJob<any, JobContext>> = []
 
   // initial setup.
+  config = await loaders.loadConfiguration(systemProcessEnvs, options)
   lastModified = await getLastModifiedTimeMs(filepath)
   cronJobs = await rebuildCronJobs(
     systemProcessEnvs,

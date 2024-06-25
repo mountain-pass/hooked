@@ -26,20 +26,24 @@ export const generateAdvancedBlankTemplateFileContents = (): string => {
   return `${HEADER}${YAML.stringify(defaults.CONFIG_ADVANCED_GREETING())}`
 }
 
+/** Writes the config to the file location. */
+export const writeConfig = async (contents: string, overwrite: boolean): Promise<void> => {
+  const filepath = defaults.getDefaults().HOOKED_FILE
+  if (!overwrite && fs.existsSync(filepath)) {
+    throw new Error(`Cannot create - file already exists '${filepath}'`)
+  }
+  logger.info(`Writing config file - ${filepath}`)
+  fs.writeFileSync(filepath, contents, { encoding: 'utf-8' })
+}
+
+export const writeBlankConfig = async (): Promise<void> => {
+  await writeConfig(generateBlankTemplateFileContents(), false)
+}
+
 /**
  * Facilitates creating configuration files.
  */
 export const init = async (options: ProgramOptions): Promise<void> => {
-  /** Writes the config to the file location. */
-  const writeConfig = async (contents: string, force: boolean): Promise<void> => {
-    const filepath = defaults.getDefaults().HOOKED_FILE
-    if (!force && fs.existsSync(filepath)) {
-      throw new Error(`Cannot create - file already exists '${filepath}'`)
-    }
-    logger.info(`Writing config file - ${filepath}`)
-    fs.writeFileSync(filepath, contents, { encoding: 'utf-8' })
-  }
-
   if (options.batch === true) {
     // initialise a basic config...
     if (options.init === true) {

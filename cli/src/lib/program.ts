@@ -7,7 +7,7 @@ import loaders from './common/loaders.js'
 import defaults from './defaults.js'
 import exitHandler from './exitHandler.js'
 import { addHistory, displaySuccessfulScript, printHistory } from './history.js'
-import { init } from './init.js'
+import { init, writeBlankConfig } from './init.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import server from './server/server.js'
 import {
@@ -64,25 +64,25 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       .argParser(parseInt)
       .implies({ batch: true })
       .preset(4000)
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
     .addOption(new Option('--ssl', 'Enable SSL, using the default hooked-cert.pem and hooked-key.pem files.')
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
       .implies({
         sslKey: 'hooked-key.pem',
         sslCert: 'hooked-cert.pem'
       })
     )
     .addOption(new Option('--ssl-key [sslKey]', 'The private keys in PEM format. (todo: add passphrase support?)')
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
       .preset('hooked-key.pem')
     )
     .addOption(new Option('--ssl-cert [sslCert]', 'The certificate chains in PEM format.')
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
       .preset('hooked-cert.pem')
     )
     .addOption(new Option('--api-key <apiKey>', 'The "Authorization" Bearer token, that must be present to access API endpoints.')
-      .conflicts(['version', 'init', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
     .argument('[scriptPath...]', 'the script path to run', '')
     .addHelpText('afterAll', `
@@ -103,6 +103,10 @@ Provided Environment Variables:
     .action(async (scriptPath: string[], options: ProgramOptions) => {
       // set the default configuration location (should be first step!)
       defaults.setDefaultConfigurationFilepath(options.config)
+
+      // check for server mode
+      const port = options.server
+      const isServerMode = isNumber(port)
 
       // show update command...
       if (options.update === true) {
@@ -132,11 +136,21 @@ Provided Environment Variables:
 
       // no config? initialise a new project...
       if (!fs.existsSync(defaults.getDefaults().HOOKED_FILE)) {
-        logger.error(`No config file found at '${defaults.getDefaults().HOOKED_FILE}'. Launching setup...`)
-        await init(options)
-        return
+        if (isServerMode) {
+          await writeBlankConfig()
+        } else {
+          logger.error(`No config file found at '${defaults.getDefaults().HOOKED_FILE}'. Launching setup...`)
+          await init(options)
+          return
+        }
       } else {
         logger.debug(`Using config file: ${defaults.getDefaults().HOOKED_FILE}`)
+      }
+
+      // run the api server...
+      if (isServerMode) {
+        await server.startServer(port, systemProcessEnvs, options)
+        return
       }
 
       // show logs
@@ -158,13 +172,6 @@ Provided Environment Variables:
       // show environment names...
       if (options.listenvs === true) {
         logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
-        return
-      }
-
-      // run the api server...
-      const port = options.server
-      if (isNumber(port)) {
-        await server.startServer(port, systemProcessEnvs, options, config)
         return
       }
 
