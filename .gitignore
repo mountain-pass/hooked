@@ -1,3 +1,4 @@
+*.pem
 cli/public/
 Brainstorm.md
 # Logs

@@ -1,9 +1,9 @@
-
+ARG VERSION=latest
 
 # host it...
 FROM node:lts-alpine
 RUN apk add --no-cache openssl curl docker-cli
-RUN npm i -g @mountainpass/hooked-cli
+RUN npm i -g @mountainpass/hooked-cli@${VERSION}
 WORKDIR /hooked
 
 # configure it...

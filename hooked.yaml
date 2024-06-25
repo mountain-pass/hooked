@@ -116,6 +116,7 @@ scripts:
         echo Building and publishing - version: \"${VERSION}\"
         docker buildx build \
           --push \
+          --build-arg VERSION=${VERSION} \
           --platform linux/amd64,linux/arm64/v8 \
           --tag mountainpass/hooked:latest \
           --tag mountainpass/hooked:${VERSION} \
