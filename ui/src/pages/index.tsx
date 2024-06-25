@@ -178,10 +178,10 @@ export default function Home() {
         </section>
 
         {/* Results */}
-        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${true || doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
+        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
           <h2>Results</h2>
           {/* shimmer */}
-          <div className={`${true || doExecute.isPending ? 'visible' : 'hidden'} animate-pulse flex space-x-4`}>
+          <div className={`${doExecute.isPending ? 'visible' : 'hidden'} animate-pulse flex space-x-4`}>
             <div className="min-h-[44px] w-full bg-slate-200 dark:bg-slate-900"></div>
           </div>
           {/* results - success */}
