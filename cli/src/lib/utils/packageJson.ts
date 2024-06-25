@@ -16,7 +16,7 @@ export const findFileInAncestors = (dirname: string, filename: string, throwErro
   // find filename
   let i = 0
   let filepath
-  const maxDepth = 5
+  const maxDepth = 10
   for (; i < maxDepth; i++) {
     const tmp = path.resolve(dirname, '../'.repeat(i), filename)
     if (!fs.existsSync(tmp)) continue

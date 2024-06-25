@@ -1,76 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BlackButton, GreyText, ListItem, OutputPre, Section } from "@/components/components";
+import { useExecuteScript, useGet } from "@/hooks/ReactQuery";
+import { useRunTimer } from "@/hooks/useRunTimer";
 import React from "react";
-import { isScript } from "../utils/types";
-
-/**
- * Fetches data from the given URL using a GET request with the given bearer token.
- * @param url 
- * @param bearerToken 
- * @returns 
- */
-const useGet = (url: string, bearerToken: string) => {
-  const queryClient = useQueryClient()
-  return useQuery({
-    queryKey: [bearerToken, url],
-    queryFn: () => {
-      return fetch(url, { method: 'get', headers: { 'Authorization': `Bearer ${bearerToken}` } }).then(async res => {
-        if (res.status !== 200) {
-          const error: any = new Error(`Failed to fetch data from ${url}: ${res.statusText}`);
-          error.body = await res.json();
-          throw error
-        }
-        const newData = await res.json();
-        const oldData = queryClient.getQueryData([url]);
-        const newString = JSON.stringify(Object.entries(newData ?? {}).sort());
-        const oldString = JSON.stringify(Object.entries(oldData ?? {}).sort());
-        if (newString === oldString) {
-          return oldData
-        } else {
-          // console.debug(`Using new data... <- ${url}`, { oldString, newString })
-          return newData
-        }
-      })
-    },
-    refetchInterval: 6000,
-    retry: 0,
-  })
-}
-
-const useExecuteScript = (baseUrl: string, bearerToken: string) => {
-  return useMutation({
-    // mutationKey: [bearerToken, url],
-    mutationFn: (postData: any) => {
-      const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
-      return fetch(url, {
-        method: 'post',
-        headers: {
-          'Authorization': `Bearer ${bearerToken}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(postData.env ?? {})
-      }).then(async res => {
-        if (res.status !== 200) {
-          const error: any = new Error(`Failed to post data to ${url}: ${res.statusText}`);
-          error.body = await res.json();
-          console.error(error.message, error.body)
-          throw error
-        }
-        return res.json()
-      })
-    }
-  })
-}
+import { isScript } from "../components/types";
 
 export default function Home() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
+  // state
+
   const [searchScripts, setSearchScripts] = React.useState('')
   const [apiKey, setApiKey] = React.useState('')
   const [showLogin, setShowLogin] = React.useState(true)
 
+  // hooks
+
   const doExecute = useExecuteScript(baseUrl, apiKey)
+  const runTimer = useRunTimer()
 
   const executeScript = (
     scriptPath: string,
@@ -78,7 +25,13 @@ export default function Home() {
     env: Record<string, string> = {}
 
   ) => {
-    doExecute.mutate({ scriptPath, envNames, env })
+    if (runTimer.isRunning) {
+      runTimer.stop()
+    }
+    runTimer.start()
+    doExecute.mutateAsync({ scriptPath, envNames, env }).then(() => {
+      runTimer.stop()
+    })
   }
 
   // const envs = useGet(`${baseUrl}/api/env`, bearerToken)
@@ -93,7 +46,7 @@ export default function Home() {
   // filters the visible scripts
   const filteredObjects: FilteredObjects = React.useMemo(() => {
     if (useScripts.isSuccess) {
-      console.log('Reevaluating filteredScripts...')
+      console.log('Re-evaluating filteredScripts...')
       const parentPath: string[] = []
       const filters = searchScripts.trim().split(' ').filter(f => f.length > 0)
       let current: Record<string, any> = useScripts.data
@@ -121,78 +74,93 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center gap-4">
-      <div className="banner-colour text-white w-full flex justify-center">
+      <div className="bg-blue-800 dark:bg-gray-500/25 text-white w-full flex justify-center">
         <div className="flex items-center justify-between w-full max-w-[1000px] p-4">
-          <h1>mountainpass / hooked</h1>
-          <button className="block p-2 w-[40px] h-[40px] bg-blue-900 hover:bg-white/10 dark:bg-black dark:border card-border" onClick={() => setShowLogin(ps => !ps)}>🔑</button>
+          <div className="flex flex-col gap-0">
+            <h1 className="truncate">mountainpass / hooked</h1>
+            <div className="text-xs">{process.env.NEXT_PUBLIC_VERSION}</div>
+          </div>
+          <BlackButton className="bg-transparent border-white/20" onClick={() => setShowLogin(ps => !ps)}>🔑</BlackButton>
         </div>
       </div>
       <div className="flex flex-col items-center gap-4 w-full px-4 pb-4 max-w-[1000px]">
 
-        {/* Login */}
-        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${showLogin ? 'visible' : 'hidden'}`}>
+        {/* Api Key */}
+        <Section visible={showLogin}>
           <div className="w-full flex items-center justify-between">
             <h2>Api Key</h2>
             {useScripts.isSuccess
               ? <div>✅</div>
-              : <div className="flex gap-2 items-center">
-                <div className="text-gray-400 max-w-[200px] truncate">{useScripts.error?.message}</div>
+              : <div className="flex gap-3 items-center">
+                <GreyText className="max-w-[200px] truncate">{useScripts.error?.message}</GreyText>
                 <div>❌</div>
               </div>}
           </div>
           <input
             type="text"
-            className="border border-gray-200 w-full p-4 text-sm"
+            className="border border-gray-200 dark:border-gray-800 w-full p-4 text-sm"
             placeholder="API Key"
             spellCheck={false}
             value={apiKey}
             onKeyUp={e => setApiKey((e.target as any).value)}
             onChange={e => setApiKey((e.target as any).value)}
           />
-        </section>
+        </Section>
 
         {/* Scripts */}
-        <section className={`${useScripts.isSuccess ? 'visible' : 'hidden'} border card-border w-full p-4 flex flex-col gap-4`}>
+        <Section visible={useScripts.isSuccess}>
           <h2>Scripts</h2>
-          <input
-            type="search"
-            autoFocus
-            className="border card-border w-full p-4 text-sm"
-            placeholder="Search scripts"
-            spellCheck={false}
-            value={searchScripts}
-            onChange={e => setSearchScripts(e.target.value)}
-          />
-          <div className="flex flex-col gap-1 max-h-[400px] overflow-auto [color-scheme:light_dark]">
+          <div className="flex">
+            <input
+              type="text"
+              autoFocus
+              className="border border-gray-200 dark:border-gray-800 w-full p-4 text-sm"
+              placeholder="Search scripts"
+              spellCheck={false}
+              value={searchScripts}
+              onChange={e => setSearchScripts(e.target.value)}
+              // on escape key, clear searc
+              onKeyDown={e => {
+                if (e.key === 'Escape') setSearchScripts('')
+              }}
+            />
+            <BlackButton className="text-xl min-w-[54px] border-l-0" onClick={() => setSearchScripts('')}>&times;</BlackButton>
+          </div>
+
+          <div className="flex flex-col gap-1 h-[400px] overflow-auto [color-scheme:light_dark]">
             {useScripts.isSuccess && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
               if (isScript(groupOrJob)) {
+                // executable Script
                 return (
-                  <div key={name} className="border card-border w-full px-4 py-3 text-sm text-left flex gap-2 items-center justify-between hover:bg-black/5 dark:hover:bg-white/5">
+                  <ListItem key={name} className="justify-between">
                     <span className="truncate">{name}</span>
-                    <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10 text-sm" onClick={() => executeScript([...filteredObjects.parentPath, name.split(' ')[0]].join(' '))}>Execute</button>
-                  </div>
+                    <BlackButton onClick={() => executeScript([...filteredObjects.parentPath, name.split(' ')[0]].join(' '))}>Execute</BlackButton>
+                  </ListItem>
                 )
               } else {
+                // Script Group
                 return (
-                  <button key={name} className="border card-border w-full p-4 text-sm text-left flex gap-2 items-center hover:bg-black/5 dark:hover:bg-white/5"
-                    onClick={() => setSearchScripts(ps => `${ps} ${name}`.trim())}>
+                  <ListItem key={name} className="cursor-pointer" onClick={() => setSearchScripts(ps => `${ps} ${name}`.trim())}>
                     <span className="truncate">{name}</span>
                     <span className="text-gray-300">({Object.values(groupOrJob).length})</span>
-                  </button>
+                  </ListItem>
                 )
               }
             })}
-            {useScripts.isLoading && <i className="text-gray-400 text-sm">Loading...</i>}
-            {useScripts.isSuccess && Object.keys(useScripts.data).length === 0 && <i className="text-gray-400 text-sm">No data</i>}
-            {useScripts.isError && <i className="text-gray-400 text-sm">{useScripts.error.message}</i>}
+            {useScripts.isLoading && <GreyText>Loading...</GreyText>}
+            {useScripts.isSuccess && Object.keys(useScripts.data).length === 0 && <GreyText>No data</GreyText>}
+            {useScripts.isError && <GreyText>{useScripts.error.message}</GreyText>}
           </div>
-        </section>
+        </Section>
 
         {/* Results */}
-        <section className={`border card-border w-full p-4 flex flex-col gap-4 ${doExecute.isSuccess || doExecute.isPending || doExecute.isError ? 'visible' : 'hidden'}`}>
+        <Section visible={doExecute.isSuccess || doExecute.isPending || doExecute.isError}>
           <div className="flex items-center justify-between">
             <h2>Results</h2>
-            <button className="border card-border px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10 text-sm" onClick={() => doExecute.reset()}>Clear</button>
+            <div className="flex gap-3 items-center">
+              <GreyText>{`${runTimer.isRunning ? Math.round(runTimer.durationMs / 1000) : runTimer.durationMs / 1000} seconds`}</GreyText>
+              <BlackButton onClick={() => doExecute.reset()}>Clear</BlackButton>
+            </div>
           </div>
 
           {/* shimmer */}
@@ -201,21 +169,20 @@ export default function Home() {
           </div>
 
           {/* results - success */}
-          <pre className={`${doExecute.isSuccess ? 'visible' : 'hidden'} text-sm text-blue-700 p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+          <OutputPre visible={doExecute.isSuccess} className="text-blue-700">
             {'Success:\n'}
             {(doExecute.data?.outputs ?? []).join('\n')}
-          </pre>
+          </OutputPre>
 
           {/* results - error */}
-          <pre className={`${doExecute.isError ? 'visible' : 'hidden'} text-sm text-red-700 p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+          <OutputPre visible={doExecute.isError} className="text-red-700">
             {'Error:\n'}
             {(doExecute.error as Error)?.message}
             {'\n'}
             {(doExecute.error as any)?.body?.message}
-          </pre>
-        </section>
+          </OutputPre>
+        </Section>
 
-        <i className="text-gray-400 text-sm">{process.env.NEXT_PUBLIC_VERSION}</i>
       </div>
     </main>
   );
