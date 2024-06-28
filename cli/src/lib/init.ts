@@ -44,15 +44,15 @@ export const writeBlankConfig = async (): Promise<void> => {
  * Facilitates creating configuration files.
  */
 export const init = async (options: ProgramOptions): Promise<void> => {
+  // if batch and init, create a blank config
+  if (options.batch === true && options.init === true) {
+    await writeConfig(generateBlankTemplateFileContents(), options.force)
+    return
+  }
+
+  // throw error
   if (options.batch === true) {
-    // initialise a basic config...
-    if (options.init === true) {
-      await writeConfig(generateBlankTemplateFileContents(), options.force)
-      return
-    } else {
-      // throw error
-      throw new Error('Interactive prompts not supported in batch mode. No hooked.yaml file found.')
-    }
+    throw new Error(`Interactive prompts not supported in batch mode. [2] No config file found - "${defaults.getDefaults().HOOKED_FILE}".`)
   }
 
   // ask user which hooked.yaml template to use (NOTE: even if only one option, still ask user the chance to escape without creating a file!)

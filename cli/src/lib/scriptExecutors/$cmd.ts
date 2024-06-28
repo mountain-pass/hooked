@@ -9,6 +9,7 @@ import logger from '../utils/logger.js'
 import { resolveResolveScript } from './ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
+import { type ProgramOptions } from '../program.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -97,6 +98,7 @@ export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, 
 export const executeCmd = async (
   key: string,
   script: CmdScript,
+  options: ProgramOptions,
   opts: any = undefined,
   env: Environment,
   customOpts: CustomOptions,
@@ -108,7 +110,7 @@ export const executeCmd = async (
     const scriptName = `${key.replace(/[^\w\d-]+/g, '')}-${rand}`
     const filepath = fileUtils.resolvePath(`.tmp-${scriptName}.sh`)
     const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
-    const parent = process.env.DOCKER_HOOKED_DIR ?? path.dirname(filepath)
+    const parent = options.dockerHookedDir ?? path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
 
     // add "HOOKED_ROOT=false" to all child environments...

@@ -37,9 +37,9 @@ interface Defaults {
 }
 
 const defaults: Defaults = {
-  HOOKED_FILE: '/tmp/hooked.yaml',
+  HOOKED_FILE: '',
   HOOKED_DIR: '',
-  HISTORY_PATH: '/tmp/.hooked_history.log',
+  HISTORY_PATH: '',
   PAGE_SIZE: 10,
   LOGS_MENU_OPTION: '🪵  _logs_',
   LOCAL_CACHE_PATH: path.join(os.homedir(), '.hooked', 'imports')
@@ -57,7 +57,9 @@ const setDefaultConfigurationFilepath = (hookedFilepath: string | undefined): vo
   defaults.HISTORY_PATH = path.resolve(defaults.HOOKED_DIR, '.hooked_history.log')
 }
 
-const getDefaults = (): Defaults => defaults
+const getDefaults = (): Defaults => {
+  return defaults
+}
 
 const getLocalImportsCachePath = (filename: string): string => path.join(getDefaults().LOCAL_CACHE_PATH, filename)
 

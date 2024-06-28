@@ -1,3 +1,4 @@
+import { ProgramOptions } from '../program.js'
 import { isDefined } from '../types.js'
 import { Environment, type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
@@ -18,6 +19,7 @@ const verifyLatestVersion = async (): Promise<void> => {
     const latestPublishedVersion = (await executeCmd(
       'system',
       { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
+      {} as any,
       { env: process.env },
       env,
       { printStdio: false, captureStdout: true },
@@ -45,6 +47,7 @@ const verifyDockerExists = async (env: Environment): Promise<void> => {
         '-',
         // eslint-disable-next-line no-template-curly-in-string
         { $cmd: '${DOCKER_BIN=docker} -v' },
+        {} as any,
         { env: env.resolved },
         env,
         { printStdio: false, captureStdout: true },
@@ -65,7 +68,7 @@ const verifyDockerExists = async (env: Environment): Promise<void> => {
 }
 
 const verifyDockerKilled = async (dockerName: string): Promise<string> => {
-  return await executeCmd('-', { $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {},
+  return await executeCmd('-', { $cmd: `docker kill ${dockerName} 2>/dev/null || true` }, {} as any, {},
     new Environment(), { printStdio: false, captureStdout: false }, 5000)
 }
 

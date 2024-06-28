@@ -41,7 +41,9 @@ describe('config', () => {
 
     const [script, scriptPath] = await findScript({ env: { default: { }}, scripts: { foo: { $cmd: 'echo "FOO"'}}}, [], { env: 'default', stdin: '{}', force: false })
 
-    sinon.assert.calledOnceWithExactly(inqspy, [
+    sinon.assert.calledOnce(inqspy)
+    const tmp = inqspy.args[0][0]
+    expect(tmp).to.eql([
       {
         type: 'list',
         name: 'next',
@@ -503,7 +505,7 @@ describe('config', () => {
       }])
     })
 
-    it('wip $ask - $ask should support $choices $cmd', async () => {
+    it('$ask - $ask should support $choices $cmd', async () => {
       // stub
       const inqspy = sinon.stub(inquirer, 'prompt').resolves({ name: 'jack' })
       // test

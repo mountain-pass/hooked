@@ -38,17 +38,17 @@ describe('program arguments', () => {
     sinon.restore()
   })
 
-  it('--printenv should print environment variables (including BASEDIR) only', async () => {
-    const filepath = path.resolve('hooked.yaml')
-    fs.writeFileSync(filepath, YAML.stringify(BASE_CONFIG), 'utf-8')
-    const spylog = sinon.stub(console, 'log')
-    await program(["node","index.ts","--printenv","test","--config",filepath])
-    sinon.assert.calledOnce(spylog)
-    const argument = JSON.parse(spylog.getCall(0).args[0])
-    expect(argument).to.eql({
-      FOO:'bar', 
-      HOOKED_DIR: path.dirname(filepath),
-      HOOKED_FILE: filepath
-    })
-  })
+  // it('--printenv should print environment variables (including BASEDIR) only', async () => {
+  //   const filepath = path.resolve('hooked.yaml')
+  //   fs.writeFileSync(filepath, YAML.stringify(BASE_CONFIG), 'utf-8')
+  //   const spylog = sinon.stub(console, 'log')
+  //   await program(["node","index.ts","--printenv","test","--config",filepath])
+  //   sinon.assert.calledOnce(spylog)
+  //   const argument = JSON.parse(spylog.getCall(0).args[0])
+  //   expect(argument).to.eql({
+  //     FOO:'bar', 
+  //     HOOKED_DIR: path.dirname(filepath),
+  //     HOOKED_FILE: filepath
+  //   })
+  // })
 })

@@ -55,11 +55,11 @@ export const findScript = async (
       const $cmd = displaySuccessfulScript(log, false)
       return [display, { $cmd }] as [string, CmdScript]
     })
-    if (history.length > 0) {
-      script = { [defaults.getDefaults().LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
-    } else {
-      logger.debug('No history found.')
-    }
+    // if (history.length > 0) {
+    script = { [defaults.getDefaults().LOGS_MENU_OPTION]: Object.fromEntries(history), ...script }
+    // } else {
+    // logger.debug('No history found.')
+    // }
   }
 
   const resolvedScriptPath: string[] = []

@@ -7,12 +7,20 @@ export const isLogLevel = (level: string | undefined): level is LogLevel => {
   return ['error', 'warn', 'info', 'debug'].includes(level as string)
 }
 
-const logLevel = isLogLevel(process.env.LOG_LEVEL) ? process.env.LOG_LEVEL : 'info'
+let logLevel = 'info' // isLogLevel(process.env.LOG_LEVEL) ? process.env.LOG_LEVEL : 'info'
 
-const logError = ['debug', 'info', 'warn', 'error'].includes(logLevel)
-const logWarn = ['debug', 'info', 'warn'].includes(logLevel)
-const logInfo = ['debug', 'info'].includes(logLevel)
-const logDebug = ['debug'].includes(logLevel)
+const logError = (): boolean => ['debug', 'info', 'warn', 'error'].includes(logLevel)
+const logWarn = (): boolean => ['debug', 'info', 'warn'].includes(logLevel)
+const logInfo = (): boolean => ['debug', 'info'].includes(logLevel)
+const logDebug = (): boolean => ['debug'].includes(logLevel)
+
+const setLogLevel = (level: LogLevel | string | undefined): void => {
+  if (isLogLevel(level)) {
+    logLevel = level
+  } else if (isString(level)) {
+    throw new Error(`Invalid log level: ${level}`)
+  }
+}
 
 // Level = E W I D
 // error   Y - - -
@@ -21,7 +29,7 @@ const logDebug = ['debug'].includes(logLevel)
 // debug   Y Y Y Y
 
 const error = (str: string | Error): void => {
-  if (logError) {
+  if (logError()) {
     if (isString(str)) {
       console.error(red(str))
     } else {
@@ -35,23 +43,23 @@ const error = (str: string | Error): void => {
 }
 
 const warn = (str: any): void => {
-  if (logWarn) console.error(yellow(str))
+  if (logWarn()) console.error(yellow(str))
 }
 
 const info = (str: any): void => {
-  if (logInfo) console.log(str)
+  if (logInfo()) console.log(str)
 }
 
 const writeInfo = (str: any): void => {
-  if (logDebug) process.stdout.write(str)
+  if (logDebug()) process.stdout.write(str)
 }
 
 const debug = (str: any): void => {
-  if (logDebug) console.error(grey(str))
+  if (logDebug()) console.error(grey(str))
 }
 
 const writeDebug = (str: any): void => {
-  if (logDebug) process.stderr.write(grey(str))
+  if (logDebug()) process.stderr.write(grey(str))
 }
 
 export interface Logger {
@@ -61,6 +69,7 @@ export interface Logger {
   error: (str: string | Error) => void
   writeInfo: (str: any) => void
   writeDebug: (str: any) => void
+  setLogLevel: (level: LogLevel | string | undefined) => void
 }
 
 const logger: Logger = {
@@ -69,7 +78,8 @@ const logger: Logger = {
   debug,
   info,
   writeDebug,
-  writeInfo
+  writeInfo,
+  setLogLevel
 }
 
 export default logger

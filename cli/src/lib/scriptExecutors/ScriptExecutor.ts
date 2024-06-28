@@ -84,12 +84,6 @@ export const resolveInternalScript = async (
   // actually resolve the environment variables... (internal script)
   await resolveEnvironmentVariables(config, envVars, stdin, env, options)
 
-  // print environment variables, and exit.
-  if (isFinalScript && options.printenv === true) {
-    logger.info(env.toJsonStringResolved(options.pretty))
-    return ''
-  }
-
   // execute the script
   const result = await script.$internal({ key, stdin, env })
 
@@ -149,12 +143,6 @@ export const resolveCmdScript = async (
     throw new Error(`Script '${key}' is missing required environment variables: ${JSON.stringify(missingKeys.sort())}\nFound: ${foundString}`)
   }
 
-  // print environment variables, and exit.
-  if (isFinalScript && options.printenv === true) {
-    logger.info(env.toJsonStringResolved(options.pretty))
-    return ''
-  }
-
   // if set to true, or not defined and not a docker or ssh script, include host environment variables...
   const isDocker = isDockerCmdScript(script)
   const isSSH = isSSHCmdScript(script)
@@ -179,6 +167,7 @@ export const resolveCmdScript = async (
     let newValue = await executeCmd(
       key,
       script,
+      options,
       { env: env.resolved },
       env,
       // N.B. we do NOT want to capture output if this is the final script, we want it to be streamed to stdout!
@@ -349,8 +338,6 @@ export const executeScriptsSequentially = async (
     } else if (isEnvScript(scriptx)) {
       // write files
       await resolveEnvScript(pathsx.join(' '), scriptx, stdin, env, config, options, envVars)
-    } else if (options.printenv === true) {
-      throw new Error(`Cannot print environment variables for this script type - script="${JSON.stringify(scriptx)}"`)
     }
   }
   return outputs
