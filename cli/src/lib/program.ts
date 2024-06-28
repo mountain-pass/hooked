@@ -1,4 +1,4 @@
-import { Command, Option } from 'commander'
+import { Argument, Command, Option } from 'commander'
 import fs from 'fs'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
@@ -11,7 +11,8 @@ import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools
 import server from './server/server.js'
 import {
   isNumber,
-  isString
+  isString,
+  isUndefined
 } from './types.js'
 import { type RawEnvironment } from './utils/Environment.js'
 import logger from './utils/logger.js'
@@ -27,8 +28,8 @@ export interface ProgramOptions {
   //
   // skipCleanup?: boolean
   // skipVersionCheck?: boolean
-  // dockerHookedDir?: string
   //
+  dockerHookedDir?: string
   tz?: string
   init?: boolean
   pull?: boolean
@@ -41,7 +42,7 @@ export interface ProgramOptions {
   sslKey?: string
   apiKey?: string
   force: boolean
-  scriptPath?: string
+  scriptPath?: string[] // this is here because of the command args
 }
 
 export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
@@ -76,10 +77,10 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
   // .addOption(new Option('-svc, --skipVersionCheck', 'If present, skips the version check at startup.')
   //   .env('SKIP_VERSION_CHECK'))
 
-  // .addOption(new Option(
-  //   '-dhd, --dockerHookedDir <dockerHookedDir>',
-  //   'Used to specify the HOOKED directory in relation to the Docker host. (Note: Required for Docker jobs!)')
-  //   .env('DOCKER_HOOKED_DIR'))
+    .addOption(new Option(
+      '-dhd, --dockerHookedDir <dockerHookedDir>',
+      'Used to specify the HOOKED directory in relation to the Docker host. (Note: Required for Docker jobs!)')
+      .env('DOCKER_HOOKED_DIR'))
 
     .addOption(new Option('-tz, --timezone <timezone>', "The timezone to use for Cron triggers. e.g. 'Australia/Sydney'")
       .default(Intl.DateTimeFormat().resolvedOptions().timeZone).env('TZ'))
@@ -97,6 +98,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       .env('CONFIG'))
 
     .addOption(new Option('-sp, --scriptPath', 'A space-delimited script path to execute (supercedes the argument).')
+      .argParser((val: string) => val.trim().split(' '))
       .env('SCRIPTPATH'))
 
     .addOption(new Option('-s, --server [port]', 'Runs hooked in server mode. Enables cron jobs, rest api and web ui.')
@@ -132,7 +134,8 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       .env('API_KEY')
       .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
-    .argument('[scriptPath...]', 'the script path to run', '')
+    .addArgument(new Argument('[scriptPath...]', 'the script path to run')
+      .default([]))
     .addHelpText('afterAll', `
 Environment Variables:
   LOG_LEVEL              <info|debug|warn|error> Specifies the log level. (default: "debug").
@@ -147,8 +150,13 @@ Provided Environment Variables:
   HOOKED_ROOT            <true|false> True if the current script is the root file.
     `)
     .usage('[options]')
-    .action(async (scriptPath: string[], options: ProgramOptions) => {
+    .action(async (scriptPathArgs: string[], options: ProgramOptions) => {
       logger.setLogLevel(options.logLevel)
+
+      // set the script path from the command line arguments
+      if (isUndefined(options.scriptPath)) {
+        options.scriptPath = scriptPathArgs
+      }
 
       // set the default configuration location (should be first step!)
       defaults.setDefaultConfigurationFilepath(options.config)
@@ -192,12 +200,6 @@ Provided Environment Variables:
         logger.debug(`Using config file: ${defaultInstance.HOOKED_FILE}`)
       }
 
-      // show logs
-      // if (options.log === true) {
-      //   printHistory()
-      //   return
-      // }
-
       // check for newer versions
       if (options.batch !== true && isString(process.env.SKIP_VERSION_CHECK)) {
         await verifyLocalRequiredTools.verifyLatestVersion()
@@ -214,28 +216,14 @@ Provided Environment Variables:
         return
       }
 
-      // otherwise execute the script...
-      if (isString(options.scriptPath) && options.scriptPath.trim().length > 0) {
-        scriptPath = options.scriptPath.trim().split(' ')
-      } else if (isString(scriptPath) && scriptPath.trim().length > 0) {
-        if (scriptPath.trim().length > 0) {
-          scriptPath = scriptPath.split(' ')
-        } else {
-          // blank string = don't run anything
-          scriptPath = []
-        }
-      }
-
-      // invoke script if provided
-      if (Array.isArray(scriptPath) && scriptPath.length > 0) {
+      if (isServerMode) {
+        // server mode
+        await server.startServer(port, systemProcessEnvs, options)
+      } else {
+        // script mode
         const providedEnvNames = options.env.split(',')
         const stdin: RawEnvironment = HJSON.parse(options.stdin)
-        await common.invoke(systemProcessEnvs, options, config, providedEnvNames, scriptPath, stdin, true, false)
-      }
-
-      // run the api server...
-      if (isServerMode) {
-        await server.startServer(port, systemProcessEnvs, options)
+        await common.invoke(systemProcessEnvs, options, config, providedEnvNames, options.scriptPath, stdin, true, false)
       }
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)

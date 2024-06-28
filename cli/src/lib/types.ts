@@ -209,6 +209,8 @@ export const isStdinScriptFieldsMapping = (script: any): script is StdinScriptFi
     (isString(script.short) || typeof script.short === 'undefined')
 }
 
+export const isUndefined = (o: any): o is undefined => typeof o === 'undefined'
+
 export const isDefined = (o: any): o is object => {
   return typeof o !== 'undefined' && o !== null
 }

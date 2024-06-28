@@ -4,6 +4,7 @@ import { type ProgramOptions } from '../program.js'
 import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from '../scriptExecutors/ScriptExecutor.js'
 import {
   isJobsSerialScript,
+  isString,
   type EnvironmentVariables,
   type ScriptAndPaths,
   type StdinResponses,
