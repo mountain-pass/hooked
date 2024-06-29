@@ -19,13 +19,13 @@ export default function Home() {
 
   // state
 
-  const [searchScripts, setSearchScripts] = React.useState('')
+  const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
+  const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
   const [apiKey, setApiKey] = React.useState('')
   const [showLogin, setShowLogin] = React.useState(true)
 
   // hooks
 
-  const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
   const doExecute = useExecuteScript(baseUrl, apiKey)
   const runTimer = useRunTimer()
 
