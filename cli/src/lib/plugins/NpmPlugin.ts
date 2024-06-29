@@ -20,12 +20,12 @@ export const generateNpmScripts = (systemProcessEnvs: RawEnvironment): any => {
     const packageJson = loadPackageJsonSync(packageJsonFile)
     if (isDefined(packageJson.scripts) && Object.keys(packageJson.scripts).length > 0) {
       const npmScripts = {
-        install: { $cmd: 'npm install' },
-        'clean install production': { $cmd: 'npm ci --production' }
+        install: { _scriptPath: 'npm install', $cmd: 'npm install' },
+        ci_production: { _scriptPath: 'npm ci_production', $cmd: 'npm ci --production' }
       }
       const npm = Object.keys(packageJson.scripts).reduce((prev: any, curr: string) => {
         const cmd = resolveResolveScript('-', { $resolve: npmScript }, new Environment().putAllGlobal({ NPM_COMMAND: curr }), false)
-        prev[curr] = { $cmd: cmd }
+        prev[curr] = { _scriptPath: `npm ${curr}`, $cmd: cmd }
         return prev
       }, npmScripts)
       return { npm }

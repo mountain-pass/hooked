@@ -48,7 +48,7 @@ Most decent editors support YAML schemas, which provides **validation**, **docum
 ```
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/mountain-pass/hooked/main/schemas/hooked.yaml.schema-v1.json": [
+    "https://raw.githubusercontent.com/mountain-pass/hooked/main/cli/schemas/hooked.yaml.schema-v1.json": [
       "hooked*.{yml,yaml}",
     ]
   }

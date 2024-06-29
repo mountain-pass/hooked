@@ -20,7 +20,7 @@ export const generateMakefileScripts = (systemProcessEnvs: RawEnvironment): any 
       const makefileScripts = scriptNames.reduce((prev: any, curr: string) => {
         const env = new Environment().putAllGlobal({ MAKE_FILE: makefile, MAKE_COMMAND: curr })
         const cmd = resolveResolveScript('-', { $resolve: makeScript }, env, false)
-        prev[curr] = { $cmd: cmd }
+        prev[curr] = { _scriptPath: `makefile ${curr}`, $cmd: cmd }
         return prev
       }, {})
       return { '🔧 makefile': makefileScripts }

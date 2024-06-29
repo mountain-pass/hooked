@@ -613,8 +613,8 @@ describe('config', () => {
       }, {}, ['default']])
       // assert
       expect(rootConfig.scripts).to.eql({
-        hello: { $cmd: 'echo "Hello"' },
-        goodbye: { $cmd: 'echo "Goodbye"' }
+        hello: { "_scriptPath": "hello", $cmd: 'echo "Hello"' },
+        goodbye: { $cmd: 'echo "Goodbye"' } // <- config was not loaded, thus missing "_scriptPath": "goodbye", 
       })
       sinon.assert.calledThrice(spyFsExistsSync)
       const argument = spyFsExistsSync.getCall(0).args[0]
@@ -662,8 +662,8 @@ describe('config', () => {
       expect(envs).to.eql(['default'])
       // assert
       expect(rootConfig.scripts).to.eql({
-        hello: { $cmd: 'echo "Hello"' },
-        goodbye: { $cmd: 'echo "Goodbye"' }
+        hello: { "_scriptPath": "hello", $cmd: 'echo "Hello"' },
+        goodbye: { $cmd: 'echo "Goodbye"' } // <- config was not loaded, thus missing "_scriptPath": "goodbye", 
       })
       sinon.assert.calledWithExactly(fsspy1, path.join(os.homedir(), '.hooked', 'imports', 'custom.yaml'))
       sinon.assert.calledOnce(fsspy2)

@@ -192,7 +192,7 @@ export const isInternalScript = (script: Script): script is InternalScript => {
   return typeof (script as any).$internal === 'function'
 }
 
-export const isScript = (script: any): script is Script => {
+export const isScript = (script: any): script is Script & BaseScript => {
   return (typeof script === 'object' || typeof script === 'function') &&
   script !== null &&
   (

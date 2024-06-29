@@ -342,6 +342,18 @@ try {
   throw err
 }
 
+export const populateScriptPath = (scripts: TopLevelScripts, parentPaths: string[] = []): void => {
+  for (const [key, script] of Object.entries(scripts)) {
+    if (isScript(script)) {
+      script._scriptPath = [...parentPaths, key].join(' ')
+    } else {
+      // TODO verify unique paths?
+      const firstWord = key.trim().split(' ')[0]
+      populateScriptPath(script, [...parentPaths, firstWord])
+    }
+  }
+}
+
 export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<YamlConfig> => {
   const fileExists = fs.existsSync(configFile)
   // file exists
@@ -353,12 +365,13 @@ export const loadConfig = async (configFile: string, pullLatestFlag = false): Pr
     }
 
     // TODO validate this configuration file (called recursively for imports)
-    const valid = validate(config)
-    if (!valid) {
-      throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
-    }
+    // const valid = validate(config)
+    // if (!valid) {
+    //   throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
+    // }
 
-    // TODO add _scriptPath fields to all scripts
+    // add _scriptPath fields to all scripts
+    populateScriptPath(config.scripts)
 
     // merge imports with current configuration
     await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)

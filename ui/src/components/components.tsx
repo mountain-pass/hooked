@@ -4,8 +4,10 @@ export const GreyText = ({ className = '', children }: { className?: string, chi
   <i className={`text-gray-400 dark:text-gray-700 text-sm ${className}`}>{children}</i>
 )
 
-export const BlackButton = ({ children, className = '', onClick }: { onClick: () => void, className?: string, children: React.ReactNode }) => (
-  <button className={`border border-gray-200 dark:border-gray-800 px-3 py-2 min-h-[38px] min-w-[38px] bg-white dark:bg-transparent hover:bg-black/10 dark:hover:bg-white/10 text-sm ${className}`}
+export const BlackButton = ({ children, disabled, active, className = '', onClick }: { disabled?: boolean, active?: boolean, onClick: () => void, className?: string, children: React.ReactNode }) => (
+  <button
+    disabled={disabled}
+    className={`flex items-center justify-center border ${active ? 'border-blue-500 bg-black/10 dark:bg-white/10 ' : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-transparent hover:bg-black/10 dark:hover:bg-white/10'} px-3 py-2 min-h-[38px] min-w-[38px] text-sm ${className}`}
     onClick={onClick}>
     {children}
   </button>
@@ -24,8 +26,8 @@ export const ListItem = ({ className = '', children, onClick }: { onClick?: () =
   </div>
 )
 
-export const Section = ({ visible, className = '', children }: { visible: boolean, className?: string, children: React.ReactNode }) => (
-  <section className={`border border-gray-200 dark:border-gray-800 bg-slate-100 dark:bg-slate-800/25 w-full p-4 flex flex-col gap-4 ${visible ? 'visible' : 'hidden'} ${className}`}>
+export const Section = ({ visible, fade, naked, className = '', children }: { visible?: boolean, naked?: boolean, fade?: boolean, className?: string, children: React.ReactNode }) => (
+  <section className={`${naked ? '' : 'p-4 border border-gray-200'} dark:border-gray-800 bg-slate-100 dark:bg-slate-800/25 w-full flex flex-col gap-4 ${visible ? 'visible' : 'hidden'} ${fade ? 'opacity-40 blur-sm' : ''} ${className}`}>
     {children}
   </section >
 )

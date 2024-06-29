@@ -11,5 +11,12 @@
             "type": "node-terminal",
             "cwd": "${workspaceFolder}/cli"
         },
+        {
+            "command": "npm run start:serverssl",
+            "name": "Run start:serverssl",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/cli"
+        },
     ]
 }

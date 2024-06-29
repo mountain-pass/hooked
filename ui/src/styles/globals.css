@@ -29,6 +29,13 @@ input {
 h1 {
   font-size: 1.4rem !important;
 }
+
 h2 {
   font-size: 1.125rem !important;
+}
+
+button:focus, input:focus {
+  outline: none;
+  border-color: #3B81F6;
+  z-index:99;
 }
