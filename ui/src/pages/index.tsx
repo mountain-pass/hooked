@@ -200,8 +200,8 @@ export default function Home() {
             <div className="flex flex-col gap-1">
               {(favourites ?? []).map((scriptPath, i) => {
                 return (
-                  <div className="flex">
-                    <ListItem key={i} className="justify-between">
+                  <div className="flex" key={scriptPath}>
+                    <ListItem className="justify-between">
                       <span className="truncate">{scriptPath}</span>
                     </ListItem>
                     <BlackButton
@@ -251,8 +251,8 @@ export default function Home() {
               if (isScript(groupOrJob)) {
                 // executable Script
                 return (
-                  <div className="flex">
-                    <ListItem key={name} className="justify-between">
+                  <div className="flex" key={name}>
+                    <ListItem className="justify-between">
                       <span className="truncate">{name}</span>
                     </ListItem>
                     <BlackButton
