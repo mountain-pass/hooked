@@ -34,7 +34,7 @@ export default function Home() {
 
   /** Jumps up to the parent script (removes the child). */
   const setSearchScriptsToParent = () => {
-    setSearchScripts(ps => ps.trim().split(' ').slice(0, -1).join(' '))
+    setSearchScripts((ps: string) => ps.trim().split(' ').slice(0, -1).join(' '))
     refSearchScript.current?.focus()
   }
 
@@ -47,7 +47,7 @@ export default function Home() {
   /** Selects the script group. */
   const selectScriptGroup = (name: string) => {
     // NOTE: trailing space is important, for next selection
-    setSearchScripts(ps => `${ps.trim()} ${name.trim()} `)
+    setSearchScripts((ps: string) => `${ps.trim()} ${name.trim()} `)
     refSearchScript.current?.focus()
   }
 
@@ -120,7 +120,7 @@ export default function Home() {
     if (useGetScripts.isSuccess) {
       console.log('Re-evaluating filteredScripts...')
       const parentPath: string[] = []
-      const filters = searchScripts.trim().split(' ').filter(f => f.length > 0)
+      const filters = searchScripts?.trim().split(' ').filter(f => f.length > 0) ?? []
       let current: Record<string, any> = useGetScripts.data
       for (const filter of filters) {
         const filtered = Object.entries(current).filter(([name, groupOrJob]) => {
