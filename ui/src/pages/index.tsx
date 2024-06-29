@@ -3,9 +3,11 @@ import { useExecuteScript, useGet } from "@/hooks/ReactQuery";
 import { useRunTimer } from "@/hooks/useRunTimer";
 import React from "react";
 import { isScript } from "../components/types";
-import { TbLockCheck, TbLock, TbLockCancel, TbArrowBackUp, TbX } from "react-icons/tb";
+import { TbLockCheck, TbStar, TbStarFilled, TbLockCancel, TbArrowBackUp, TbX } from "react-icons/tb";
 import { useTabs } from "@/hooks/useTabs";
 import { Tabs } from "@/hooks/Tabs";
+import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4";
+import { isString } from "util";
 
 export default function Home() {
 
@@ -23,6 +25,7 @@ export default function Home() {
 
   // hooks
 
+  const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
   const doExecute = useExecuteScript(baseUrl, apiKey)
   const runTimer = useRunTimer()
 
@@ -96,6 +99,20 @@ export default function Home() {
   interface FilteredObjects {
     parentPath: string[]
     scripts: Record<string, any>
+  }
+
+  const isFavourite = (scriptPath: string): boolean => {
+    return favourites?.includes(scriptPath) ?? false
+  }
+
+  const toggleFavourite = (scriptPath: string) => {
+    setFavourites((ps: string[]) => {
+      if (ps.indexOf(scriptPath) !== -1) {
+        return ps.filter(f => f !== scriptPath)
+      } else {
+        return [...ps, scriptPath]
+      }
+    })
   }
 
   // filters the visible scripts
@@ -175,6 +192,32 @@ export default function Home() {
           <Tabs {...tabs} />
         </Section>
 
+        {/* Favourites List */}
+        <Section visible={tabs.currentTab === 'Favourites' && useGetScripts.isSuccess} fade={showLogin} className="flex-1">
+          <h2>Favourites</h2>
+          {(favourites ?? []).length === 0 && <GreyText>No favourites.</GreyText>}
+          {(favourites ?? []).length > 0 && (
+            <div className="flex flex-col gap-1">
+              {(favourites ?? []).map((scriptPath, i) => {
+                return (
+                  <div className="flex">
+                    <ListItem key={i} className="justify-between">
+                      <span className="truncate">{scriptPath}</span>
+                    </ListItem>
+                    <BlackButton
+                      className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
+                      onClick={() => toggleFavourite(scriptPath)}
+                    >
+                      {isFavourite(scriptPath) ? <TbStarFilled /> : <TbStar />}
+                    </BlackButton>
+                    <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(scriptPath)}>Execute</BlackButton>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </Section>
+
         {/* Scripts List */}
         <Section visible={tabs.currentTab === 'Scripts' && useGetScripts.isSuccess} fade={showLogin} className="flex-1">
           <h2>Scripts</h2>
@@ -202,14 +245,24 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-1 h-[30dvh] overflow-auto [color-scheme:light_dark]">
-            {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
+            {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
+            {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length === 0 && <GreyText>No matching scripts.</GreyText>}
+            {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length > 0 && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
               if (isScript(groupOrJob)) {
                 // executable Script
                 return (
-                  <ListItem key={name} className="justify-between">
-                    <span className="truncate">{name}</span>
-                    <BlackButton onClick={() => executeScript(groupOrJob._scriptPath)}>Execute</BlackButton>
-                  </ListItem>
+                  <div className="flex">
+                    <ListItem key={name} className="justify-between">
+                      <span className="truncate">{name}</span>
+                    </ListItem>
+                    <BlackButton
+                      className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(groupOrJob._scriptPath) ? 'text-yellow-400' : ''}`}
+                      onClick={() => toggleFavourite(groupOrJob._scriptPath)}
+                    >
+                      {isFavourite(groupOrJob._scriptPath) ? <TbStarFilled /> : <TbStar />}
+                    </BlackButton>
+                    <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(groupOrJob._scriptPath)}>Execute</BlackButton>
+                  </div>
                 )
               } else {
                 // Script Group
@@ -257,9 +310,9 @@ export default function Home() {
           </OutputPre>
         </Section>
 
-        <pre className={`${process.env.NODE_ENV === 'production' ? 'hidden' : 'visible'} text-purple-500 bg-purple-500/20 w-full p-4 border border-purple-500`}>
+        {/* <pre className={`${process.env.NODE_ENV === 'production' ? 'hidden' : 'visible'} text-purple-500 bg-purple-500/20 w-full p-4 border border-purple-500`}>
           env = {process.env.NODE_ENV}
-        </pre>
+        </pre> */}
       </div>
     </main>
   );

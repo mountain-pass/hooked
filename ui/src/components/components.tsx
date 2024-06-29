@@ -20,14 +20,14 @@ export const OutputPre = ({ visible, className = '', children }: { visible: bool
 )
 
 export const ListItem = ({ className = '', children, onClick }: { onClick?: () => void, className?: string, children: React.ReactNode }) => (
-  <div className={`border border-gray-200 dark:border-gray-800 w-full min-h-[64px] h-[64px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
+  <div className={`border border-gray-200 dark:border-gray-800 w-full h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
     onClick={onClick}>
     {children}
   </div>
 )
 
 export const Section = ({ visible, fade, naked, className = '', children }: { visible?: boolean, naked?: boolean, fade?: boolean, className?: string, children: React.ReactNode }) => (
-  <section className={`${naked ? '' : 'p-4 border border-gray-200'} dark:border-gray-800 bg-slate-100 dark:bg-slate-800/25 w-full flex flex-col gap-4 ${visible ? 'visible' : 'hidden'} ${fade ? 'opacity-40 blur-sm' : ''} ${className}`}>
+  <section className={`${naked ? '' : 'p-4 border border-gray-200 dark:border-gray-800 bg-slate-100 dark:bg-slate-800/25'} w-full flex flex-col gap-4 ${visible ? 'visible' : 'hidden'} ${fade ? 'opacity-40 blur-sm' : ''} ${className}`}>
     {children}
   </section >
 )
