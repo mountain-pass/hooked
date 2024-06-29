@@ -19,6 +19,10 @@ import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
+import Ajv, { type ValidateFunction, type ErrorObject } from 'ajv'
+import { findFileInAncestors } from './utils/packageJson.js'
+import { fileURLToPath } from 'url'
+import path from 'path'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -316,18 +320,49 @@ export const resolveEnvironmentVariables = async (
   // }
 }
 
+const dirname = path.dirname(fileURLToPath(import.meta.url))
+const yamlSchema = findFileInAncestors(dirname, 'schemas/hooked.yaml.schema-v1.json', true)
+const schema = JSON.parse(fs.readFileSync(yamlSchema, 'utf-8'))
+
+const ajv = new Ajv({
+  allErrors: true,
+  strict: 'log',
+  strictSchema: 'log',
+  strictTypes: 'log',
+  strictTuples: 'log',
+  strictRequired: 'log',
+  validateSchema: 'log',
+  logger
+})
+let validate: ValidateFunction
+try {
+  validate = ajv.compile(schema)
+} catch (err: any) {
+  logger.error(`Error compiling schema: ${err.message as string ?? '?'}`)
+  throw err
+}
+
 export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<YamlConfig> => {
   const fileExists = fs.existsSync(configFile)
   // file exists
   if (fileExists) {
     const yamlStr = fs.readFileSync(configFile, 'utf-8')
-    const config = YAML.parse(yamlStr)
+    const config: YamlConfig = YAML.parse(yamlStr)
     if (config === null) {
       throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
     }
 
+    // TODO validate this configuration file (called recursively for imports)
+    const valid = validate(config)
+    if (!valid) {
+      throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
+    }
+
+    // TODO add _scriptPath fields to all scripts
+
     // merge imports with current configuration
     await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
+
     return config
   } else {
     throw new Error(`No ${configFile} file found.`)

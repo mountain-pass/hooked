@@ -63,6 +63,7 @@ const writeDebug = (str: any): void => {
 }
 
 export interface Logger {
+  log: (str: any) => void
   info: (str: any) => void
   debug: (str: any) => void
   warn: (str: any) => void
@@ -76,6 +77,7 @@ const logger: Logger = {
   error,
   warn,
   debug,
+  log: info,
   info,
   writeDebug,
   writeInfo,

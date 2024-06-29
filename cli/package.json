@@ -34,12 +34,13 @@
   },
   "dir": [
     "dist",
-    "public"
+    "public",
+    "schemas"
   ],
   "scripts": {
     "start": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",
     "start:server": "TZ=Australia/Sydney LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml'",
-    "start:serverssl": "TZ=Australia/Sydney LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml --ssl --api-key ABCD'",
+    "start:serverssl": "TZ=Australia/Sydney LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml --ssl --api-key abc'",
     "build": "tsc --build",
     "build:clean": "tsc --build --clean",
     "postbuild": "chmod 755 dist/index.js",
@@ -60,6 +61,7 @@
     "npm-check": "npm-check --production"
   },
   "dependencies": {
+    "ajv": "8.16.0",
     "commander": "12.1.0",
     "cors": "2.8.5",
     "cron": "3.1.7",

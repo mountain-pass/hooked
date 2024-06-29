@@ -52,8 +52,12 @@ export interface SuccessfulScript {
 
 // script types
 
+export interface BaseScript {
+  _scriptPath?: string
+}
+
 /** Configuration for writing a file/folder. */
-export interface WritePathScript {
+export interface WritePathScript extends BaseScript {
   /** Sets the file/folder location. */
   $path: string
   /**
@@ -76,12 +80,12 @@ export interface WritePathScript {
 /**
  * Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.
  */
-export interface JobsSerialScript {
+export interface JobsSerialScript extends BaseScript {
   /** A list of script paths, or job definitions. */
   $jobs_serial: string[] | Script[]
 }
 
-export interface CmdScript {
+export interface CmdScript extends BaseScript {
   /** Additional environment variables to resolve (added to global environment). Resolved before $envNames */
   $env?: EnvironmentVariables
   /** Additional environment group names to resolve ONLY when executing command. */
@@ -104,11 +108,11 @@ export interface SSHCmdScript extends CmdScript {
   $ssh: string
 }
 
-export interface EnvScript {
+export interface EnvScript extends BaseScript {
   /** Additional environment variables to resolve (added to global environment). */
   $env: string
 }
-export interface ResolveScript {
+export interface ResolveScript extends BaseScript {
   $resolve: string
 }
 
@@ -118,7 +122,7 @@ export interface StdinScriptFieldsMapping {
 }
 
 /** Provides a prompt to the user, to select from a set of choices. */
-export interface StdinScript {
+export interface StdinScript extends BaseScript {
   /** The prompt provided to the user. */
   $ask: string
   /** The default value provided to the user. */
@@ -134,7 +138,7 @@ export interface StdinScript {
   $sort?: 'alpha' | 'alphaDesc' | 'none'
 }
 
-export interface InternalScript {
+export interface InternalScript extends BaseScript {
   $env?: EnvironmentVariables
   $internal: (options: { key: string, stdin: StdinResponses, env: Environment }) => Promise<string>
 }
