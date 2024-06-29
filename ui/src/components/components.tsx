@@ -20,7 +20,7 @@ export const OutputPre = ({ visible, className = '', children }: { visible: bool
 )
 
 export const ListItem = ({ className = '', children, onClick }: { onClick?: () => void, className?: string, children: React.ReactNode }) => (
-  <div className={`border border-gray-200 dark:border-gray-800 w-full h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
+  <div className={`border border-gray-200 dark:border-gray-800 w-full h-[54px] min-h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
     onClick={onClick}>
     {children}
   </div>
