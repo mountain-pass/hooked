@@ -1,7 +1,14 @@
 import React from "react"
 import { useLocalStorageBackedStateV4 } from "./useLocalStorageBackedStateV4"
 
-export const useFavourites = () => {
+export interface UseFavouritesState {
+    favourites: string[]
+    isFavourite: (scriptPath: string) => boolean
+    toggleFavourite: (scriptPath: string) => void
+    setFavourites: (favourites: string[]) => void
+}
+
+export const useFavourites = (): UseFavouritesState => {
 
     const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
     // const [favourites, setFavourites] = React.useState<string[]>([])
@@ -22,5 +29,5 @@ export const useFavourites = () => {
         })
     }, [setFavourites])
 
-    return { favourites, isFavourite, toggleFavourite, setFavourites }
+    return { favourites: favourites ?? [], isFavourite, toggleFavourite, setFavourites }
 }

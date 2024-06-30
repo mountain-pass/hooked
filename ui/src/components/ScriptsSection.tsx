@@ -1,10 +1,12 @@
-import React from "react"
-import { useFavourites } from "@/hooks/useFavourites"
-import { BlackButton, GreyText, ListItem, Section } from "./components"
-import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4"
-import { TbArrowBackUp, TbStar, TbStarFilled, TbX } from "react-icons/tb"
 import { useGet } from "@/hooks/ReactQuery"
+import { useFavourites } from "@/hooks/useFavourites"
+import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4"
+import React from "react"
+import { TbArrowBackUp, TbX } from "react-icons/tb"
+import { BlackButton, GreyText, Section } from "./components"
+import { GroupRow } from "./scripts/GroupRow"
 import { isScript } from "./types"
+import { ScriptRow } from "./scripts/ScriptRow"
 
 export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }: {
     visible: boolean,
@@ -16,9 +18,9 @@ export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }
 
     const isTouchScreen = typeof window === 'undefined' ? false : window.matchMedia("(pointer: coarse)").matches
     const refSearchScript = React.useRef<HTMLInputElement>(null)
-    const { isFavourite, toggleFavourite } = useFavourites()
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
     const useGetScripts = useGet(`${baseUrl}/api/scripts`, apiKey)
+    const FavouritesState = useFavourites()
 
     // useMemo
 
@@ -111,28 +113,16 @@ export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }
                 {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length > 0 && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
                     if (isScript(groupOrJob)) {
                         // executable Script
-                        return (
-                            <div className="flex" key={name}>
-                                <ListItem className="justify-between">
-                                    <span className="truncate">{name}</span>
-                                </ListItem>
-                                <BlackButton
-                                    className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(groupOrJob._scriptPath) ? 'text-yellow-400' : ''}`}
-                                    onClick={() => toggleFavourite(groupOrJob._scriptPath)}
-                                >
-                                    {isFavourite(groupOrJob._scriptPath) ? <TbStarFilled /> : <TbStar />}
-                                </BlackButton>
-                                <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(groupOrJob._scriptPath)}>Execute</BlackButton>
-                            </div>
-                        )
+                        return <ScriptRow
+                            key={name}
+                            name={groupOrJob._scriptPath}
+                            scriptPath={groupOrJob._scriptPath}
+                            favouritesState={FavouritesState}
+                            executeScript={executeScript}
+                        />
                     } else {
                         // Script Group
-                        return (
-                            <ListItem key={name} className="cursor-pointer" onClick={() => selectScriptGroup(name)}>
-                                <span className="truncate">{name}</span>
-                                <span className="text-gray-300">({Object.values(groupOrJob).length})</span>
-                            </ListItem>
-                        )
+                        return <GroupRow key={name} name={name} childrenCount={Object.values(groupOrJob).length} selectScriptGroup={selectScriptGroup} />
                     }
                 })}
                 {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}

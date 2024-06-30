@@ -1,12 +1,12 @@
-import React from "react"
-import { BlackButton, GreyText, ListItem, Section } from "./components"
-import { TbStar, TbStarFilled } from "react-icons/tb"
 import { useFavourites } from "@/hooks/useFavourites"
+import { GreyText, Section } from "./components"
+import { ScriptRow } from "./scripts/ScriptRow"
 
 
 export const FavouritesSection = ({ visible, fade, executeScript }: { visible: boolean, fade: boolean, executeScript: (scriptPath: string) => void }) => {
 
-    const { favourites, isFavourite, toggleFavourite } = useFavourites()
+    const favouritesState = useFavourites()
+    const { favourites } = favouritesState
 
     return (
         <Section visible={visible} fade={fade} className="flex-1">
@@ -16,20 +16,13 @@ export const FavouritesSection = ({ visible, fade, executeScript }: { visible: b
                 <div className="flex flex-col gap-1">
                     {(favourites ?? [])
                         .map((scriptPath, i) => {
-                            return (
-                                <div className="flex" key={scriptPath}>
-                                    <ListItem className="justify-between">
-                                        <span className="truncate">{scriptPath}</span>
-                                    </ListItem>
-                                    <BlackButton
-                                        className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
-                                        onClick={() => toggleFavourite(scriptPath)}
-                                    >
-                                        {isFavourite(scriptPath) ? <TbStarFilled /> : <TbStar />}
-                                    </BlackButton>
-                                    <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(scriptPath)}>Execute</BlackButton>
-                                </div>
-                            )
+                            return <ScriptRow
+                                key={scriptPath}
+                                name={scriptPath}
+                                scriptPath={scriptPath}
+                                favouritesState={favouritesState}
+                                executeScript={executeScript}
+                            />
                         })}
                 </div>
             )}

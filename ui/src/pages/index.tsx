@@ -148,13 +148,13 @@ export default function Home() {
           </div>
 
           {/* results - success */}
-          <OutputPre visible={doExecute.isSuccess} className="text-blue-700">
+          <OutputPre visible={doExecute.isSuccess} className="text-blue-500">
             {'Success:\n'}
             {(doExecute.data?.outputs ?? []).join('\n')}
           </OutputPre>
 
           {/* results - error */}
-          <OutputPre visible={doExecute.isError} className="text-red-700">
+          <OutputPre visible={doExecute.isError} className="text-red-500">
             {'Error:\n'}
             {(doExecute.error as Error)?.message}
             {'\n'}
