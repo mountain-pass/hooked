@@ -299,11 +299,11 @@ export const verifyScriptsAreExecutable = (executableScriptsAndPaths: ScriptAndP
   // check executable scripts are actually executable
   for (const scriptAndPaths of executableScriptsAndPaths) {
     const [scriptx, pathx] = scriptAndPaths
-    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx)) {
+    if (isCmdScript(scriptx) || isInternalScript(scriptx) || isWritePathScript(scriptx) || isEnvScript(scriptx) || isJobsSerialScript(scriptx)) {
       // all good
     } else {
       // uknown
-      throw new Error(`Expected $cmd or $path, found "${typeof scriptx}" at path "${pathx.join(' ')}": ${JSON.stringify(scriptx)}`)
+      throw new Error(`Expected $cmd, $path or $jobs_serial, found "${typeof scriptx}" at path "${pathx.join(' ')}": ${JSON.stringify(scriptx)}`)
     }
   }
 }
