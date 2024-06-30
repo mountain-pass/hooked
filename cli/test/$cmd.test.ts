@@ -1,14 +1,14 @@
 /* eslint-disable no-template-curly-in-string */
-import chai from 'chai'
+import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { describe } from 'mocha'
 import sinon from 'sinon'
-import { createProcess, executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
+import { executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
 import { Environment } from '../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe('$cmd', () => {
+describe('wip $cmd', () => {
   let spyStdout: any
   let spyStderr: any
   beforeEach(() => {

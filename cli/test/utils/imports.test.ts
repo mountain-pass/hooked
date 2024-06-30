@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import chai from 'chai'
+import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import fs from 'fs'
 import { describe } from 'mocha'

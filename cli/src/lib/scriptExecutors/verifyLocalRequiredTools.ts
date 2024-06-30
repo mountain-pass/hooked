@@ -15,7 +15,8 @@ const verifyLatestVersion = async (): Promise<void> => {
     logger.debug('Checking if latest version...')
     const env = new Environment()
     env.putAllGlobal(process.env as RawEnvironment)
-    // eslint-disable-next-line max-len
+
+    // NOTE: don't wait longer than 3 seconds!
     const latestPublishedVersion = (await executeCmd(
       'system',
       { $cmd: `\${NPM_BIN=npm} view ${packageJson.name} version 2>/dev/null || true` },
@@ -23,7 +24,7 @@ const verifyLatestVersion = async (): Promise<void> => {
       { env: process.env },
       env,
       { printStdio: false, captureStdout: true },
-      5000
+      3000
     )).trim()
     if (latestPublishedVersion.trim().length === 0) {
       logger.warn(`Unable to check latest version for package '${packageJson.name}'.`)

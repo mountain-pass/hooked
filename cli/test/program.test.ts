@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import chai from 'chai'
+import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import fs from 'fs'
 import path from 'path'
@@ -161,7 +161,7 @@ describe('program', () => {
     await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith(`Interactive prompts not supported in batch mode. No config file found - "${defaults.getDefaults().HOOKED_FILE}".`)
   })
 
-  it('wip should throw error, if script cannot be found (and run in batch mode)', async () => {
+  it('should throw error, if script cannot be found (and run in batch mode)', async () => {
     const tmp = writeConfig(BASE_CONFIG)
     await expect(program.parseAsync(`node index.ts --config ${tmp} -b notavalidscript`.split(' '))).to.be.rejectedWith(`Interactive prompts not supported in batch mode. Could not determine a script to run. scriptPath='notavalidscript'`)
   })
