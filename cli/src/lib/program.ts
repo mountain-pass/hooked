@@ -52,9 +52,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
   program
     .name('hooked')
     .description('CLI to execute preconfigured scripts.\n\nUpdate: npm i -g --prefer-online --force @mountainpass/hooked-cli')
-    .version(packageJson.version, '-v, --version')
+    .version(packageJson.version, '-v, --version', 'Output the current version of hooked.')
 
-    .addOption(new Option('-i, --init', 'Runs the initialisation wizard')
+    .addOption(new Option('-i, --init', 'Runs the initialisation wizard, and exits.')
       .env('INIT'))
 
     .addOption(new Option('-ic, --initConfig', 'Creates a basic configuration file (hooked.yaml) in the current directory.')
@@ -63,22 +63,22 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .addOption(new Option('-is, --initSsl', 'Creates self signed SSL certificates (hooked-cert.pem and hooked-key.pem) in the current directory.')
       .default(false).env('INIT_SSL'))
 
-    .addOption(new Option('-id, --initDocker', 'Initialises a Docker compose file, and starts the service.')
+    .addOption(new Option('-id, --initDocker', 'Initialises a Docker compose file, starts the service, and exits.')
       .default(false).env('INIT_DOCKER'))
 
-    .addOption(new Option('-f, --force', 'Forces the operation - usually with regard to overwriting a file')
+    .addOption(new Option('-f, --force', 'Forces the operation - usually with regard to overwriting a file.')
       .default(false).env('FORCE'))
 
-    .addOption(new Option('-e, --env <env>', 'Accepts a comma separated list of environment names ("default" is always on)')
+    .addOption(new Option('-e, --env <env>', 'Accepts a comma separated list of environment names (environment "default" is always on).')
       .default('default').env('ENV'))
 
-    .addOption(new Option('-in, --stdin <json>', 'Allows predefining stdin responses')
+    .addOption(new Option('-in, --stdin <json>', 'Allows predefining stdin responses.')
       .default('{}').env('STDIN'))
 
-    .addOption(new Option('-ls, --listenvs', 'Lists the available environments, and exits')
+    .addOption(new Option('-ls, --listenvs', 'Lists the available environments, and exits.')
       .env('LISTENVS'))
 
-    .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level. (default: "debug").')
+    .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level.')
       .default('info').env('LOG_LEVEL'))
 
     .addOption(new Option('-sc, --skipCleanup', "If 'true', doesn't cleanup old *.sh files. Useful for debugging.")
@@ -92,19 +92,19 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       'Used to specify the HOOKED directory in relation to the Docker host.')
       .env('DOCKER_HOOKED_DIR'))
 
-    .addOption(new Option('-tz, --timezone <timezone>', "The timezone to use for Cron triggers. e.g. 'Australia/Sydney'")
+    .addOption(new Option('-tz, --timezone <timezone>', "The timezone to use for Cron triggers. e.g. 'Australia/Sydney'.")
       .default(Intl.DateTimeFormat().resolvedOptions().timeZone).env('TZ'))
 
-    .addOption(new Option('-p, --pull', 'Force download all imports from remote to local cache')
+    .addOption(new Option('-p, --pull', 'Force download all imports from remote to local cache.')
       .env('PULL'))
 
-    .addOption(new Option('-u, --update', 'Prints the command to update to the latest version of hooked')
+    .addOption(new Option('-u, --update', 'Prints the command to update to the latest version of hooked, and exits.')
       .env('UPDATE'))
 
     .addOption(new Option('-b, --batch', 'Non-interactive "batch" mode - errors if an interactive prompt is required.')
       .env('CI'))
 
-    .addOption(new Option('-c, --config <config>', 'Specify the hooked configuration file to use')
+    .addOption(new Option('-c, --config <config>', 'Specify the hooked configuration file to use.')
       .env('CONFIG'))
 
     .addOption(new Option('-sp, --scriptPath', 'A space-delimited script path to execute (supercedes the argument).')
@@ -128,7 +128,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       })
     )
 
-    .addOption(new Option('--ssl-key [sslKey]', 'The private keys in PEM format. (todo: add passphrase support?)')
+    .addOption(new Option('--ssl-key [sslKey]', 'The no-passphrase private key in PEM format.')
       .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
       .env('SSL_KEY')
       .preset('hooked-key.pem')
@@ -144,16 +144,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       .env('API_KEY')
       .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
     )
-    .addArgument(new Argument('[scriptPath...]', 'the script path to run')
+    .addArgument(new Argument('[scriptPath...]', 'The space delimited, path of the script to run.')
       .default([]))
     .addHelpText('afterAll', `
-Environment Variables:
-  LOG_LEVEL              <info|debug|warn|error> Specifies the log level. (default: "debug").
-  SKIP_CLEANUP           If 'true', doesn't cleanup old *.sh files. Useful for debugging.
-  SKIP_VERSION_CHECK     If present, skips the version check at startup.
-  DOCKER_HOOKED_DIR      Used to specify the HOOKED directory in relation to the Docker host. (Note: Required for Docker jobs!)
-  TZ                     The timezone to use for Cron triggers. e.g. 'Australia/Sydney'
-
 Provided Environment Variables:
   HOOKED_FILE            The root hooked.yaml file that was run.
   HOOKED_DIR             The parent directory of the HOOKED_FILE.
