@@ -158,7 +158,7 @@ describe('program', () => {
   // })
 
   it('should throw error, if no config file exists (and run in batch mode)', async () => {
-    await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith(`Interactive prompts not supported in batch mode. [1] No config file found - "${defaults.getDefaults().HOOKED_FILE}".`)
+    await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith(`Interactive prompts not supported in batch mode. No config file found - "${defaults.getDefaults().HOOKED_FILE}".`)
   })
 
   it('wip should throw error, if script cannot be found (and run in batch mode)', async () => {

@@ -4,7 +4,7 @@ import child_process, { type ChildProcess, type ExecSyncOptions, type SpawnOptio
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript } from '../types.js'
+import { type DockerCmdScript, type SSHCmdScript, isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript } from '../types.js'
 import logger from '../utils/logger.js'
 import { resolveResolveScript } from './ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
@@ -97,7 +97,7 @@ export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, 
  */
 export const executeCmd = async (
   key: string,
-  script: CmdScript,
+  script: CmdScript | DockerCmdScript | SSHCmdScript,
   options: ProgramOptions,
   opts: any = undefined,
   env: Environment,

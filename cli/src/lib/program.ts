@@ -6,7 +6,7 @@ import common from './common/invoke.js'
 import loaders from './common/loaders.js'
 import defaults from './defaults.js'
 import exitHandler from './exitHandler.js'
-import { init, writeBlankConfig } from './init.js'
+import { init, initialiseConfig, initialiseDocker, initialiseSsl } from './initialisers.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import server from './server/server.js'
 import {
@@ -32,6 +32,9 @@ export interface ProgramOptions {
   dockerHookedDir?: string
   tz?: string
   init?: boolean
+  initConfig?: boolean
+  initSsl?: boolean
+  initDocker?: boolean
   pull?: boolean
   update?: boolean
   batch?: boolean
@@ -56,6 +59,15 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .addOption(new Option('-i, --init', 'Runs the initialisation wizard')
       .env('INIT'))
 
+    .addOption(new Option('-ic, --initConfig', 'Creates a basic configuration file (hooked.yaml) in the current directory.')
+      .default(false).env('INIT_CONFIG'))
+
+    .addOption(new Option('-is, --initSsl', 'Creates self signed SSL certificates (hooked-cert.pem and hooked-key.pem) in the current directory.')
+      .default(false).env('INIT_SSL'))
+
+    .addOption(new Option('-id, --initDocker', 'Initialises a Docker compose file, and starts the service.')
+      .default(false).env('INIT_DOCKER'))
+
     .addOption(new Option('-f, --force', 'Forces the operation - usually with regard to overwriting a file')
       .default(false).env('FORCE'))
 
@@ -71,15 +83,15 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level. (default: "debug").')
       .default('info').env('LOG_LEVEL'))
 
-  // .addOption(new Option('-sc, --skipCleanup', "If 'true', doesn't cleanup old *.sh files. Useful for debugging.")
-  //   .env('SKIP_CLEANUP'))
+    .addOption(new Option('-sc, --skipCleanup', "If 'true', doesn't cleanup old *.sh files. Useful for debugging.")
+      .default(false).env('SKIP_CLEANUP'))
 
-  // .addOption(new Option('-svc, --skipVersionCheck', 'If present, skips the version check at startup.')
-  //   .env('SKIP_VERSION_CHECK'))
+    .addOption(new Option('-svc, --skipVersionCheck', 'If present, skips the version check at startup.')
+      .default(false).env('SKIP_VERSION_CHECK'))
 
     .addOption(new Option(
       '-dhd, --dockerHookedDir <dockerHookedDir>',
-      'Used to specify the HOOKED directory in relation to the Docker host. (Note: Required for Docker jobs!)')
+      'Used to specify the HOOKED directory in relation to the Docker host.')
       .env('DOCKER_HOOKED_DIR'))
 
     .addOption(new Option('-tz, --timezone <timezone>', "The timezone to use for Cron triggers. e.g. 'Australia/Sydney'")
@@ -180,22 +192,25 @@ Provided Environment Variables:
       // initialise a new project...
       if (options.init === true) {
         // ensure the default configuration file path is ${HOOKED_DIR}/hooked.yaml, and not ~/hooked.yaml!
-        defaults.setDefaultConfigurationFilepath('hooked.yaml')
         await init(options)
       }
+      if (options.initConfig === true) {
+        await initialiseConfig(options)
+      }
+      if (options.initSsl === true) {
+        await initialiseSsl(options)
+      }
+      if (options.initDocker === true) {
+        await initialiseDocker(options)
+        return // NOTE - exit after docker initialisation!
+      }
 
-      const defaultInstance = defaults.getDefaults()
       // no config? initialise a new project...
+      const defaultInstance = defaults.getDefaults()
       if (!fs.existsSync(defaultInstance.HOOKED_FILE)) {
-        if (isServerMode) {
-          await writeBlankConfig()
-        } else if (options.batch === true) {
-          throw new Error(`Interactive prompts not supported in batch mode. [1] No config file found - "${defaultInstance.HOOKED_FILE}".`)
-        } else {
-          logger.error(`No config file found at '${defaultInstance.HOOKED_FILE}'. Launching setup...`)
-          await init(options)
-          return
-        }
+        logger.warn(`No config file found at '${defaultInstance.HOOKED_FILE}'. Launching setup...`)
+        await init(options)
+        return
       } else {
         logger.debug(`Using config file: ${defaultInstance.HOOKED_FILE}`)
       }

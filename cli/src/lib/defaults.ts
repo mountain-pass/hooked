@@ -30,6 +30,7 @@ const findHookedYaml = (): string => {
 interface Defaults {
   HOOKED_FILE: string
   HOOKED_DIR: string
+  DOCKER_COMPOSE_FILE: string
   HISTORY_PATH: string
   PAGE_SIZE: number
   LOGS_MENU_OPTION: string
@@ -39,6 +40,7 @@ interface Defaults {
 const defaults: Defaults = {
   HOOKED_FILE: '',
   HOOKED_DIR: '',
+  DOCKER_COMPOSE_FILE: '',
   HISTORY_PATH: '',
   PAGE_SIZE: 10,
   LOGS_MENU_OPTION: '🪵  _logs_',
@@ -54,6 +56,7 @@ const setDefaultConfigurationFilepath = (hookedFilepath: string | undefined): vo
   logger.debug(`Setting config file: ${filepath}`)
   defaults.HOOKED_FILE = filepath
   defaults.HOOKED_DIR = path.dirname(defaults.HOOKED_FILE)
+  defaults.DOCKER_COMPOSE_FILE = path.resolve(defaults.HOOKED_DIR, 'docker-compose.yml')
   defaults.HISTORY_PATH = path.resolve(defaults.HOOKED_DIR, '.hooked_history.log')
 }
 
@@ -87,41 +90,9 @@ echo Files hooked-cert.pem and hooked-key.pem successfully written!`
   }
 }
 
-const CONFIG_ADVANCED_GREETING = (): YamlConfig => {
-  return {
-    env: {
-      default: {
-        GREETING: {
-          $ask: 'What country do you prefer?',
-          $choices: {
-            germany: 'Guten tag',
-            france: 'Bonjour',
-            spain: 'Hola',
-            england: 'Good day'
-          },
-          $sort: 'alpha'
-        },
-        YOURNAME: {
-          $ask: 'What is your name? (Hint: set YOURNAME to avoid prompt):',
-          $default: 'Bob'
-        },
-        HOMEPATH: {
-          $cmd: 'set -u && echo $HOME'
-        }
-      }
-    },
-    scripts: {
-      say: {
-        $cmd: 'echo "${GREETING} ${YOURNAME}! There is no place like ${HOMEPATH}."'
-      }
-    }
-  }
-}
-
 export default {
   getDefaults,
   setDefaultConfigurationFilepath,
   getLocalImportsCachePath,
-  CONFIG_BLANK,
-  CONFIG_ADVANCED_GREETING
+  CONFIG_BLANK
 }
