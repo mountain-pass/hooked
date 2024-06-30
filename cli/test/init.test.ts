@@ -25,11 +25,6 @@ env:
 scripts:
   say:
     $cmd: echo "$\{GREETING\}!"
-  generate_ssl_certificates:
-    $cmd: |-
-      #!/bin/sh -e
-      openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650
-      echo Files hooked-cert.pem and hooked-key.pem successfully written!
   docker_test:
     $image: alpine
     $cmd: echo "Docker worked - Alpine $(cat /etc/alpine-release)!"
