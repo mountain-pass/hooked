@@ -29,7 +29,7 @@ export const generateBlankTemplateFileContents = (): string => {
 
 /** Creates a blank hooked.yaml file. */
 export const initialiseConfig = async (options: ProgramOptions): Promise<void> => {
-  await writeFile(defaults.getDefaults().HOOKED_FILE, generateBlankTemplateFileContents(), options.force)
+  await writeFile(defaults.getDefaults().HOOKED_FILE, generateBlankTemplateFileContents(), options.force, false)
 }
 
 /** Runs openssl to generate the SSL certificates. */
@@ -51,7 +51,7 @@ export const initialiseDocker = async (options: ProgramOptions): Promise<void> =
 services:
   hooked:
     image: mountainpass/hooked:${packageJson.version}
-    container_name: hooked
+    container_name: hooked_${options.server ?? '4000'}
     environment:
       - TZ=${options.tz ?? 'UTC'}
     volumes:
@@ -65,9 +65,9 @@ services:
       - ${defaults.getDefaults().HOOKED_FILE}
       - --server
       - --ssl
-      - --api-key=abc
+      - --api-key=${options.apiKey ?? 'abc'}
     ports:
-      - 4000:4000
+      - ${options.server ?? '4000'}:4000
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -95,7 +95,7 @@ docker compose -f "${defaults.getDefaults().DOCKER_COMPOSE_FILE}" up -d
  * @param overwrite if true, overwrites the file if it exists.
  * @param errorIfExists if true, throws an error if the file exists.
  */
-const writeFile = async (filepath: string, contents: string, overwrite: boolean, errorIfExists = false): Promise<void> => {
+const writeFile = async (filepath: string, contents: string, overwrite: boolean, errorIfExists: boolean): Promise<void> => {
   if (fs.existsSync(filepath)) {
     if (overwrite) {
       logger.info(`Writing config file - ${filepath}`)

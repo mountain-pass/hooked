@@ -193,6 +193,7 @@ Provided Environment Variables:
       if (options.init === true) {
         // ensure the default configuration file path is ${HOOKED_DIR}/hooked.yaml, and not ~/hooked.yaml!
         await init(options)
+        return
       }
       if (options.initConfig === true) {
         await initialiseConfig(options)

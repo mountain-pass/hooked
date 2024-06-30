@@ -65,7 +65,7 @@ const startServer = async (
 
   // listen
   server.listen(port, () => {
-    const toggles = `api-key=${isString(apiKey) ? '✅' : '🙅'}, ssl=${isHttps ? '✅' : '🙅'}`
+    const toggles = `api-key=${isString(apiKey) ? apiKey.substring(0, 1).padEnd(apiKey.length, '*') : '🙅'}, ssl=${isHttps ? '✅' : '🙅'}`
     logger.info(`Server listening: ${isHttps ? 'https' : 'http'}://localhost:${port} (${toggles})`)
   })
   const shutdownServer = (): void => {
