@@ -1,9 +1,9 @@
-ARG VERSION=latest
 
 # host it...
 FROM node:lts-alpine
 RUN apk add --no-cache openssl curl docker-cli
-RUN npm i -g @mountainpass/hooked-cli@${VERSION}
+ARG HOOKED_TAG=NOT_A_VALID_LIBRARY
+RUN npm i -g ${HOOKED_TAG}
 WORKDIR /hooked
 
 # configure it...

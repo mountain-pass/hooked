@@ -6,6 +6,9 @@ import { type ProgramOptions } from './program.js'
 import { executeCmd } from './scriptExecutors/$cmd.js'
 import logger from './utils/logger.js'
 import { Environment } from './utils/Environment.js'
+import { loadRootPackageJsonSync } from './utils/packageJson.js'
+
+const packageJson = loadRootPackageJsonSync()
 
 const HEADER = `#
 # Hooked configuration file
@@ -47,7 +50,7 @@ export const initialiseDocker = async (options: ProgramOptions): Promise<void> =
   const DOCKER_COMPOSE_CONTENTS = `
 services:
   hooked:
-    image: mountainpass/hooked
+    image: mountainpass/hooked:${packageJson.version}
     container_name: hooked
     environment:
       - TZ=${options.tz ?? 'UTC'}
@@ -56,8 +59,8 @@ services:
       - ${defaults.getDefaults().HOOKED_DIR}:${defaults.getDefaults().HOOKED_DIR}
     working_dir: ${defaults.getDefaults().HOOKED_DIR}
     command:
-      - --initialiseConfig
-      - --initialiseSsl
+      - --initConfig
+      - --initSsl
       - --config
       - ${defaults.getDefaults().HOOKED_FILE}
       - --server
