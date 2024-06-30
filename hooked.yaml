@@ -107,29 +107,28 @@ scripts:
         #!/bin/sh -e
         docker build --build-arg="NPM_TAG=@mountainpass/hooked-cli@latest" --tag="mountainpass/hooked" .
     publish:
-      $jobs_serial:
-        - $env:
-            VERSION:
-              $image: node:lts-alpine
-              $cmd: node -e 'console.log(require("./cli/package.json").version)'
-            NPM_TAG:
-              $cmd: echo "@mountainpass/hooked-cli@${VERSION}"
-            DOCKER_TAG:
-              $cmd: echo "mountainpass/hooked:${VERSION}"
-          $cmd: |
-            #!/bin/sh -e
-            echo Building and publishing - version: \"${VERSION}\"
-            docker buildx build \
-              --push \
-              --build-arg="HOOKED_TAG=${NPM_TAG}" \
-              --platform linux/amd64,linux/arm64/v8 \
-              --tag mountainpass/hooked:latest \
-              --tag ${DOCKER_TAG} \
-              --output=type=registry \
-              .
-        - $cmd: docker rmi ${DOCKER_TAG} || true
-        - $cmd: docker pull ${DOCKER_TAG}
-        - $cmd: docker run -it --rm ${DOCKER_TAG} -v
+      $env:
+        VERSION:
+          $image: node:lts-alpine
+          $cmd: node -e 'console.log(require("./cli/package.json").version)'
+        NPM_TAG:
+          $cmd: echo "@mountainpass/hooked-cli@${VERSION}"
+        DOCKER_TAG:
+          $cmd: echo "mountainpass/hooked:${VERSION}"
+      $cmd: |
+        #!/bin/sh -e
+        echo Building and publishing - version: \"${VERSION}\"
+        docker buildx build \
+          --push \
+          --build-arg="HOOKED_TAG=${NPM_TAG}" \
+          --platform linux/amd64,linux/arm64/v8 \
+          --tag mountainpass/hooked:latest \
+          --tag ${DOCKER_TAG} \
+          --output=type=registry \
+          .
+      # - $cmd: docker rmi ${DOCKER_TAG} || true
+      # - $cmd: docker pull ${DOCKER_TAG}
+      # - $cmd: docker run -it --rm ${DOCKER_TAG} -v
 
   # Just for local builds.
   local_build:
