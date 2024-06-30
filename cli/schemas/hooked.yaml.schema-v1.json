@@ -126,6 +126,7 @@
     },
     "EnvironmentKeyVariable": {
       "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)",
+      "type": "object",
       "patternProperties": {
         "^.*$": {
           "oneOf": [
@@ -154,8 +155,8 @@
       }
     },
     "JobsSerialScript": {
-      "type": "object",
       "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.",
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "$jobs_serial": {
@@ -245,8 +246,8 @@
       ]
     },
     "CmdScript": {
-      "type": "object",
       "description": "Executes a command, and optionally provides output to environment variables or stdin.",
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "$env": {
@@ -350,8 +351,8 @@
       ]
     },
     "fieldsMappingValue": {
-      "type": "object",
       "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths.",
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "name": {

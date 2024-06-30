@@ -4,12 +4,13 @@ import logger from './utils/logger.js'
 import { childProcesses, dockerNames } from './scriptExecutors/$cmd.js'
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import { cleanupOldTmpFiles } from './utils/fileUtils.js'
+import { type ProgramOptions } from './program.js'
 
-const onExit = (): void => {
+const onExit = (options: ProgramOptions): void => {
   nodeCleanup((exitCode, signal) => {
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 1 : 0
     // delete tmp files...
-    if (process.env.SKIP_CLEANUP !== 'true') {
+    if (options.skipCleanup !== true) {
       logger.debug('Cleaning up .tmp and .env files...')
       cleanupOldTmpFiles()
     }

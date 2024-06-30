@@ -25,10 +25,8 @@ export interface ProgramOptions {
   stdin: string
   listenvs?: boolean
   logLevel?: string
-  //
-  // skipCleanup?: boolean
-  // skipVersionCheck?: boolean
-  //
+  skipCleanup?: boolean
+  skipVersionCheck?: boolean
   dockerHookedDir?: string
   tz?: string
   init?: boolean
@@ -163,6 +161,10 @@ Provided Environment Variables:
     `)
     .usage('[options]')
     .action(async (scriptPathArgs: string[], options: ProgramOptions) => {
+      // exit handler
+      exitHandler.onExit(options)
+
+      // set log level
       logger.setLogLevel(options.logLevel)
 
       // set the script path from the command line arguments
@@ -217,7 +219,7 @@ Provided Environment Variables:
       }
 
       // check for newer versions
-      if (options.batch !== true && isString(process.env.SKIP_VERSION_CHECK)) {
+      if (options.skipVersionCheck !== true) {
         await verifyLocalRequiredTools.verifyLatestVersion()
       } else {
         logger.debug('Skipping version check...')
@@ -268,8 +270,5 @@ Provided Environment Variables:
 
 export default async (argv: string[] = process.argv): Promise<Command> => {
   const program = newProgram(process.env as RawEnvironment)
-
-  exitHandler.onExit()
-
   return await program.parseAsync(argv)
 }

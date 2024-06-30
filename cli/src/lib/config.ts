@@ -325,7 +325,8 @@ const yamlSchema = findFileInAncestors(dirname, 'schemas/hooked.yaml.schema-v1.j
 const schema = JSON.parse(fs.readFileSync(yamlSchema, 'utf-8'))
 
 const ajv = new Ajv({
-  allErrors: true,
+  allErrors: true, // do not bail
+  // jsonPointers: true, // totally needed for this
   strict: 'log',
   strictSchema: 'log',
   strictTypes: 'log',
@@ -364,11 +365,13 @@ export const loadConfig = async (configFile: string, pullLatestFlag = false): Pr
       throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
     }
 
-    // TODO validate this configuration file (called recursively for imports)
-    // const valid = validate(config)
-    // if (!valid) {
-    //   throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
-    // }
+    // validate this configuration file (called recursively for imports)
+    const valid = validate(config)
+    if (valid) {
+      logger.debug(`Configuration file ${configFile} is valid.`)
+    } else {
+      throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
+    }
 
     // add _scriptPath fields to all scripts
     populateScriptPath(config.scripts)
