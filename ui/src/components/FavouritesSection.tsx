@@ -13,7 +13,7 @@ export const FavouritesSection = ({ visible, fade, executeScript }: { visible: b
             <h2>Favourites</h2>
             {(favourites ?? []).length === 0 && <GreyText>No favourites.</GreyText>}
             {(favourites ?? []).length > 0 && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 max-w-full w-full">
                     {(favourites ?? [])
                         .map((scriptPath, i) => {
                             return <ScriptRow

@@ -13,19 +13,20 @@ export const ScriptRow = ({ name, scriptPath, favouritesState, executeScript }: 
     const { toggleFavourite, isFavourite } = favouritesState
 
     return (
-        <div className="flex">
+        <div className="flex max-w-full w-full">
             <ListItem>
-                <TbPlayerPlay className="text-xl text-green-500" />
-                <span className="truncate">{name}</span>
+                <TbPlayerPlay className="text-xl flex-shrink-0 text-green-500" />
+                <div className="truncate">{name}</div>
             </ListItem>
             <BlackButton
-                className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
+                className={`flex-shrink-0 h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
                 onClick={() => toggleFavourite(scriptPath)}
             >
                 <TbStar />
             </BlackButton>
-            <BlackButton className="h-[54px] ml-[-1px] px-6 gap-3" onClick={() => executeScript(scriptPath)}>
-                Execute
+            <BlackButton className="flex-shrink-0 h-[54px] min-w-[54px] ml-[-1px] sm:px-6 gap-3" onClick={() => executeScript(scriptPath)}>
+                <div className="max-sm:hidden sm:visible">Execute</div>
+                <TbPlayerPlay className="text-xl max-sm:visible sm:hidden" />
             </BlackButton>
         </div>
     )

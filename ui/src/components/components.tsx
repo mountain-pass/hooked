@@ -16,11 +16,11 @@ export const BlackButton = ({ children, disabled, active, className = '', onClic
 export const OutputPre = ({ visible, className = '', children }: { visible: boolean, className?: string, children: React.ReactNode }) => (
   <pre className={`${visible ? 'visible' : 'hidden'} ${className} text-sm p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
     {children}
-  </pre>
+  </pre >
 )
 
 export const ListItem = ({ className = '', children, onClick }: { onClick?: () => void, className?: string, children: React.ReactNode }) => (
-  <div className={`border border-gray-200 dark:border-gray-800 w-full h-[54px] min-h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
+  <div className={`border border-gray-200 dark:border-gray-800 max-w-full w-full min-w-0 h-[54px] min-h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
     onClick={onClick}>
     {children}
   </div>
