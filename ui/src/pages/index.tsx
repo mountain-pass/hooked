@@ -1,82 +1,45 @@
-import { BlackButton, GreyText, ListItem, OutputPre, Section } from "@/components/components";
+import { FavouritesSection } from "@/components/FavouritesSection";
+import { ScriptsSection } from "@/components/ScriptsSection";
+import { BlackButton, GreyText, OutputPre, Section } from "@/components/components";
 import { useExecuteScript, useGet } from "@/hooks/ReactQuery";
-import { useRunTimer } from "@/hooks/useRunTimer";
-import React from "react";
-import { isScript } from "../components/types";
-import { TbLockCheck, TbStar, TbStarFilled, TbLockCancel, TbArrowBackUp, TbX } from "react-icons/tb";
-import { useTabs } from "@/hooks/useTabs";
 import { Tabs } from "@/hooks/Tabs";
-import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4";
-import { isString } from "util";
+import { useRunTimer } from "@/hooks/useRunTimer";
+import { useTabs } from "@/hooks/useTabs";
+import React from "react";
+import { TbLockCancel, TbLockCheck } from "react-icons/tb";
 
 export default function Home() {
+  console.debug('Re-rendering Home...')
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
   // refs
+
   const refApiKey = React.useRef<HTMLInputElement>(null)
   const refSearchScript = React.useRef<HTMLInputElement>(null)
 
   // state
-
-  const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
-  const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
   const [apiKey, setApiKey] = React.useState('')
   const [showLogin, setShowLogin] = React.useState(true)
 
-  // hooks
+  // react-query
 
   const doExecute = useExecuteScript(baseUrl, apiKey)
-  const runTimer = useRunTimer()
-
-  type TabTypes = 'Scripts' | 'Favourites'
-  const tabs = useTabs<TabTypes>(['Scripts', 'Favourites'], 'Scripts')
-
-  /** Jumps up to the parent script (removes the child). */
-  const setSearchScriptsToParent = () => {
-    setSearchScripts((ps: string) => ps.trim().split(' ').slice(0, -1).join(' '))
-    refSearchScript.current?.focus()
-  }
-
-  /** Clears the search scripts. */
-  const clearSearchScripts = () => {
-    setSearchScripts('')
-    refSearchScript.current?.focus()
-  }
-
-  /** Selects the script group. */
-  const selectScriptGroup = (name: string) => {
-    // NOTE: trailing space is important, for next selection
-    setSearchScripts((ps: string) => `${ps.trim()} ${name.trim()} `)
-    refSearchScript.current?.focus()
-  }
-
-  /** Attempts to run the script. */
-  const executeScript = (
-    scriptPath: string,
-    envNames: string = 'default',
-    env: Record<string, string> = {}
-
-  ) => {
-    if (runTimer.isRunning) {
-      runTimer.stop()
-    }
-    if (!showLogin) {
-      runTimer.start()
-      doExecute.mutateAsync({ scriptPath, envNames, env })
-        .then(runTimer.stop)
-        .catch(runTimer.stop)
-    }
-  }
-
   // const envs = useGet(`${baseUrl}/api/env`, bearerToken)
   // const triggers = useGet(`${baseUrl}/api/triggers`, bearerToken)
   const useGetScripts = useGet(`${baseUrl}/api/scripts`, apiKey)
+
+  // hooks
+
+  const runTimer = useRunTimer()
+  type TabTypes = 'Scripts' | 'Favourites'
+  const tabs = useTabs<TabTypes>(['Scripts', 'Favourites'], 'Scripts')
 
   // effects
 
   // focus input on showLogin
   React.useEffect(() => {
+    console.debug('Focus check...')
     if (showLogin) {
       refApiKey.current?.focus()
     } else {
@@ -84,68 +47,33 @@ export default function Home() {
     }
   }, [showLogin])
 
-  // hide 'api-key' if successful after 1.5 seconds
-  const refTimer = React.useRef<NodeJS.Timeout>()
+  /** Hide 'api-key' if successful after 1.5 seconds. */
   React.useEffect(() => {
-    if (useGetScripts.isSuccess) {
-      if (typeof refTimer.current !== 'undefined') clearTimeout(refTimer.current)
-      refTimer.current = setTimeout(() => setShowLogin(false), 500)
-    }
-    return () => {
-      if (typeof refTimer.current !== 'undefined') clearTimeout(refTimer.current)
-    }
+    console.debug('Checking showLogin...')
+    setShowLogin(!useGetScripts.isSuccess)
   }, [useGetScripts.isSuccess])
 
-  interface FilteredObjects {
-    parentPath: string[]
-    scripts: Record<string, any>
-  }
+  // functions
 
-  const isFavourite = (scriptPath: string): boolean => {
-    return favourites?.includes(scriptPath) ?? false
-  }
-
-  const toggleFavourite = (scriptPath: string) => {
-    setFavourites((ps: string[]) => {
-      if (ps.indexOf(scriptPath) !== -1) {
-        return ps.filter(f => f !== scriptPath)
-      } else {
-        return [...ps, scriptPath]
-      }
-    })
-  }
-
-  // filters the visible scripts
-  const filteredObjects: FilteredObjects = React.useMemo(() => {
-    if (useGetScripts.isSuccess) {
-      console.log('Re-evaluating filteredScripts...')
-      const parentPath: string[] = []
-      const filters = searchScripts?.trim().split(' ').filter(f => f.length > 0) ?? []
-      let current: Record<string, any> = useGetScripts.data
-      for (const filter of filters) {
-        const filtered = Object.entries(current).filter(([name, groupOrJob]) => {
-          return name.toLowerCase().startsWith(filter.toLowerCase())
-        })
-        if (filtered.length === 1) {
-          parentPath.push(filter)
-          const tmp = filtered[0][1]
-          if (isScript(tmp)) {
-            current = Object.fromEntries(filtered)
-            break
-          } else {
-            current = tmp
-          }
-        } else {
-          current = Object.fromEntries(filtered)
-        }
-      }
-      return { parentPath, scripts: current }
+  /** Attempts to run the script. */
+  const executeScript = (
+    scriptPath: string
+  ) => {
+    if (runTimer.isRunning) {
+      runTimer.stop()
     }
-    return { parentPath: [], scripts: {} }
-  }, [useGetScripts, searchScripts])
+    if (!showLogin) {
+      runTimer.start()
+      doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
+        .then(runTimer.stop)
+        .catch(runTimer.stop)
+    }
+  }
 
   return (
     <main className="flex flex-col items-center gap-4">
+
+      {/* banner */}
       <div className="bg-blue-800 dark:bg-gray-500/25 text-white w-full flex justify-center">
         <div className="flex items-center justify-between w-full max-w-[1000px] p-4">
           <div className="flex flex-col gap-0">
@@ -163,6 +91,8 @@ export default function Home() {
           </BlackButton>
         </div>
       </div>
+
+      {/* main */}
       <div className="flex flex-col items-center gap-4 w-full px-4 pb-4 max-w-[1000px]">
 
         {/* Api Key */}
@@ -179,6 +109,9 @@ export default function Home() {
           <input
             ref={refApiKey}
             type="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
             className="border border-gray-200 dark:border-gray-800 w-full p-4 text-sm"
             placeholder="API Key"
             spellCheck={false}
@@ -188,97 +121,16 @@ export default function Home() {
           />
         </Section>
 
+        {/* Tabs */}
         <Section naked={true} visible={useGetScripts.isSuccess} fade={showLogin}>
           <Tabs {...tabs} />
         </Section>
 
-        {/* Favourites List */}
-        <Section visible={tabs.currentTab === 'Favourites' && useGetScripts.isSuccess} fade={showLogin} className="flex-1">
-          <h2>Favourites</h2>
-          {(favourites ?? []).length === 0 && <GreyText>No favourites.</GreyText>}
-          {(favourites ?? []).length > 0 && (
-            <div className="flex flex-col gap-1">
-              {(favourites ?? []).map((scriptPath, i) => {
-                return (
-                  <div className="flex" key={scriptPath}>
-                    <ListItem className="justify-between">
-                      <span className="truncate">{scriptPath}</span>
-                    </ListItem>
-                    <BlackButton
-                      className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
-                      onClick={() => toggleFavourite(scriptPath)}
-                    >
-                      {isFavourite(scriptPath) ? <TbStarFilled /> : <TbStar />}
-                    </BlackButton>
-                    <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(scriptPath)}>Execute</BlackButton>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </Section>
+        {/* Favourites */}
+        <FavouritesSection visible={tabs.currentTab === 'Favourites' && useGetScripts.isSuccess} fade={showLogin} executeScript={executeScript} />
 
-        {/* Scripts List */}
-        <Section visible={tabs.currentTab === 'Scripts' && useGetScripts.isSuccess} fade={showLogin} className="flex-1">
-          <h2>Scripts</h2>
-          <div className="flex">
-            <input
-              ref={refSearchScript}
-              type="text"
-              autoFocus
-              className="border border-gray-200 dark:border-gray-800 w-full p-4 text-sm"
-              placeholder="Search scripts"
-              spellCheck={false}
-              value={searchScripts}
-              onChange={e => setSearchScripts(e.target.value)}
-              // on escape key, clear searc
-              onKeyDown={e => {
-                if (e.key === 'Escape') setSearchScripts('')
-              }}
-            />
-            <BlackButton className="text-xl min-w-[54px] ml-[-1px]" onClick={() => setSearchScriptsToParent()}>
-              <TbArrowBackUp className="text-xl" />
-            </BlackButton>
-            <BlackButton className="text-xl min-w-[54px] ml-[-1px]" onClick={() => clearSearchScripts()}>
-              <TbX className="text-xl" />
-            </BlackButton>
-          </div>
-
-          <div className="flex flex-col gap-1 h-[30dvh] overflow-auto [color-scheme:light_dark]">
-            {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
-            {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length === 0 && <GreyText>No matching scripts.</GreyText>}
-            {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length > 0 && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
-              if (isScript(groupOrJob)) {
-                // executable Script
-                return (
-                  <div className="flex" key={name}>
-                    <ListItem className="justify-between">
-                      <span className="truncate">{name}</span>
-                    </ListItem>
-                    <BlackButton
-                      className={`h-[54px] min-w-[54px] ml-[-1px] text-xl ${isFavourite(groupOrJob._scriptPath) ? 'text-yellow-400' : ''}`}
-                      onClick={() => toggleFavourite(groupOrJob._scriptPath)}
-                    >
-                      {isFavourite(groupOrJob._scriptPath) ? <TbStarFilled /> : <TbStar />}
-                    </BlackButton>
-                    <BlackButton className="h-[54px] ml-[-1px] px-6" onClick={() => executeScript(groupOrJob._scriptPath)}>Execute</BlackButton>
-                  </div>
-                )
-              } else {
-                // Script Group
-                return (
-                  <ListItem key={name} className="cursor-pointer" onClick={() => selectScriptGroup(name)}>
-                    <span className="truncate">{name}</span>
-                    <span className="text-gray-300">({Object.values(groupOrJob).length})</span>
-                  </ListItem>
-                )
-              }
-            })}
-            {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
-            {useGetScripts.isSuccess && Object.keys(useGetScripts.data).length === 0 && <GreyText>No data</GreyText>}
-            {useGetScripts.isError && <GreyText>{useGetScripts.error.message}</GreyText>}
-          </div>
-        </Section>
+        {/* Scripts */}
+        <ScriptsSection visible={tabs.currentTab === 'Scripts' && useGetScripts.isSuccess} fade={showLogin} executeScript={executeScript} baseUrl={baseUrl} apiKey={apiKey} />
 
         {/* Results */}
         <Section visible={useGetScripts.isSuccess && (doExecute.isSuccess || doExecute.isPending || doExecute.isError)} fade={showLogin} className="flex-1">
@@ -314,6 +166,6 @@ export default function Home() {
           env = {process.env.NODE_ENV}
         </pre> */}
       </div>
-    </main>
+    </main >
   );
 }

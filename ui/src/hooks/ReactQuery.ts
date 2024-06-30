@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
  * @returns 
  */
 export const useGet = (url: string, bearerToken: string) => {
+  console.debug('Use get script...', { url })
     const queryClient = useQueryClient()
     return useQuery({
       queryKey: [bearerToken, url],
@@ -29,14 +30,15 @@ export const useGet = (url: string, bearerToken: string) => {
           }
         })
       },
-      refetchInterval: 6000,
+      // refetchInterval: 6000,
       retry: 0,
     })
   }
   
   export const useExecuteScript = (baseUrl: string, bearerToken: string) => {
+    console.debug('Use execute script...', { baseUrl })
     return useMutation({
-      // mutationKey: [bearerToken, url],
+      mutationKey: [bearerToken, baseUrl],
       mutationFn: (postData: any) => {
         const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
         return fetch(url, {
