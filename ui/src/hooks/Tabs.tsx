@@ -8,7 +8,8 @@ export const Tabs = ({ tabs, currentTab, setCurrentTab, className = '' }: UseTab
                 <BlackButton
                     key={tab}
                     active={tab === currentTab}
-                    className={`py-4 px-6 ${className}`}
+                    className={`px-6 rounded ${className}`}
+                    size="sm"
                     onClick={() => setCurrentTab(tab)}
                 >
                     {tab}

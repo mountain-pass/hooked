@@ -2,11 +2,12 @@ import { useGet } from "@/hooks/ReactQuery"
 import { useFavourites } from "@/hooks/useFavourites"
 import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4"
 import React from "react"
-import { TbArrowBackUp, TbX } from "react-icons/tb"
+import { TbArrowBackUp, TbCheckbox, TbStar, TbStarFilled, TbX } from "react-icons/tb"
 import { BlackButton, GreyText, Section } from "./components"
 import { GroupRow } from "./scripts/GroupRow"
 import { isScript } from "./types"
 import { ScriptRow } from "./scripts/ScriptRow"
+import { FavouritesSection } from "./FavouritesSection"
 
 export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }: {
     visible: boolean,
@@ -19,6 +20,7 @@ export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }
     const isTouchScreen = typeof window === 'undefined' ? false : window.matchMedia("(pointer: coarse)").matches
     const refSearchScript = React.useRef<HTMLInputElement>(null)
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
+    const [showFavourites, setShowFavourites] = useLocalStorageBackedStateV4<boolean>('showFavourites', false)
     const useGetScripts = useGet(`${baseUrl}/api/scripts`, apiKey)
     const FavouritesState = useFavourites()
 
@@ -75,21 +77,35 @@ export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }
         if (!isTouchScreen) refSearchScript.current?.focus()
     }
 
+    const toggleFavourites = () => setShowFavourites((ps: boolean) => !ps);
+
     interface FilteredObjects {
         scripts: Record<string, any>
     }
 
     return (<>
         <Section visible={visible} fade={fade} className="flex-1">
-            <h2>Scripts</h2>
-            <div className="flex">
+            <div className="flex items-start max-sm:justify-end sm:justify-between">
+                <h2 className="max-sm:hidden sm:visible">Scripts</h2>
+
+                <BlackButton size="sm" active={showFavourites} className="rounded flex items-center justify-between gap-2" onClick={toggleFavourites}>
+                    {showFavourites ? <TbStarFilled className="text-xl" /> : <TbStar className="text-xl" />}
+                    <div>Favourites</div>
+                </BlackButton>
+            </div>
+
+            {/* Favourites */}
+            <FavouritesSection visible={showFavourites ?? false} fade={fade} executeScript={executeScript} />
+
+            {/* Scripts */}
+            <div className={`flex ${showFavourites ? 'hidden' : 'visible'}`}>
                 <input
                     ref={refSearchScript}
                     type="text"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="none"
-                    className="border border-gray-200 dark:border-gray-800 w-full p-4 text-sm"
+                    className="border border-gray-200 dark:border-neutral-700 placeholder-neutral-500 w-full p-4 text-sm"
                     placeholder="Search scripts"
                     spellCheck={false}
                     value={searchScripts}
@@ -107,24 +123,26 @@ export const ScriptsSection = ({ visible, fade, executeScript, baseUrl, apiKey }
                 </BlackButton>
             </div>
 
-            <div className="flex flex-col gap-1 h-[30dvh] overflow-auto [color-scheme:light_dark]">
+            <div className={`flex flex-col gap-1 h-[30dvh] overflow-auto [color-scheme:light_dark] ${showFavourites ? 'hidden' : 'visible'}`}>
                 {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
                 {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length === 0 && <GreyText>No matching scripts.</GreyText>}
-                {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length > 0 && Object.entries(filteredObjects.scripts).map(([name, groupOrJob]) => {
-                    if (isScript(groupOrJob)) {
-                        // executable Script
-                        return <ScriptRow
-                            key={name}
-                            name={groupOrJob._scriptPath}
-                            scriptPath={groupOrJob._scriptPath}
-                            favouritesState={FavouritesState}
-                            executeScript={executeScript}
-                        />
-                    } else {
-                        // Script Group
-                        return <GroupRow key={name} name={name} childrenCount={Object.values(groupOrJob).length} selectScriptGroup={selectScriptGroup} />
-                    }
-                })}
+                {useGetScripts.isSuccess && Object.entries(filteredObjects.scripts).length > 0 && Object.entries(filteredObjects.scripts)
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([name, groupOrJob]) => {
+                        if (isScript(groupOrJob)) {
+                            // executable Script
+                            return <ScriptRow
+                                key={name}
+                                name={groupOrJob._scriptPath}
+                                scriptPath={groupOrJob._scriptPath}
+                                favouritesState={FavouritesState}
+                                executeScript={executeScript}
+                            />
+                        } else {
+                            // Script Group
+                            return <GroupRow key={name} name={name} childrenCount={Object.values(groupOrJob).length} selectScriptGroup={selectScriptGroup} />
+                        }
+                    })}
                 {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
                 {useGetScripts.isSuccess && Object.keys(useGetScripts.data).length === 0 && <GreyText>No data</GreyText>}
                 {useGetScripts.isError && <GreyText>{useGetScripts.error.message}</GreyText>}

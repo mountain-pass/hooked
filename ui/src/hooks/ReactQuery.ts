@@ -1,18 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+export const KEYS = {
+  apiKey: () => ['apiKey']
+}
+
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
+
 /**
  * Fetches data from the given URL using a GET request with the given bearer token.
  * @param url 
  * @param bearerToken 
  * @returns 
  */
-export const useGet = (url: string, bearerToken: string) => {
+export const useGet = (url: string) => {
   console.debug('Use get script...', { url })
     const queryClient = useQueryClient()
+    const apiKey = useQuery({ queryKey: KEYS.apiKey() })
+    console.debug('Use get script...', { url, apiKey: `${apiKey.data}` })
     return useQuery({
-      queryKey: [bearerToken, url],
+      queryKey: [apiKey.data, url],
       queryFn: () => {
-        return fetch(url, { method: 'get', headers: { 'Authorization': `Bearer ${bearerToken}` } }).then(async res => {
+        return fetch(`${baseUrl}${url}`, { method: 'get', headers: { 'Authorization': `Bearer ${apiKey.data}` } }).then(async res => {
           if (res.status !== 200) {
             const error: any = new Error(`Failed to fetch data from ${url}: ${res.statusText}`);
             error.body = await res.json();
@@ -35,16 +43,17 @@ export const useGet = (url: string, bearerToken: string) => {
     })
   }
   
-  export const useExecuteScript = (baseUrl: string, bearerToken: string) => {
+  export const useExecuteScript = () => {
     console.debug('Use execute script...', { baseUrl })
+    const apiKey = useQuery({ queryKey: KEYS.apiKey() })
     return useMutation({
-      mutationKey: [bearerToken, baseUrl],
+      mutationKey: [apiKey.data, baseUrl],
       mutationFn: (postData: any) => {
         const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
         return fetch(url, {
           method: 'post',
           headers: {
-            'Authorization': `Bearer ${bearerToken}`,
+            'Authorization': `Bearer ${apiKey.data}`,
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           },
