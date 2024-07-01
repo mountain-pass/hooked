@@ -3,11 +3,12 @@ import { BlackButton, GreyText, Section } from './components'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { KEYS, useGet } from '@/hooks/ReactQuery'
 import { TbLockCancel, TbLockCheck } from 'react-icons/tb'
+import { TopLevelScripts } from './types'
 
 export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, setShowLogin: (show: boolean) => void }) => {
     const queryClient = useQueryClient()
     const apiKey = useQuery<string>({ queryKey: KEYS.apiKey() })
-    const useGetScripts = useGet('/api/scripts')
+    const useGetScripts = useGet<TopLevelScripts>('/api/scripts', showLogin)
 
     // refs
     const refApiKey = React.useRef<HTMLInputElement>(null)
@@ -24,7 +25,7 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
     React.useEffect(() => {
         console.debug('Checking showLogin...')
         setShowLogin(!useGetScripts.isSuccess)
-    }, [useGetScripts.isSuccess])
+    }, [useGetScripts.isSuccess, setShowLogin])
 
     return (
 

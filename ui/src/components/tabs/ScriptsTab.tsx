@@ -5,7 +5,7 @@ import React from "react"
 import { TbArrowBackUp, TbCheckbox, TbStar, TbStarFilled, TbX } from "react-icons/tb"
 import { BlackButton, GreyText, Section } from "@/components/components"
 import { GroupRow } from "@/components/scripts/GroupRow"
-import { isScript } from "@/components/types"
+import { TopLevelScripts, isScript } from "@/components/types"
 import { ScriptRow } from "@/components/scripts/ScriptRow"
 import { FavouritesSection } from "@/components/FavouritesSection"
 import { useRunTimer } from "@/hooks/useRunTimer"
@@ -20,7 +20,7 @@ export const ScriptsTab = ({ visible }: {
     const refSearchScript = React.useRef<HTMLInputElement>(null)
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
     const [showFavourites, setShowFavourites] = useLocalStorageBackedStateV4<boolean>('showFavourites', false)
-    const useGetScripts = useGet(`/api/scripts`, visible)
+    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
     const FavouritesState = useFavourites()
 
     const runTimer = useRunTimer()
@@ -147,8 +147,8 @@ export const ScriptsTab = ({ visible }: {
                             // executable Script
                             return <ScriptRow
                                 key={name}
-                                name={groupOrJob._scriptPath}
-                                scriptPath={groupOrJob._scriptPath}
+                                name={groupOrJob._scriptPath ?? ''}
+                                scriptPath={groupOrJob._scriptPath ?? ''}
                                 favouritesState={FavouritesState}
                                 executeScript={executeScript}
                             />

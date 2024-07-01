@@ -3,19 +3,15 @@ import { BlackButton } from "./components"
 import { useGet } from "@/hooks/ReactQuery"
 import React from "react"
 import { ApiKeyPrompt } from "./ApiKeyPrompt"
+import { TopLevelScripts } from "./types"
 
 
 export const Banner = () => {
     console.debug('Re-rendering Banner...')
 
-
     const [showLogin, setShowLogin] = React.useState(true)
 
-    // react-query
-
-    // const envs = useGet(`${baseUrl}/api/env`, bearerToken)
-    // const triggers = useGet(`${baseUrl}/api/triggers`, bearerToken)
-    const useGetScripts = useGet(`/api/scripts`)
+    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, true)
 
     const setShowLoginGuard = React.useCallback((show: boolean) => {
         if (useGetScripts.isSuccess) {
