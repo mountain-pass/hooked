@@ -48,3 +48,11 @@ export const isScript = (script: any): boolean => {
             isInternalScript(script)
         )
 }
+
+
+export interface CronTrigger {
+    $cron: string
+    $job: string
+  }
+  
+  export interface Triggers extends Record<string, CronTrigger> {}
