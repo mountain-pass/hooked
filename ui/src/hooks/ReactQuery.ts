@@ -4,7 +4,7 @@ export const KEYS = {
   apiKey: () => ['apiKey']
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
+export const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
 export const useGetApiKey = () => {
   const queryClient = useQueryClient()

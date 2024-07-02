@@ -1,7 +1,7 @@
 import React from 'react'
 import { BlackButton, GreyText, Section } from '../components'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { KEYS, useGet } from '@/hooks/ReactQuery'
+import { KEYS, baseUrl, useGet } from '@/hooks/ReactQuery'
 import { TbLockCancel, TbLockCheck } from 'react-icons/tb'
 import { TopLevelScripts } from '../types'
 
@@ -50,7 +50,9 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
                             ? <TbLockCheck className="text-green-500 text-xl" />
                             : <div className="flex gap-3 items-center">
                                 <GreyText className="max-w-[200px] truncate">{useGetScripts.error?.message}</GreyText>
-                                <TbLockCancel className="text-red-500 text-xl" />
+                                <TbLockCancel className="text-red-500 text-xl cursor-pointer" onClick={() => {
+                                    if (typeof window !== 'undefined') window.open(baseUrl, '_blank')
+                                }} />
                             </div>}
                     </div>
                     <input
