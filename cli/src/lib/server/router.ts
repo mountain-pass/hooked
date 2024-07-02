@@ -91,29 +91,43 @@ const router = async (
 
   // watcher for file configuration changes
   const fileChangeListener = (curr: fs.Stats, prev: fs.Stats): void => {
-    checkIfConfigHasChanged(curr)
+    checkIfConfigurationHasChanged(curr)
       .catch((err: Error) => { logger.error(`Error occurred checking config change - ${err.message}`) })
   }
   // watch for changes
   fs.watchFile(filepath, { interval: 3000 }, fileChangeListener)
   process.on('SIGTERM', () => { fs.unwatchFile(filepath, fileChangeListener) })
 
+  /** Force reloads of all configuration. */
+  const reloadConfiguration = async (): Promise<void> => {
+    config = await loaders.loadConfiguration(systemProcessEnvs, options)
+    // and reconfigure cron jobs
+    cronJobs = await rebuildCronJobs(
+      systemProcessEnvs,
+      options,
+      config,
+      cronJobs
+    )
+  }
+
   /** Checks whether the root config file modification time is newer, and reloads the configuration. (Max once per second) */
-  const checkIfConfigHasChanged = async (curr: fs.Stats): Promise<void> => {
+  const checkIfConfigurationHasChanged = async (curr: fs.Stats): Promise<void> => {
+    // TODO extend to all files?
     if (curr.mtimeMs > lastModified) {
       // file has been modified, reload...
       logger.debug(`Configuration changed, reloading '${filepath}'`)
       lastModified = curr.mtimeMs
-      config = await loaders.loadConfiguration(systemProcessEnvs, options)
-      // and reconfigure cron jobs
-      cronJobs = await rebuildCronJobs(
-        systemProcessEnvs,
-        options,
-        config,
-        cronJobs
-      )
+      await reloadConfiguration()
     }
   }
+
+  /**
+   * Reloads all configuration from disk.
+   */
+  app.get('/reload', globalErrorHandler(async (req, res) => {
+    await reloadConfiguration()
+    res.json({ message: 'Successfully reloaded configuration.' })
+  }))
 
   /**
    * Prints the different environments available (and their environment variable names).

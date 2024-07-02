@@ -24,19 +24,23 @@ export const ScriptsTab = ({ visible }: {
     const FavouritesState = useFavourites()
 
     const runTimer = useRunTimer()
+    const [lastScriptPath, setLastScriptPath] = React.useState<string | null>(null)
 
     /** Attempts to run the script. */
-    const executeScript = (
-        scriptPath: string
-    ) => {
+    const executeScript = React.useCallback((scriptPath: string) => {
+        if (doExecute.isPending) {
+            console.debug('Already executing script, skipping...')
+            return
+        }
         if (runTimer.isRunning) {
             runTimer.stop()
         }
+        setLastScriptPath(scriptPath)
         runTimer.start()
         doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
             .then(runTimer.stop)
             .catch(runTimer.stop)
-    }
+    }, [setLastScriptPath, doExecute.isPending])
 
     // useMemo
 

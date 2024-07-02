@@ -1,17 +1,26 @@
 import React from 'react'
-import { BlackButton, GreyText, Section } from './components'
+import { BlackButton, GreyText, Section } from '../components'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { KEYS, useGet } from '@/hooks/ReactQuery'
 import { TbLockCancel, TbLockCheck } from 'react-icons/tb'
-import { TopLevelScripts } from './types'
+import { TopLevelScripts } from '../types'
 
 export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, setShowLogin: (show: boolean) => void }) => {
+
     const queryClient = useQueryClient()
-    const apiKey = useQuery<string>({ queryKey: KEYS.apiKey() })
+    const [apiKey, setApiKey] = React.useState<string>('')
     const useGetScripts = useGet<TopLevelScripts>('/api/scripts', showLogin)
 
     // refs
+
     const refApiKey = React.useRef<HTMLInputElement>(null)
+
+    // function
+
+    const setApiKeyValue = (value: string) => {
+        setApiKey(value)
+        queryClient.setQueryData(KEYS.apiKey(), value)
+    }
 
     // focus input on showLogin
     React.useEffect(() => {
@@ -30,10 +39,10 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
     return (
 
         <div
-            className={`${showLogin ? 'visible' : 'hidden'} flex items-start justify-center w-full h-full absolute top-0 left-0 right-0 bottom-0 backdrop-filter backdrop-blur-sm`}
+            className={`animate-fade-in-out ${showLogin ? 'show' : ''} flex items-start justify-center w-full h-full absolute top-0 left-0 right-0 bottom-0 backdrop-filter backdrop-blur-md`}
             onClick={() => setShowLogin(false)}
         >
-            <div className="flex flex-col items-center justify-center p-4 w-full max-w-[1000px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-col items-center justify-center p-4 w-full max-w-[500px]" onClick={(e) => e.stopPropagation()}>
                 <Section visible={showLogin || useGetScripts.isError}>
                     <div className="w-full flex items-center justify-between">
                         <h2>Api Key</h2>
@@ -53,13 +62,11 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
                         className="border border-gray-200 dark:border-neutral-700 placeholder-neutral-500 w-full p-4 text-sm"
                         placeholder="API Key"
                         spellCheck={false}
-                        value={apiKey.data}
-                        onKeyUp={e => queryClient.setQueryData(KEYS.apiKey(), () => ((e.target as any).value))}
-                        onChange={e => queryClient.setQueryData(KEYS.apiKey(), () => ((e.target as any).value))}
+                        value={apiKey}
+                        onKeyUp={e => setApiKeyValue((e.target as any).value)}
+                        onChange={e => setApiKeyValue((e.target as any).value)}
                     />
-                    <div className="flex justify-end">
-                        <BlackButton size="md" disabled={!useGetScripts.isSuccess} className="rounded" onClick={() => setShowLogin(false)}>Close</BlackButton>
-                    </div>
+                    <BlackButton size="md" disabled={!useGetScripts.isSuccess} className="rounded" onClick={() => setShowLogin(false)}>Close</BlackButton>
                 </Section >
             </div>
         </div>

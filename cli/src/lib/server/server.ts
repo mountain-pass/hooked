@@ -32,8 +32,9 @@ const startServer = async (
 
   // setup express
   const app = express()
+  app.enable('trust proxy')
+  app.set('etag', 'strong')
   app.use(cors())
-
   // api-key verification
   const apiKey = options.apiKey
   if (isString(apiKey)) {

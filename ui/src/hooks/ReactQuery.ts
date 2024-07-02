@@ -6,6 +6,11 @@ export const KEYS = {
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
+export const useGetApiKey = () => {
+  const queryClient = useQueryClient()
+  return useQuery({ queryKey: KEYS.apiKey(), queryFn: () => queryClient.getQueryData(KEYS.apiKey())})
+}
+
 /**
  * Fetches data from the given URL using a GET request with the given bearer token.
  * @param url 
@@ -13,13 +18,17 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
  * @returns 
  */
 export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
-  console.debug('Use get script...', { url })
     const queryClient = useQueryClient()
-    const apiKey = useQuery({ queryKey: KEYS.apiKey() })
+    const apiKey = useGetApiKey()
     return useQuery<any, Error, ResponseDataType, any[]>({
       queryKey: [apiKey.data, url],
       queryFn: () => {
-        return fetch(`${baseUrl}${url}`, { method: 'get', headers: { 'Authorization': `Bearer ${apiKey.data}` } }).then(async res => {
+        return fetch(`${baseUrl}${url}`, { 
+          method: 'get', 
+          headers: { 
+            Authorization: `Bearer ${apiKey.data}` 
+          }
+        }).then(async res => {
           if (res.status !== 200) {
             const error: any = new Error(`Failed to fetch data from ${url}: ${res.statusText}`);
             error.body = await res.json();
@@ -37,15 +46,34 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
           }
         })
       },
-      // refetchInterval: 6000,
+      refetchInterval: 5000,
       retry: 0,
       enabled
+    })
+  }
+
+  /** Reloads the configuration on the backend. */
+  export const useReloadConfiguration = () => {
+    const queryClient = useQueryClient()
+    const apiKey = useGetApiKey()
+    return useMutation({
+      mutationFn: () => {
+        return fetch(`${baseUrl}/api/reload`, {
+          method: 'get',
+          headers: {
+            'Authorization': `Bearer ${apiKey.data}`,
+            'Accept': 'application/json',
+          }
+        }).then(() => {
+          queryClient.invalidateQueries()
+        })
+      }
     })
   }
   
   export const useExecuteScript = () => {
     console.debug('Use execute script...', { baseUrl })
-    const apiKey = useQuery({ queryKey: KEYS.apiKey() })
+    const apiKey = useGetApiKey()
     return useMutation({
       mutationKey: [apiKey.data, baseUrl],
       mutationFn: (postData: any) => {
