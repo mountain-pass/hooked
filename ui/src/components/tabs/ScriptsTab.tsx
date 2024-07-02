@@ -40,7 +40,7 @@ export const ScriptsTab = ({ visible }: {
         doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
             .then(runTimer.stop)
             .catch(runTimer.stop)
-    }, [setLastScriptPath, doExecute.isPending])
+    }, [setLastScriptPath, doExecute, runTimer])
 
     // useMemo
 

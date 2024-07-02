@@ -17,5 +17,5 @@ export const GlobalModal = ({ queryKey, children }: { queryKey: QueryKey & Query
         queryClient.setQueryData(queryKey, show)
     }
 
-    return <Modal show={show} setShow={setShow} children={children} />
+    return <Modal show={show} setShow={setShow}>{children}</Modal>
 }

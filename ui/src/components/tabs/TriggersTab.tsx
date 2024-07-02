@@ -19,7 +19,7 @@ export const TriggersTab = ({ visible }: { visible: boolean }) => {
             <h2 className="max-sm:hidden">Triggers</h2>
             <div className={`flex flex-col gap-1 [color-scheme:light_dark]`}>
                 {useGetTriggers.isSuccess && Object.entries(useGetTriggers.data).map(([triggerName, trigger]) => {
-                    return <TriggerRow name={triggerName} trigger={trigger} onEdit={onEdit} />
+                    return <TriggerRow key={triggerName} name={triggerName} trigger={trigger} onEdit={onEdit} />
                 })}
             </div>
         </Section>
