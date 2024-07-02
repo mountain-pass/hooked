@@ -19,6 +19,8 @@ describe('init', () => {
 # To enable yaml validation: https://github.com/mountain-pass/hooked/blob/main/_CONFIG.md#recommended---enable-yaml-schema
 #
 
+imports:
+  - ./imports/*.{yaml,yml}?
 env:
   default:
     GREETING: Hello
