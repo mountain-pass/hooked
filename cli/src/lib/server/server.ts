@@ -54,7 +54,7 @@ const startServer = async (
 
   // ssl setup
   if ((isString(options.sslCert) && !isString(options.sslKey)) || (!isString(options.sslCert) && isString(options.sslKey))) {
-    throw new Error('ssl-key and ssl-cert must both be provided together.')
+    throw new Error('sslKey and sslCert must both be provided together.')
   }
   const isHttps = isString(options.sslCert) && isString(options.sslKey)
   const server = isHttps

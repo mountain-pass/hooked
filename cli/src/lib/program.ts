@@ -23,7 +23,7 @@ const packageJson = loadRootPackageJsonSync()
 export interface ProgramOptions {
   env: string
   stdin: string
-  listenvs?: boolean
+  listEnvs?: boolean
   logLevel?: string
   skipCleanup?: boolean
   skipVersionCheck?: boolean
@@ -75,7 +75,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .addOption(new Option('-in, --stdin <json>', 'Allows predefining stdin responses.')
       .default('{}').env('STDIN'))
 
-    .addOption(new Option('-ls, --listenvs', 'Lists the available environments, and exits.')
+    .addOption(new Option('-ls, --listEnvs', 'Lists the available environments, and exits.')
       .env('LISTENVS'))
 
     .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level.')
@@ -116,11 +116,11 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       .implies({ batch: true })
       .env('SERVER')
       .preset(4000)
-      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listEnvs', 'log', 'update'])
     )
 
     .addOption(new Option('--ssl', 'Enable SSL, using the default hooked-cert.pem and hooked-key.pem files.')
-      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listEnvs', 'log', 'update'])
       .env('SSL')
       .implies({
         sslKey: 'hooked-key.pem',
@@ -128,21 +128,21 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
       })
     )
 
-    .addOption(new Option('--ssl-key [sslKey]', 'The no-passphrase private key in PEM format.')
-      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+    .addOption(new Option('--sslKey [sslKey]', 'The no-passphrase private key in PEM format.')
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listEnvs', 'log', 'update'])
       .env('SSL_KEY')
       .preset('hooked-key.pem')
     )
 
-    .addOption(new Option('--ssl-cert [sslCert]', 'The certificate chains in PEM format.')
-      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+    .addOption(new Option('--sslCert [sslCert]', 'The certificate chains in PEM format.')
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listEnvs', 'log', 'update'])
       .env('SSL_CERT')
       .preset('hooked-cert.pem')
     )
 
     .addOption(new Option('--api-key <apiKey>', 'The "Authorization" Bearer token, that must be present to access API endpoints.')
       .env('API_KEY')
-      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listenvs', 'log', 'update'])
+      .conflicts(['version', 'env', 'stdin', 'printenv', 'pretty', 'listEnvs', 'log', 'update'])
     )
     .addArgument(new Argument('[scriptPath...]', 'The space delimited, path of the script to run.')
       .default([]))
@@ -222,7 +222,7 @@ Provided Environment Variables:
       const config = await loaders.loadConfiguration(systemProcessEnvs, options)
 
       // show environment names...
-      if (options.listenvs === true) {
+      if (options.listEnvs === true) {
         logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
         return
       }

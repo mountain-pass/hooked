@@ -11,7 +11,7 @@ workers - deploy / view logs
 - [x] Ability to run jobs via api
 - [x] Ability to post stdin when running a job
 - [x] Ability to reload hooked.yaml on modification date change
-- [x] Ability to set --ssl , --ssl-cert , --ssl-key
+- [x] Ability to set --ssl , --sslCert , --sslKey
 - [x] Ability to set --api-key
 - [x] Example ssh cert in example config
 - [x] Dockerise - but how will it interact with Docker / SSH?
