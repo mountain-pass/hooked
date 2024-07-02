@@ -45,6 +45,9 @@ openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooke
 
 /** Writes a docker file, and "up's" the docker service. */
 export const initialiseDocker = async (options: ProgramOptions): Promise<void> => {
+  if (!fs.existsSync('/var/run/docker.sock')) {
+    logger.warn('Docker socket file "/var/run/docker.sock" not found. Please update docker-compose.yml.')
+  }
   // write docker compose
   const DOCKER_COMPOSE_CONTENTS = `
 services:

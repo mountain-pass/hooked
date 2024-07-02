@@ -20,15 +20,15 @@ workers - deploy / view logs
 
 # NICE TO HAVE
 - [ ] Server - Clean up .tmp files
-- [ ] Package UI with the NPM release
+- [x] Package UI with the NPM release
 - [ ] Document triggers
 - [ ] Rate limit to stop brute force API-KEY
-- [ ] Validate YAML config
-- [ ] Permanently enable NPM / Makefile / Icons - Remove Ethers/?
-- [ ] Support javascript? Just use node docker container
+- [x] Validate YAML config
+- [ ] Permanently enable NPM / Makefile / Icons - Remove config options & Ethers?
+- [x] Support javascript? No -> Just use node docker container
 - [ ] Reduce bundle size - https://bundlephobia.com/package/@mountainpass/hooked-cli
-- [ ] Fix security alerts
-- [ ] Ability to manage non-transient jobs (see inflight jobs, see job results, see job logs, cancel jobs)
+- [x] Fix security alerts
+- [ ] UI Ability to manage non-transient jobs (see inflight jobs, see job results, see job logs, cancel jobs)
 - [ ] Ability to run commands in already running docker containers?
 - [ ] Document SSL usage
 - [ ] UI - Ability to view logs, and rerun jobs
@@ -36,7 +36,7 @@ workers - deploy / view logs
 - [ ] UI - Ability to edit/organise jobs via web
 - [ ] UI - Ability to delegate jobs to other servers
 - [ ] UI - Ability to set max runtime on scripts
-- [ ] Handle file inputs/outputs?
+- [ ] Handle file inputs/outputs? -> Expose directory
 - [ ] Keep historical logs (incl pass/fail)
-- [ ] User roles - Expose functions to groups of users
+- [ ] User roles / Dashboard - Expose functions to groups of users
 - [ ] Support $jobs_parallel
