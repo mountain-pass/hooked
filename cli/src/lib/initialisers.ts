@@ -36,9 +36,8 @@ export const initialiseConfig = async (options: ProgramOptions): Promise<void> =
 export const initialiseSsl = async (options: ProgramOptions): Promise<void> => {
   logger.info('Generating SSL certificates...')
   await executeCmd('initialiseDocker', {
-    $image: 'alpine',
+    $image: 'mountainpass/hooked',
     $cmd: `#!/bin/sh -ve
-apk add --no-cache openssl
 openssl req -x509 -newkey rsa:2048 -nodes -keyout hooked-key.pem -new -out hooked-cert.pem -subj /CN=localhost -days 3650
 `
   }, options, {}, new Environment(), { printStdio: true, captureStdout: false }, 60000)
