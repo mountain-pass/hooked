@@ -68,6 +68,9 @@ const getLocalImportsCachePath = (filename: string): string => path.join(getDefa
 
 const CONFIG_BLANK = (): YamlConfig => {
   return {
+    imports: [
+      './imports/*.{yaml,yml}?'
+    ],
     env: {
       default: {
         GREETING: 'Hello'
