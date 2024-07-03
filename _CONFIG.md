@@ -11,12 +11,12 @@
   - [`env:` (optional)](#env-optional)
   - [`scripts:` (optional)](#scripts-optional)
 - [Environment Variables and Resolvers](#environment-variables-and-resolvers)
-  - [`string`](#string)
-  - [`$ask`](#ask)
-  - [`$cmd`](#cmd)
-  - [`$path`](#path)
-  - [`$env`](#env)
-  - [`$jobs_serial`](#jobs_serial)
+  - [`string` - Set the value of an environment variable](#string---set-the-value-of-an-environment-variable)
+  - [`$ask` - Prompt the user for input](#ask---prompt-the-user-for-input)
+  - [`$cmd` - Run a command](#cmd---run-a-command)
+  - [`$path` - Write a file/folder](#path---write-a-filefolder)
+  - [`$env` - Adds environment variables](#env---adds-environment-variables)
+  - [`$jobs_serial` - Run multiple jobs, one after the other](#jobs_serial---run-multiple-jobs-one-after-the-other)
 - [Conventions](#conventions)
 - [Advanced Configuration](#advanced-configuration)
   - [Custom Docker Command](#custom-docker-command)
@@ -186,7 +186,7 @@ In order to support more complicated resolution scenarios, we've provided the fo
 5. [`$env`](#env)
 6. [`$jobs_serial`](#jobs_serial)
 
-## `string`
+## `string` - Set the value of an environment variable
 
 > Used for: Environment Variables
 
@@ -209,7 +209,7 @@ env:
     NAME: ${USER}
 ```
 
-## `$ask`
+## `$ask` - Prompt the user for input
 
 > Used for: Environment Variables
 
@@ -244,7 +244,7 @@ env:
       $sort: alpha
 ```
 
-## `$cmd`
+## `$cmd` - Run a command
 
 > Used for: Environment Variables or Scripts
 
@@ -285,7 +285,7 @@ env:
 - you can specify a shell to use, by using `#!/bin/sh -ve` (verbose output & fail fast) on the first line.
 - if you want a script to always pass, append ` || true` to the end of the failing line.
 
-## `$path`
+## `$path` - Write a file/folder
 
 > Used for: Scripts
 
@@ -316,7 +316,7 @@ scripts:
     $owner: '100:100'
 ```
 
-## `$env`
+## `$env` - Adds environment variables
 
 > Used for: Scripts
 
@@ -332,7 +332,7 @@ scripts:
       TimeOfDay: Afternoon
 ```
 
-## `$jobs_serial`
+## `$jobs_serial` - Run multiple jobs, one after the other
 
 > Used for: Scripts
 

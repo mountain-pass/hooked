@@ -11,6 +11,7 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { findFileInAncestors } from '../utils/packageJson.js'
+import jwt from './auth/jwt.js'
 
 /**
  * Starts the REST API server.
@@ -35,20 +36,31 @@ const startServer = async (
   app.enable('trust proxy')
   app.set('etag', 'strong')
   app.use(cors())
-  // api-key verification
-  const apiKey = options.apiKey
-  if (isString(apiKey)) {
-    const requiredAuthorizationHeader = `Bearer ${apiKey}`
-    app.use('/api', (req, res, next) => {
-      if (req.header('authorization') !== requiredAuthorizationHeader) {
-        res.status(401).json({ message: 'Invalid authorization token.' }).end()
-      } else {
-        next()
+  jwt.initialise(
+    app,
+    (auth) => {
+      const { name, pass } = auth
+      if (name === 'nick' && pass === 'password') {
+        return { name }
+      }
+    },
+    (payload) => {
+      const { name } = payload
+      if (name === 'nick') {
+        return { name }
       }
     })
-  }
-  app.use(express.json())
-  app.get('/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+
+  // auth by apikey or jwt
+  app.use('/api', (req, res, next) => {
+    if (isString(options.apiKey) && req.header('authorization') === `Bearer ${options.apiKey}`) {
+      next()
+    } else {
+      jwt.verifyJwtTokenMiddleware(req, res, next)
+    }
+  })
+
+  app.get('/api/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
   app.use('/api', await router.router(systemProcessEnvs, options))
   app.use('/', express.static(publicPath))
 
@@ -66,6 +78,7 @@ const startServer = async (
 
   // listen
   server.listen(port, () => {
+    const apiKey = options.apiKey
     const toggles = `api-key=${isString(apiKey) ? apiKey.substring(0, 1).padEnd(apiKey.length, '*') : '🙅'}, ssl=${isHttps ? '✅' : '🙅'}`
     logger.info(`Server listening: ${isHttps ? 'https' : 'http'}://localhost:${port} (${toggles})`)
   })
