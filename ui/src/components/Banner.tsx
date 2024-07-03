@@ -57,7 +57,7 @@ export const Banner = () => {
         </div >
 
         {/* global loading spinner */}
-        <div className={`animate-fade-in-out ${isFetching > 0 || isMutating > 0 ? 'show' : ''} absolute bottom-0 right-0 pb-6 pr-6 flex items-end justify-end`}>
+        <div className={`animate-fade-in-out ${isFetching > 0 || isMutating > 0 ? 'show' : ''} fixed bottom-0 right-0 pb-6 pr-6 flex items-end justify-end z-10`}>
             <Spinner className="w-10 h-10" />
         </div>
 

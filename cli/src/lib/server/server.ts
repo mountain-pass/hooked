@@ -54,8 +54,10 @@ const startServer = async (
   // auth by apikey or jwt
   app.use('/api', (req, res, next) => {
     if (isString(options.apiKey) && req.header('authorization') === `Bearer ${options.apiKey}`) {
+      logger.debug('API key authentication successful.')
       next()
     } else {
+      logger.debug('Performing JWT authentication...')
       jwt.verifyJwtTokenMiddleware(req, res, next)
     }
   })
