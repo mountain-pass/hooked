@@ -5,17 +5,25 @@ import { describe } from 'mocha'
 import sinon from 'sinon'
 import { executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
 import { Environment } from '../src/lib/utils/Environment.js'
+import logger from '../src/lib/utils/logger.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('$cmd', () => {
+
+  let spyLoggerInfo: sinon.SinonSpy
+  let spyLoggerError: sinon.SinonSpy
   let spyStdout: any
   let spyStderr: any
+  
   beforeEach(() => {
     sinon.restore()
+    spyLoggerInfo = sinon.spy(logger, 'info')
+    spyLoggerError = sinon.spy(logger, 'error')
     spyStdout = sinon.spy(process.stdout, 'write')
     spyStderr = sinon.spy(process.stderr, 'write')
   })
+  
   afterEach(() => {
     sinon.restore()
   })
@@ -56,18 +64,19 @@ describe('$cmd', () => {
       // sinon.assert.notCalled(spyStderr)
     })
 
-    it('captureStdout=false, printStdio=true - should NOT return output, and print output', async () => {
+    it('wip captureStdout=false, printStdio=true - should NOT return output, and print output', async () => {
       const result2 = await executeCmd('-', { $cmd: 'echo "Hello"' }, {} as any, {}, new Environment(), { captureStdout: false, printStdio: true })
       expect(result2).to.eql('')
-      // sinon.assert.calledWithExactly(spyStdout, 'Hello\n')
-      // sinon.assert.notCalled(spyStderr)
+      sinon.assert.callCount(spyLoggerInfo, 1)
+      sinon.assert.callCount(spyLoggerError, 0)
+      expect(spyLoggerInfo.getCall(0).args[0].toString()).to.eql('Hello\n')
     })
 
-    it('captureStdout=true, printStdio=false - should return output, and NOT print output', async () => {
+    it('wip captureStdout=true, printStdio=false - should return output, and NOT print output', async () => {
       const result2 = await executeCmd('-', { $cmd: 'echo "Hello"' }, {} as any, {}, new Environment(), { captureStdout: true, printStdio: false })
       expect(result2).to.eql('Hello\n')
-      // sinon.assert.notCalled(spyStdout)
-      // sinon.assert.notCalled(spyStderr)
+      sinon.assert.callCount(spyLoggerInfo, 0)
+      sinon.assert.callCount(spyLoggerError, 0)
     })
 
     it('captureStdout=false, printStdio=false - should NOT return output, and NOT print output (bit pointless!)', async () => {

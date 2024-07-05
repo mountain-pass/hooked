@@ -62,7 +62,7 @@ export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOp
   const buffer = child_process.execSync(cmd, { ...opts, stdio: undefined })
   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
   const stdout = buffer !== null ? buffer.toString() : ''
-  if (customOpts.printStdio) logger.info(stdout)
+  if (!customOpts.captureStdout && customOpts.printStdio) logger.info(stdout)
   return customOpts.captureStdout ? stdout : ''
 }
 

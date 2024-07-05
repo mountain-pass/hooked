@@ -12,14 +12,19 @@ import tmp from 'tmp'
 import fs from 'fs'
 import inquirer from 'inquirer'
 import { fail } from 'assert'
+import logger from '../src/lib/utils/logger.js'
 
 describe('$cmd', () => {
+  let spyLoggerInfo: sinon.SinonSpy
+  let spyLoggerError: sinon.SinonSpy
   let spyStdout: sinon.SinonSpy
   let spyStderr: sinon.SinonSpy
   let inqStub: sinon.SinonStub
 
   beforeEach(() => {
     sinon.restore()
+    spyLoggerInfo = sinon.spy(logger, 'info')
+    spyLoggerError = sinon.spy(logger, 'error')
     spyStdout = sinon.spy(process.stdout, 'write')
     spyStderr = sinon.spy(process.stderr, 'write')
     inqStub = sinon.stub(inquirer, 'prompt')
@@ -52,7 +57,7 @@ Could not resolve 1 environment variables:
       config.removeCallback()
   })
 
-  it('when $choices has a $cmd, it should be able to resolve the output as choices', async () => {
+  it('wip when $choices has a $cmd, it should be able to resolve the output as choices', async () => {
     const config = tmp.fileSync({ tmpdir: '/tmp', postfix: '.yml', })
     fs.writeFileSync(config.name, `
 scripts:
@@ -66,9 +71,9 @@ scripts:
 `)
       inqStub.resolves({ MAPNAME: 'FOO' })
       await program(`node index.js --config ${config.name} map`.split(' '))
-      sinon.assert.callCount(spyStdout, 2)
-      expect(spyStdout.getCall(0).args[0]).to.eql('FOO\nBAR\n')
-      expect(spyStdout.getCall(1).args[0]).to.eql('Hello FOO\n\n')
+      sinon.assert.callCount(spyLoggerInfo, 1)
+      sinon.assert.callCount(spyLoggerError, 0)
+      expect(spyLoggerInfo.getCall(0).args[0]).to.eql('Hello FOO\n')
       config.removeCallback()
   })
 
