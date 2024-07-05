@@ -3,7 +3,6 @@ import express, { NextFunction, Response, type Request } from 'express'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
-import logger from '../../utils/logger'
 
 // lazy init
 
@@ -66,7 +65,7 @@ const initialise = (
     const user = authenticator(req.body)
     if (typeof user !== 'undefined') {
       const token = createJwtToken(user)
-      logger.debug(`Creating jwt token - maxAge=${jwtOptions.expiresIn} secure=${process.env.NODE_ENV === 'production'}`)
+      console.debug(`Creating jwt token - maxAge=${jwtOptions.expiresIn} secure=${process.env.NODE_ENV === 'production'}`)
       return res.cookie('jwt', token,
         {
           // domain: '.localhost:3000',

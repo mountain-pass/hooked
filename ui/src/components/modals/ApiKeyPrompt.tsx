@@ -19,8 +19,8 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
     // function
 
     const setApiKeyValue = (value: string) => {
-        setApiKey(value)
-        queryClient.setQueryData(KEYS.apiKey(), value)
+        //     setApiKey(value)
+        //     queryClient.setQueryData(KEYS.apiKey(), value)
     }
 
     // focus input on showLogin
