@@ -42,6 +42,18 @@ export const useLogin = () => {
   })
 }
 
+export const useLogout = () => {
+  const queryClient = useQueryClient()
+  return useMutation<any, Error>({
+    mutationFn: () => {
+      return fetch(`${baseUrl}/auth/logout`).then(async res => await errorHandler(res))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+    }
+  })
+}
+
 /**
  * Fetches data from the given URL using a GET request with the given bearer token.
  * @param url 

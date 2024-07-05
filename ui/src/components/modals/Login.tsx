@@ -44,7 +44,7 @@ export const LoginPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, s
                             }} />
                         </div>
                     </div>
-                    <form className="all-inherit" onSubmit={(e) => {
+                    <form className="contents" onSubmit={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
                         doLogin(username, password)
@@ -54,6 +54,7 @@ export const LoginPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, s
                             name="username"
                             placeholder="Username"
                             autoComplete="username"
+                            className="rounded"
                             value={username}
                             onChangeValue={setUsername}
                         />
@@ -62,10 +63,19 @@ export const LoginPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, s
                             name="password"
                             type="password"
                             autoComplete="current-password"
+                            className="rounded"
                             value={password}
                             onChangeValue={setPassword}
                         />
-                        <BlackButton type="submit" loading={useLoginMutation.isPending} size="md" disabled={username.length < 2 || password.length < 2} className="rounded">Login</BlackButton>
+                        <BlackButton
+                            type="submit"
+                            loading={useLoginMutation.isPending}
+                            size="md"
+                            disabled={username.length < 2 || password.length < 2}
+                            className="rounded"
+                        >
+                            Login
+                        </BlackButton>
                     </form>
                 </Section>
             </div>

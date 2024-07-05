@@ -119,6 +119,7 @@ export const ScriptsTab = ({ visible }: {
             {/* Scripts */}
             <div className={`flex ${showFavourites ? 'hidden' : 'visible'}`}>
                 <Input
+                    className="rounded-l"
                     innerRef={refSearchScript}
                     placeholder="Search scripts"
                     value={searchScripts ?? ''}
@@ -131,7 +132,7 @@ export const ScriptsTab = ({ visible }: {
                 <BlackButton size="lg" className="text-xl min-w-[54px] ml-[-1px]" onClick={() => setSearchScriptsToParent()}>
                     <TbArrowBackUp className="text-xl" />
                 </BlackButton>
-                <BlackButton size="lg" className="text-xl min-w-[54px] ml-[-1px]" onClick={() => clearSearchScripts()}>
+                <BlackButton size="lg" className="text-xl min-w-[54px] ml-[-1px] rounded-r" onClick={() => clearSearchScripts()}>
                     <TbX className="text-xl" />
                 </BlackButton>
             </div>

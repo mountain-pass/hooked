@@ -1,6 +1,6 @@
-import { TbLockCancel, TbLockCheck, TbReload } from "react-icons/tb"
+import { TbLockCancel, TbLockCheck, TbLogout, TbReload } from "react-icons/tb"
 import { BlackButton } from "./components"
-import { useGet, useReloadConfiguration } from "@/hooks/ReactQuery"
+import { useGet, useLogout, useReloadConfiguration } from "@/hooks/ReactQuery"
 import React from "react"
 import { ApiKeyPrompt } from "./modals/ApiKeyPrompt"
 import { TopLevelScripts } from "./types"
@@ -19,6 +19,7 @@ export const Banner = () => {
 
     const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, true)
     const useReload = useReloadConfiguration()
+    const doLogoout = useLogout()
 
     // if error, show login
     React.useEffect(() => {
@@ -43,7 +44,7 @@ export const Banner = () => {
                     <h1 className="truncate">hooked</h1>
                     <div className="text-xs text-neutral-500">{process.env.NEXT_PUBLIC_VERSION}</div>
                 </div>
-                <div className="flex gap-2 items-center justify-end">
+                <div className="flex gap-1 items-center justify-end">
                     <BlackButton
                         size="md"
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
@@ -52,6 +53,13 @@ export const Banner = () => {
                         <TbReload className="text-xl" />
                     </BlackButton>
                     <BlackButton
+                        size="md"
+                        className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
+                        onClick={() => doLogoout.mutate()}
+                    >
+                        <TbLogout className="text-xl" />
+                    </BlackButton>
+                    {/* <BlackButton
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
                         disabled={useGetScripts.isSuccess}
                         size="md"
@@ -61,7 +69,7 @@ export const Banner = () => {
                         {useGetScripts.isSuccess
                             ? <TbLockCheck className="text-green-500 text-xl" />
                             : <TbLockCancel className="text-red-500 text-xl" />}
-                    </BlackButton>
+                    </BlackButton> */}
                 </div>
             </div>
         </div >
