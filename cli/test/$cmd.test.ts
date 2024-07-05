@@ -8,7 +8,7 @@ import { Environment } from '../src/lib/utils/Environment.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe('wip $cmd', () => {
+describe('$cmd', () => {
   let spyStdout: any
   let spyStderr: any
   beforeEach(() => {

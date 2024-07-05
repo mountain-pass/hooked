@@ -15,6 +15,7 @@ import {
   isJobsSerialScript,
   isNumber,
   isObject,
+  checkIfRecognisedAsOldScript,
   isSSHCmdScript,
   isScript,
   isStdinScript,
@@ -515,6 +516,9 @@ export const resolveStdinScript = async (
       ])
       .then((answers) => {
         const value = answers[key]
+        if (typeof value === 'undefined') {
+          throw new Error(`Inquirer response is undefined, could not find key '${key}' in answers: ${JSON.stringify(answers)}`)
+        }
         env.putResolved(key, value)
         stdin[key] = value
       })
@@ -588,6 +592,7 @@ export const resolveScript = async (
     return script
   } else {
     // otherwise... it wasn't resolvable
-    throw new Error(`Unknown script type "${typeof script}" : ${JSON.stringify(script)} at path: ${key}`)
+    checkIfRecognisedAsOldScript(script)
+    throw new Error(`Unknown or old script format detected - "${typeof script}" : ${JSON.stringify(script)} at path: ${key}`)
   }
 }

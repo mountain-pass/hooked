@@ -58,34 +58,38 @@ export interface CustomOptions {
  * @returns
  */
 export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
+  logger.debug(`Creating process - ${cmd}`)
+  const buffer = child_process.execSync(cmd, { ...opts, stdio: undefined })
+  // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
   const stdout = buffer !== null ? buffer.toString() : ''
+  if (customOpts.printStdio) logger.info(stdout)
   return customOpts.captureStdout ? stdout : ''
 }
 
-export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
-  const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
-  childProcesses.push(child)
-  // type StdioNull = 'inherit' | 'ignore' | Stream;
-  // type StdioPipeNamed = 'pipe' | 'overlapped';
-  // const [, stdout, stderr] = opts.stdio as StdioPipe[]
+// export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
+//   logger.debug(`Spawning process - ${cmd} with opts=${JSON.stringify(opts)} , customOpts=${JSON.stringify(customOpts)}`)
+//   const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
+//   childProcesses.push(child)
+//   // type StdioNull = 'inherit' | 'ignore' | Stream;
+//   // type StdioPipeNamed = 'pipe' | 'overlapped';
+//   // const [, stdout, stderr] = opts.stdio as StdioPipe[]
 
-  // print / capture stdout only [stdin, stdout, stderr]
-  let stdout = ''
-  child.stdout?.on('data', (data: string | Buffer) => {
-    if (customOpts.printStdio) logger.writeInfo(data.toString())
-    if (customOpts.captureStdout) stdout += data.toString()
-  })
-  if (customOpts.printStdio) child.stderr?.on('data', (data: string | Buffer) => { logger.writeDebug(data.toString()) })
-  // wait for process to finish
-  const exitCode = await new Promise(resolve => child.on('close', resolve))
-  if (exitCode !== 0) {
-    const error: any = new Error(`Command failed: ${cmd}`)
-    error.status = exitCode
-    throw error
-  }
-  return stdout
-}
+//   // print / capture stdout only [stdin, stdout, stderr]
+//   let stdout = ''
+//   child.stdout?.on('data', (data: string | Buffer) => {
+//     if (customOpts.printStdio) logger.writeInfo(data.toString())
+//     if (customOpts.captureStdout) stdout += data.toString()
+//   })
+//   if (customOpts.printStdio) child.stderr?.on('data', (data: string | Buffer) => { logger.writeDebug(data.toString()) })
+//   // wait for process to finish
+//   const exitCode = await new Promise(resolve => child.on('close', resolve))
+//   if (exitCode !== 0) {
+//     const error: any = new Error(`Command failed: ${cmd}`)
+//     error.status = exitCode
+//     throw error
+//   }
+//   return stdout
+// }
 
 /**
  * Executes the provided multiline command, and returns the stdout as a string.

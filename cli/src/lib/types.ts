@@ -156,6 +156,13 @@ export type Script = string
 
 export type ScriptAndPaths = [Script, string[]]
 
+export const checkIfRecognisedAsOldScript = (script: any): void => {
+  // if old script type, suggest a fix...
+  if (typeof script['$stdin'] === 'string') {
+    throw new Error('Old script format detected. Please use $ask instead of $stdin.')
+  }
+}
+
 export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {
   return Array.isArray((script as any).$jobs_serial)
 }
