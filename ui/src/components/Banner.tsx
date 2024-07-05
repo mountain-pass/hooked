@@ -8,7 +8,6 @@ import { LoginPrompt } from "./modals/Login"
 import { Modal } from "./modals/Modal"
 import { TopLevelScripts } from "./types"
 
-
 export const Banner = () => {
     console.debug('Re-rendering Banner...')
 
@@ -72,7 +71,7 @@ export const Banner = () => {
         {/* api key */}
 
         <Modal show={showLogin} setShow={setShowLogin} allowBackgroundClose={false}>
-            {(props) => <LoginPrompt {...props} />}
+            {LoginPrompt}
         </Modal>
 
     </>)

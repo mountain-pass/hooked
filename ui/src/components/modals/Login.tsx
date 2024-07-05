@@ -3,8 +3,9 @@ import React from 'react'
 import { TbLock } from 'react-icons/tb'
 import { Input } from '../common/Input'
 import { BlackButton, GreyText, Section } from '../components'
+import { ModalChildProps } from './Modal'
 
-export const LoginPrompt = ({ show, setShow }: { show: boolean, setShow: (show: boolean) => void }) => {
+export const LoginPrompt = ({ show, setShow }: ModalChildProps) => {
 
     const [username, setUsername] = React.useState<string>('')
     const [password, setPassword] = React.useState<string>('')

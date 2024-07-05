@@ -1,7 +1,14 @@
 import React from 'react'
 
-export type ModalChild = ({ show, setShow }: { show: boolean, setShow: (show: boolean) => void }) => React.JSX.Element
+export type ModalChildProps = { show: boolean, setShow: (show: boolean) => void }
 
+export type ModalChild = ({ show, setShow }: ModalChildProps) => React.JSX.Element
+
+/**
+ * Facilitates wrapping sections in a modal window.
+ * @param param0 
+ * @returns 
+ */
 export const Modal = ({
     show,
     setShow,

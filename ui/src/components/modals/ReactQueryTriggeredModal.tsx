@@ -1,10 +1,13 @@
 import { QueryFilters, QueryKey, useQuery, useQueryClient } from '@tanstack/react-query'
 import React from 'react'
-import { Modal } from './Modal'
+import { Modal, ModalChild } from './Modal'
 
-export type ModalChild = ({ show, setShow }: { show: boolean, setShow: (show: boolean) => void }) => React.JSX.Element
-
-export const GlobalModal = ({ queryKey, children }: { queryKey: QueryKey & QueryFilters, children: ModalChild }) => {
+/**
+ * Uses a react-query value to trigger the modal.
+ * @param param0 
+ * @returns 
+ */
+export const ReactQueryTriggeredModal = ({ queryKey, children }: { queryKey: QueryKey & QueryFilters, children: ModalChild }) => {
     const queryClient = useQueryClient()
     const showQuery = useQuery<any, Error, boolean>({
         queryKey,
