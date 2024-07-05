@@ -21,7 +21,7 @@ export const BlackButton = ({ children, disabled, active, loading, size = 'lg', 
           ? `border-neutral-500 bg-neutral-100 hover:bg-neutral-200 
           dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-400 `
           : `border-neutral-300  bg-white hover:bg-neutral-200
-          dark:text-neutral-400 dark:border-neutral-700 dark:bg-transparent dark:hover:bg-neutral-700 `} 
+          dark:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-700 `} 
       px-3 py-2 
       ${dims} 
       text-sm 
