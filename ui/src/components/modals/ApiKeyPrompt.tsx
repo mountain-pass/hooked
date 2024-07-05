@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { KEYS, baseUrl, useGet } from '@/hooks/ReactQuery'
 import { TbLockCancel, TbLockCheck } from 'react-icons/tb'
 import { TopLevelScripts } from '../types'
+import { Input } from '../common/Input'
 
 export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, setShowLogin: (show: boolean) => void }) => {
 
@@ -55,18 +56,11 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
                                 }} />
                             </div>}
                     </div>
-                    <input
+                    <Input
                         ref={refApiKey}
-                        type="text"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="none"
-                        className="border border-gray-200 dark:border-neutral-700 placeholder-neutral-500 w-full p-4 text-sm"
                         placeholder="API Key"
-                        spellCheck={false}
                         value={apiKey}
-                        onKeyUp={e => setApiKeyValue((e.target as any).value)}
-                        onChange={e => setApiKeyValue((e.target as any).value)}
+                        onChangeValue={val => setApiKeyValue(val)}
                     />
                     <BlackButton size="md" disabled={!useGetScripts.isSuccess} className="rounded" onClick={() => setShowLogin(false)}>Close</BlackButton>
                 </Section >

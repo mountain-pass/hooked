@@ -10,6 +10,7 @@ import { ScriptRow } from "@/components/scripts/ScriptRow"
 import { FavouritesSection } from "@/components/FavouritesSection"
 import { useRunTimer } from "@/hooks/useRunTimer"
 import { TextArea } from "../common/TextArea"
+import { Input } from "../common/Input"
 
 export const ScriptsTab = ({ visible }: {
     visible: boolean,
@@ -117,18 +118,12 @@ export const ScriptsTab = ({ visible }: {
 
             {/* Scripts */}
             <div className={`flex ${showFavourites ? 'hidden' : 'visible'}`}>
-                <input
-                    ref={refSearchScript}
-                    type="text"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="none"
-                    className="border border-gray-200 dark:border-neutral-700 placeholder-neutral-500 w-full p-4 text-sm"
+                <Input
+                    innerRef={refSearchScript}
                     placeholder="Search scripts"
-                    spellCheck={false}
-                    value={searchScripts}
-                    onChange={e => setSearchScripts(e.target.value)}
-                    // on escape key, clear searc
+                    value={searchScripts ?? ''}
+                    onChangeValue={val => setSearchScripts(val)}
+                    // on escape key, clear search
                     onKeyDown={e => {
                         if (e.key === 'Escape') setSearchScripts('')
                     }}

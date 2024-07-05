@@ -6,6 +6,7 @@ import { ApiKeyPrompt } from "./modals/ApiKeyPrompt"
 import { TopLevelScripts } from "./types"
 import { Spinner } from "./Spinner"
 import { useIsFetching, useIsMutating } from "@tanstack/react-query"
+import { LoginPrompt } from "./modals/Login"
 
 
 export const Banner = () => {
@@ -19,11 +20,19 @@ export const Banner = () => {
     const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, true)
     const useReload = useReloadConfiguration()
 
-    const setShowLoginGuard = React.useCallback((show: boolean) => {
-        if (useGetScripts.isSuccess) {
-            setShowLogin(show)
+    // if error, show login
+    React.useEffect(() => {
+        if (useGetScripts.isError) {
+            setShowLogin(true)
         }
-    }, [useGetScripts.isSuccess, setShowLogin])
+    }, [useGetScripts.isError])
+
+    // if success, hide login
+    React.useEffect(() => {
+        if (useGetScripts.isSuccess) {
+            setShowLogin(false)
+        }
+    }, [useGetScripts.isSuccess])
 
     return (<>
 
@@ -44,8 +53,9 @@ export const Banner = () => {
                     </BlackButton>
                     <BlackButton
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
-                        disabled={useGetScripts.isError}
+                        disabled={useGetScripts.isSuccess}
                         size="md"
+                        // onClick={() => { }}
                         onClick={() => setShowLogin(ps => !ps)}
                     >
                         {useGetScripts.isSuccess
@@ -62,6 +72,6 @@ export const Banner = () => {
         </div>
 
         {/* api key */}
-        <ApiKeyPrompt showLogin={showLogin} setShowLogin={setShowLoginGuard} />
+        <LoginPrompt showLogin={showLogin} setShowLogin={setShowLogin} />
     </>)
 }
