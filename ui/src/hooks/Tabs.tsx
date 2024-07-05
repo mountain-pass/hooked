@@ -6,6 +6,7 @@ export const Tabs = ({ tabs, currentTab, setCurrentTab, className = '' }: UseTab
         <div className="flex flex-start gap-2 w-full">
             {tabs.map(tab => (
                 <BlackButton
+                    title={`Show ${tab} tab`}
                     key={tab}
                     active={tab === currentTab}
                     className={`px-6 rounded ${className}`}

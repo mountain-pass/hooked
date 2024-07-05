@@ -62,7 +62,15 @@ export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, 
                         value={apiKey}
                         onChangeValue={val => setApiKeyValue(val)}
                     />
-                    <BlackButton size="md" disabled={!useGetScripts.isSuccess} className="rounded" onClick={() => setShowLogin(false)}>Close</BlackButton>
+                    <BlackButton
+                        title="Login"
+                        size="md"
+                        disabled={!useGetScripts.isSuccess}
+                        className="rounded"
+                        onClick={() => setShowLogin(false)}
+                    >
+                        Close
+                    </BlackButton>
                 </Section >
             </div>
         </div>

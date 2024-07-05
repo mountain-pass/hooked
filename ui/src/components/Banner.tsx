@@ -1,12 +1,12 @@
-import { TbLockCancel, TbLockCheck, TbLogout, TbReload } from "react-icons/tb"
-import { BlackButton } from "./components"
 import { useGet, useLogout, useReloadConfiguration } from "@/hooks/ReactQuery"
-import React from "react"
-import { ApiKeyPrompt } from "./modals/ApiKeyPrompt"
-import { TopLevelScripts } from "./types"
-import { Spinner } from "./Spinner"
 import { useIsFetching, useIsMutating } from "@tanstack/react-query"
+import React from "react"
+import { TbLogout, TbReload } from "react-icons/tb"
+import { Spinner } from "./Spinner"
+import { BlackButton } from "./components"
 import { LoginPrompt } from "./modals/Login"
+import { Modal } from "./modals/Modal"
+import { TopLevelScripts } from "./types"
 
 
 export const Banner = () => {
@@ -15,7 +15,6 @@ export const Banner = () => {
     const [showLogin, setShowLogin] = React.useState(true)
     const isFetching = useIsFetching()
     const isMutating = useIsMutating()
-
 
     const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, true)
     const useReload = useReloadConfiguration()
@@ -49,6 +48,7 @@ export const Banner = () => {
                         size="md"
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
                         onClick={() => useReload.mutate()}
+                        title="Reload Configuration"
                     >
                         <TbReload className="text-xl" />
                     </BlackButton>
@@ -56,20 +56,10 @@ export const Banner = () => {
                         size="md"
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
                         onClick={() => doLogoout.mutate()}
+                        title="Logout"
                     >
                         <TbLogout className="text-xl" />
                     </BlackButton>
-                    {/* <BlackButton
-                        className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
-                        disabled={useGetScripts.isSuccess}
-                        size="md"
-                        // onClick={() => { }}
-                        onClick={() => setShowLogin(ps => !ps)}
-                    >
-                        {useGetScripts.isSuccess
-                            ? <TbLockCheck className="text-green-500 text-xl" />
-                            : <TbLockCancel className="text-red-500 text-xl" />}
-                    </BlackButton> */}
                 </div>
             </div>
         </div >
@@ -80,6 +70,10 @@ export const Banner = () => {
         </div>
 
         {/* api key */}
-        <LoginPrompt showLogin={showLogin} setShowLogin={setShowLogin} />
+
+        <Modal show={showLogin} setShow={setShowLogin} allowBackgroundClose={false}>
+            {(props) => <LoginPrompt {...props} />}
+        </Modal>
+
     </>)
 }

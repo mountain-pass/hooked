@@ -30,8 +30,8 @@ export const TriggersTab = ({ visible }: { visible: boolean }) => {
                     <Section visible={show}>
                         <h2>Edit Trigger</h2>
                         <div className="grid grid-cols-2 gap-2">
-                            <BlackButton size="md" onClick={() => setShow(false)}>Save</BlackButton>
-                            <BlackButton size="md" onClick={() => setShow(false)}>Close</BlackButton>
+                            <BlackButton title="Save" size="md" onClick={() => setShow(false)}>Save</BlackButton>
+                            <BlackButton title="Close" size="md" onClick={() => setShow(false)}>Close</BlackButton>
                         </div>
                     </Section>
                 </>)

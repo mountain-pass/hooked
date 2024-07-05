@@ -20,6 +20,7 @@ export const ScriptRow = ({ name, scriptPath, disableExecution, favouritesState,
                 <div className="truncate">{name}</div>
             </ListItem>
             <BlackButton
+                title="Toggle Favourite"
                 size="lg"
                 className={`flex-shrink-0 h-[54px] min-w-[54px] text-xl border-l-0 ${isFavourite(scriptPath) ? 'text-yellow-400' : ''}`}
                 onClick={() => toggleFavourite(scriptPath)}
@@ -27,6 +28,7 @@ export const ScriptRow = ({ name, scriptPath, disableExecution, favouritesState,
                 {isFavourite(scriptPath) ? <TbStarFilled /> : <TbStar />}
             </BlackButton>
             <BlackButton
+                title="Execute Script"
                 size="lg"
                 className="rounded-r flex-shrink-0 h-[54px] min-w-[54px] sm:px-6 gap-3 border-l-0"
                 onClick={() => executeScript(scriptPath)}

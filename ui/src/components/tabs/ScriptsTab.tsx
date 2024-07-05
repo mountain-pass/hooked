@@ -107,7 +107,7 @@ export const ScriptsTab = ({ visible }: {
             <div className="flex items-start max-sm:justify-end sm:justify-between">
                 <h2 className="max-sm:hidden sm:visible">Scripts</h2>
 
-                <BlackButton size="sm" active={showFavourites} className="rounded flex items-center justify-between gap-2" onClick={toggleFavourites}>
+                <BlackButton title="Toggle show Favourites" size="sm" active={showFavourites} className="rounded flex items-center justify-between gap-2" onClick={toggleFavourites}>
                     {showFavourites ? <TbStarFilled className="text-xl" /> : <TbStar className="text-xl" />}
                     <div>Favourites</div>
                 </BlackButton>
@@ -129,10 +129,10 @@ export const ScriptsTab = ({ visible }: {
                         if (e.key === 'Escape') setSearchScripts('')
                     }}
                 />
-                <BlackButton size="lg" className="text-xl min-w-[54px] ml-[-1px]" onClick={() => setSearchScriptsToParent()}>
+                <BlackButton title="Jump up a group" size="lg" className="text-xl min-w-[54px] ml-[-1px]" onClick={() => setSearchScriptsToParent()}>
                     <TbArrowBackUp className="text-xl" />
                 </BlackButton>
-                <BlackButton size="lg" className="text-xl min-w-[54px] ml-[-1px] rounded-r" onClick={() => clearSearchScripts()}>
+                <BlackButton title="Remove filter" size="lg" className="text-xl min-w-[54px] ml-[-1px] rounded-r" onClick={() => clearSearchScripts()}>
                     <TbX className="text-xl" />
                 </BlackButton>
             </div>
@@ -169,7 +169,7 @@ export const ScriptsTab = ({ visible }: {
                 <h2>Results</h2>
                 <div className="flex gap-3 items-center">
                     <GreyText>{`${(runTimer.durationMs / 1000).toFixed(3)} seconds`}</GreyText>
-                    <BlackButton className="rounded" size="md" onClick={() => doExecute.reset()}>Clear</BlackButton>
+                    <BlackButton title="Clear Results" className="rounded" size="md" onClick={() => doExecute.reset()}>Clear</BlackButton>
                 </div>
             </div>
 

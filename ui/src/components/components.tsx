@@ -5,8 +5,8 @@ export const GreyText = ({ className = '', children }: { className?: string, chi
   <i className={`text-neutral-400 dark:text-neutral-500 text-sm ${className}`}>{children}</i>
 )
 
-export const BlackButton = ({ children, disabled, active, loading, size = 'lg', className = '', onClick, ...props }:
-  { loading?: boolean, disabled?: boolean, active?: boolean, size: 'sm' | 'md' | 'lg', className?: string, children: React.ReactNode } & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => {
+export const BlackButton = ({ children, disabled, active, loading, size = 'lg', title, className = '', onClick, ...props }:
+  { loading?: boolean, disabled?: boolean, active?: boolean, size: 'sm' | 'md' | 'lg', title: string, className?: string, children: React.ReactNode } & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => {
   const dims = size === 'sm' ? 'min-h-[38px] min-w-[38px] h-[38px]'
     : size === 'md' ? 'min-h-[46px] min-w-[46px] h-[46px]'
       : size === 'lg' ? 'min-h-[54px] min-w-[54px] h-[54px]'
@@ -31,6 +31,7 @@ export const BlackButton = ({ children, disabled, active, loading, size = 'lg', 
       disabled:border-neutral-300 disabled:text-neutral-300 disabled:hover:bg-white
       `}
       onClick={onClick}
+      title={title}
       {...props}
     >
       <Spinner className={`${loading ? 'visible' : 'hidden'} aspect-square w-full h-full`} />
