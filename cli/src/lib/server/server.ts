@@ -13,17 +13,18 @@ import { fileURLToPath } from 'url'
 import { findFileInAncestors } from '../utils/packageJson.js'
 import jwt from './auth/jwt.js'
 
-var whitelist = ['http://localhost:3000', 'http://www.localhost:3000', 'https://www.localhost:4000', 'https://localhost:4000', /** other domains if any */ ]
+// var allowlist = ['http://localhost:3000', 'http://www.localhost:3000', 'https://www.localhost:4000', 'https://localhost:4000', /** other domains if any */ ]
 var corsOptions = {
   credentials: true,
-  origin: function(origin: any, callback: any) {
-    const originIsSame = typeof origin === 'undefined'
-    if (originIsSame || whitelist.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      callback(new Error(`Domain not allowed by CORS - ${origin}`))
-    }
-  }
+  origin: (origin: any, callback: any) => callback(null, true)
+  // origin: function(origin: any, callback: any) {
+  //   const originIsSame = typeof origin === 'undefined'
+  //   if (originIsSame || allowlist.indexOf(origin) !== -1) {
+  //     callback(null, true)
+  //   } else {
+  //     callback(new Error(`Domain not allowed by CORS - ${origin}`))
+  //   }
+  // }
 }
 
 

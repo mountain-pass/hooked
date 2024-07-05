@@ -65,7 +65,6 @@ const initialise = (
     const user = authenticator(req.body)
     if (typeof user !== 'undefined') {
       const token = createJwtToken(user)
-      console.debug(`Creating jwt token - maxAge=${jwtOptions.expiresIn} secure=${process.env.NODE_ENV === 'production'}`)
       return res.cookie('jwt', token,
         {
           // domain: '.localhost:3000',
