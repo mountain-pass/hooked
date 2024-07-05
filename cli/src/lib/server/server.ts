@@ -13,6 +13,20 @@ import { fileURLToPath } from 'url'
 import { findFileInAncestors } from '../utils/packageJson.js'
 import jwt from './auth/jwt.js'
 
+var whitelist = ['http://localhost:3000', 'http://www.localhost:3000', 'https://www.localhost:4000', 'https://localhost:4000', /** other domains if any */ ]
+var corsOptions = {
+  credentials: true,
+  origin: function(origin: any, callback: any) {
+    const originIsSame = typeof origin === 'undefined'
+    if (originIsSame || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error(`Domain not allowed by CORS - ${origin}`))
+    }
+  }
+}
+
+
 /**
  * Starts the REST API server.
  * @param port
@@ -35,30 +49,29 @@ const startServer = async (
   const app = express()
   app.enable('trust proxy')
   app.set('etag', 'strong')
-  app.use(cors())
+  app.use(cors(corsOptions))
+
   jwt.initialise(
     app,
     (auth) => {
-      const { name, pass } = auth
-      if (name === 'nick' && pass === 'password') {
-        return { name }
+      const { username, password } = auth
+      if (username === 'admin' && password === 'hooked01') {
+        return { username }
       }
     },
     (payload) => {
-      const { name } = payload
-      if (name === 'nick') {
-        return { name }
+      const { username } = payload
+      if (username === 'admin') {
+        return { username }
       }
     })
 
   // auth by apikey or jwt
   app.use('/api', (req, res, next) => {
     if (isString(options.apiKey) && req.header('authorization') === `Bearer ${options.apiKey}`) {
-      logger.debug('API key authentication successful.')
       next()
     } else {
-      logger.debug('Performing JWT authentication...')
-      jwt.verifyJwtTokenMiddleware(req, res, next)
+      jwt.requireSigninMiddleware(req, res, next)
     }
   })
 

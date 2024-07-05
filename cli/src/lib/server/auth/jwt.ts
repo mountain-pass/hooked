@@ -1,14 +1,16 @@
 import cookieParser from 'cookie-parser'
-import express, { type Request } from 'express'
+import express, { NextFunction, Response, type Request } from 'express'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
+import logger from '../../utils/logger'
 
 // lazy init
 
 function cookieExtractor (req: Request & { cookies: boolean }): string | null {
   if (typeof req?.cookies !== 'undefined') {
-    return req.signedCookies[jwtOptions.jwtCookieName]
+    return req.cookies[jwtOptions.jwtCookieName]
+    // return req.signedCookies[jwtOptions.jwtCookieName]
   } else {
     return null
   }
@@ -19,15 +21,16 @@ const jwtOptions = {
   secretOrKey: 'SECRET_KEY',
   issuer: 'www.localhost',
   audience: 'api.localhost',
-  expiresIn: 20,
+  /** max age in seconds */
+  expiresIn: 86400,
   jwtCookieName: 'jwt'
 }
 
 type JwtPayload = any
 
 interface AuthRequest {
-  name: string
-  pass: string
+  username: string
+  password: string
 }
 
 /** Verifies the JWT payload matches a valid user. */
@@ -52,29 +55,31 @@ const initialise = (
   authenticator: UserAuthenticator,
   authoriser: RequestAuthoriser
 ): void => {
-  passport.use(getJwtStrategy(authoriser))
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
   app.use(cookieParser(jwtOptions.secretOrKey))
+  passport.use(getJwtStrategy(authoriser))
   app.use(passport.initialize())
 
   // login
   app.post('/auth/login', (req, res) => {
-    const { name, pass } = req.body
-    const user = authenticator({ name, pass })
+    const user = authenticator(req.body)
     if (typeof user !== 'undefined') {
       const token = createJwtToken(user)
+      logger.debug(`Creating jwt token - maxAge=${jwtOptions.expiresIn} secure=${process.env.NODE_ENV === 'production'}`)
       return res.cookie('jwt', token,
         {
-          httpOnly: true,
+          // domain: '.localhost:3000',
+          httpOnly: true, // no js access!
           secure: process.env.NODE_ENV === 'production',
-          signed: true
+          signed: false,  // jwt will do the signing
+          maxAge: jwtOptions.expiresIn * 1000
         }
       )
         .status(200)
         .json({ message: 'Login successful.' })
     }
-    return res.sendStatus(401)
+    return res.status(401).json({ message: 'Unauthorised' })
   })
 
   // logout
@@ -85,7 +90,7 @@ const initialise = (
         .status(200)
         .json({ message: 'You have logged out.' })
     } else {
-      res.status(401).json({ error: 'Invalid jwt' })
+      res.status(401).json({ message: 'Invalid jwt' })
     }
   })
 }
@@ -98,9 +103,17 @@ const createJwtToken = (jwtPayload: any): string => {
 }
 
 /** Verifies the JWT token issuer, audience, and expiry. */
-const verifyJwtTokenMiddleware = passport.authenticate(jwtOptions.jwtCookieName, { session: false })
+const requireSigninMiddleware: (req: Request, res: Response, next: NextFunction) => any = (req, res, next) => {
+  passport.authenticate(jwtOptions.jwtCookieName, { session: false }, (err: any, user: any, info: any) => {
+    if (err || !user) {
+      return res.status(401).json({ message: 'Unauthorised' });
+    }
+    return next();
+
+  })(req, res, next)
+}
 
 export default {
   initialise,
-  verifyJwtTokenMiddleware
+  requireSigninMiddleware
 }
