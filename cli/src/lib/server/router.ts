@@ -55,7 +55,7 @@ const rebuildCronJobs = async (
             .catch((err: Error) => { logger.error(`Error occurred running cron job - ${err.message}`) })
         },
         start: true,
-        timeZone: options.tz ?? 'UTC'
+        timeZone: options.timezone ?? 'UTC'
       })
       logger.debug(`Created cron job - "${name}" - nextRun=${job.nextDate().toISO() ?? '<unknown>'}`)
       newJobs.push(job)

@@ -28,7 +28,7 @@ export interface ProgramOptions {
   skipCleanup?: boolean
   skipVersionCheck?: boolean
   dockerHookedDir?: string
-  tz?: string
+  timezone?: string
   init?: boolean
   initConfig?: boolean
   initSsl?: boolean

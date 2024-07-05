@@ -55,7 +55,7 @@ services:
     image: mountainpass/hooked:${packageJson.version}
     container_name: hooked_${options.server ?? '4000'}
     environment:
-      - TZ=${options.tz ?? 'UTC'}
+      - TZ=${options.timezone ?? 'UTC'}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${defaults.getDefaults().HOOKED_DIR}:${defaults.getDefaults().HOOKED_DIR}
