@@ -42,10 +42,10 @@ const rebuildCronJobs = async (
   // create new jobs
   const newJobs: Array<CronJob<any, JobContext>> = []
 
-  if (isDefined(config.triggers)) {
-    for (const [name, cronJob] of Object.entries(config.triggers)) {
-      const { $cron: cronTime, $job } = cronJob
-      const scriptPath = $job.split(' ')
+  if (isDefined(config.server?.triggers)) {
+    for (const [name, cronJob] of Object.entries(config.server?.triggers)) {
+      const { $cron: cronTime, $script } = cronJob
+      const scriptPath = $script.split(' ')
       // resolve script path
       const job = CronJob.from({
         context: { name },
