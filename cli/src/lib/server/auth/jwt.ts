@@ -1,8 +1,9 @@
 import cookieParser from 'cookie-parser'
-import express, { NextFunction, Response, type Request } from 'express'
-import jwt from 'jsonwebtoken'
+import express, { type NextFunction, type Response, type Request } from 'express'
+import jwt, { type JwtPayload } from 'jsonwebtoken'
 import passport from 'passport'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
+import { isDefined, isUndefined } from '../../types'
 
 // lazy init
 
@@ -25,27 +26,36 @@ const jwtOptions = {
   jwtCookieName: 'jwt'
 }
 
-type JwtPayload = any
+export type HookedJwtPayload = JwtPayload & { username: string, roles: string[] }
 
 interface AuthRequest {
   username: string
   password: string
 }
 
-/** Verifies the JWT payload matches a valid user. */
-type RequestAuthoriser = (jwtPayload: JwtPayload) => JwtPayload | undefined
 /** Authenticates the user credentials. */
-type UserAuthenticator = (authRequest: AuthRequest) => JwtPayload | undefined
+type UserAuthenticator = (authRequest: AuthRequest) => HookedJwtPayload | undefined
 
+/** Verifies the JWT payload matches a valid user. */
+type RequestAuthoriser = (jwtPayload: HookedJwtPayload) => HookedJwtPayload | undefined
+
+/**
+ * Checks whether the JWT token is valid.
+ */
 const getJwtStrategy = (authoriser: RequestAuthoriser): JwtStrategy => {
   const { jwtFromRequest, secretOrKey, issuer, audience } = jwtOptions
-  return new JwtStrategy({ jwtFromRequest, secretOrKey, issuer, audience }, async (jwtPayload: any, done) => {
-    const user = authoriser(jwtPayload)
-    if (typeof user === 'undefined') {
-      return done('Unknown user', false)
+  return new JwtStrategy({ jwtFromRequest, secretOrKey, issuer, audience }, (jwtPayload: any, done) => {
+    try {
+      const user = authoriser(jwtPayload)
+      if (isDefined(user)) {
+        done(null, user)
+      } else {
+        done('Unknown user.', false)
+      }
+    } catch (err: any) {
+      console.error('Authoriser error.', err)
+      done('Server error.', false)
     }
-    // all ok
-    return done(null, user)
   })
 }
 
@@ -62,38 +72,39 @@ const initialise = (
 
   // login
   app.post('/auth/login', (req, res) => {
-    const user = authenticator(req.body)
-    if (typeof user !== 'undefined') {
-      const token = createJwtToken(user)
-      return res.cookie('jwt', token,
-        {
+    try {
+      const user = authenticator(req.body)
+      if (isDefined(user)) {
+        const token = createJwtToken(user)
+        return res.cookie('jwt', token,
+          {
           // domain: '.localhost:3000',
-          httpOnly: true, // no js access!
-          secure: process.env.NODE_ENV === 'production',
-          signed: false,  // jwt will do the signing
-          maxAge: jwtOptions.expiresIn * 1000
-        }
-      )
-        .status(200)
-        .json({ message: 'Login successful.' })
+            httpOnly: true, // no js access!
+            secure: process.env.NODE_ENV === 'production',
+            signed: false, // jwt will do the signing
+            maxAge: jwtOptions.expiresIn * 1000
+          }
+        )
+          .status(200)
+          .json({ message: 'Login successful.' })
+      }
+      return res.status(401).json({ message: 'Unauthorised' })
+    } catch (err: any) {
+      console.error('Authenticator error', err)
+      return res.status(500).json({ message: 'Server error' })
     }
-    return res.status(401).json({ message: 'Unauthorised' })
   })
 
   // logout
   app.get('/auth/logout', (req, res) => {
-    if (typeof req.cookies[jwtOptions.jwtCookieName] !== 'undefined') {
-      res
-        .clearCookie(jwtOptions.jwtCookieName)
-        .status(200)
-        .json({ message: 'You have logged out.' })
-    } else {
-      res.status(401).json({ message: 'Invalid jwt' })
-    }
+    res
+      .clearCookie(jwtOptions.jwtCookieName)
+      .status(200)
+      .json({ message: 'You have logged out.' })
   })
 }
 
-const createJwtToken = (jwtPayload: any): string => {
+const createJwtToken = (jwtPayload: HookedJwtPayload): string => {
   const { issuer, audience, expiresIn } = jwtOptions
   // add any other data you want in here...
   const token = jwt.sign(jwtPayload, jwtOptions.secretOrKey, { issuer, audience, expiresIn })
@@ -103,11 +114,11 @@ const createJwtToken = (jwtPayload: any): string => {
 /** Verifies the JWT token issuer, audience, and expiry. */
 const requireSigninMiddleware: (req: Request, res: Response, next: NextFunction) => any = (req, res, next) => {
   passport.authenticate(jwtOptions.jwtCookieName, { session: false }, (err: any, user: any, info: any) => {
-    if (err || !user) {
-      return res.status(401).json({ message: 'Unauthorised' });
+    if (isDefined(err) || isUndefined(user) || user === false) {
+      return res.status(401).json({ message: 'Unauthorised' })
     }
-    return next();
-
+    req.user = user
+    next()
   })(req, res, next)
 }
 

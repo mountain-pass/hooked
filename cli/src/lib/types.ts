@@ -1,5 +1,6 @@
 import { type Mode } from 'fs'
 import { type Environment } from './utils/Environment'
+import { type HookedServerSchemaType } from './schema/HookedSchema'
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
@@ -32,11 +33,13 @@ export interface YamlConfig {
   /**  */
   imports?: TopLevelImports
   /**  */
-  triggers?: Triggers
+  // triggers?: Triggers
   /**  */
-  env: TopLevelEnvironments
+  env?: TopLevelEnvironments
   /**  */
-  scripts: TopLevelScripts
+  scripts?: TopLevelScripts
+
+  server?: HookedServerSchemaType
 }
 
 // export type EnvScripts = Record<string, Script>

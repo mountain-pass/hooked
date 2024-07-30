@@ -412,18 +412,11 @@
           "minLength": 10,
           "maxLength": 100,
           "description": "A salt for the bcrypt algorithm."
-        },
-        "iterations": {
-          "type": "integer",
-          "minimum": 3,
-          "maximum": 30,
-          "description": "The number of iterations for the bcrypt algorithm."
         }
       },
       "required": [
         "type",
-        "salt",
-        "iterations"
+        "salt"
       ],
       "additionalProperties": false,
       "description": "Local bcrypt secured credentials."
@@ -515,6 +508,7 @@
         },
         "path": {
           "type": "string",
+          "pattern": "^[\\w\\d_-]+$",
           "description": "The path to the dashboard."
         },
         "accessRoles": {

@@ -62,6 +62,8 @@
     "npm-check": "npm-check --production"
   },
   "dependencies": {
+    "bcrypt": "5.1.1",
+    "bcryptjs": "2.4.3",
     "commander": "12.1.0",
     "cookie-parser": "1.4.6",
     "cors": "2.8.5",
@@ -83,6 +85,8 @@
   },
   "devDependencies": {
     "@eslint/js": "9.8.0",
+    "@types/bcrypt": "5.0.2",
+    "@types/bcryptjs": "2.4.6",
     "@types/chai": "4.3.16",
     "@types/chai-as-promised": "7.1.8",
     "@types/commander": "2.12.2",

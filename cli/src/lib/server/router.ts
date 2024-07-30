@@ -15,6 +15,7 @@ import {
 import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import { globalErrorHandler } from './globalErrorHandler.js'
+import { HookedServerSchemaType } from '../schema/HookedSchema.js'
 
 const getLastModifiedTimeMs = async (filepath: string): Promise<number> => {
   return (await fsPromise.stat(filepath)).mtimeMs
@@ -133,7 +134,7 @@ const router = async (
    * Prints the different environments available (and their environment variable names).
    */
   app.get('/env', globalErrorHandler(async (req, res) => {
-    const result = Object.entries(config.env).reduce<Record<string, string[]>>((prev, curr) => {
+    const result = Object.entries(config.env ?? {}).reduce<Record<string, string[]>>((prev, curr) => {
       const [key, env] = curr
       prev[key] = Object.keys(env).sort(sortCaseInsensitive)
       return prev
@@ -145,8 +146,30 @@ const router = async (
     res.json(config.imports ?? [])
   }))
 
+  app.get('/dashboard/list', globalErrorHandler(async (req, res) => {
+    const user = req.user
+    const dashboards = (config.server?.dashboards ?? [])
+      .filter((d) => d.accessRoles.some((r) => user.roles.includes(r)))
+      .map((d) => {
+        const { title, path } = d
+        return { title, path: `/api/dashboard/get/${path}` }
+      })
+    res.json(dashboards)
+  }))
+
+  app.get('/dashboard/get/:dashboard', globalErrorHandler(async (req, res) => {
+    const user = req.user
+    const dashboard = (config.server?.dashboards ?? [])
+      .find((d) => d.path === req.params.dashboard && d.accessRoles.some((r) => user.roles.includes(r)))
+    if (isDefined(dashboard)) {
+      res.json(dashboard)
+    } else {
+      res.sendStatus(403)
+    }
+  }))
+
   app.get('/triggers', globalErrorHandler(async (req, res) => {
-    res.json(config.triggers ?? [])
+    res.json(config.server?.triggers ?? [])
   }))
 
   app.get('/plugins', globalErrorHandler(async (req, res) => {

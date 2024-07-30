@@ -2,7 +2,7 @@ import express from 'express'
 import http from 'http'
 import https from 'https'
 import { type ProgramOptions } from '../program.js'
-import { isString, type YamlConfig } from '../types.js'
+import { isDefined, isString, isUndefined, type YamlConfig } from '../types.js'
 import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import router from './router.js'
@@ -11,9 +11,12 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { findFileInAncestors } from '../utils/packageJson.js'
-import jwt from './auth/jwt.js'
+import jwt, { HookedJwtPayload } from './auth/jwt.js'
+import { type JwtPayload } from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
+import { type HookedServerSchemaType } from '../schema/HookedSchema.js'
 
-var corsOptions = {
+const corsOptions = {
   credentials: true,
   origin: (origin: any, callback: any) => callback(null, true)
   // origin: function(origin: any, callback: any) {
@@ -26,6 +29,7 @@ var corsOptions = {
   // }
 }
 
+export interface AuthorisedUser { username: string, roles: string[] }
 
 /**
  * Starts the REST API server.
@@ -38,8 +42,11 @@ var corsOptions = {
 const startServer = async (
   port: number,
   systemProcessEnvs: RawEnvironment,
-  options: ProgramOptions
+  options: ProgramOptions,
+  config: HookedServerSchemaType
 ): Promise<void> => {
+  logger.info(`Need salt? Try this: ${bcrypt.genSaltSync(10)}`)
+
   // determine public path
   const dirname = path.dirname(fileURLToPath(import.meta.url))
   const publicPath = findFileInAncestors(dirname, 'public', false)
@@ -53,16 +60,34 @@ const startServer = async (
 
   jwt.initialise(
     app,
+    // authenticator
     (auth) => {
       const { username, password } = auth
-      if (username === 'admin' && password === 'hooked01') {
-        return { username }
+      // encrypt and compare the password
+      const user = (config.users ?? []).find((user) => user.username === username)
+      if (isDefined(user)) {
+        logger.debug(`Authenticating user: ${username}`)
+        if (bcrypt.compareSync(password, user.password)) {
+          const { username, roles } = user
+          return { username, roles } satisfies AuthorisedUser
+        } else {
+          logger.info(`Invalid password for user: ${username} pw: ${bcrypt.hashSync(password, config.auth.salt)}`)
+        }
+      } else {
+        logger.info(`Rejecting unknown user: ${username}`)
       }
     },
-    (payload) => {
-      const { username } = payload
-      if (username === 'admin') {
-        return { username }
+    // authoriser
+    (jwtPayload) => {
+      // logger.info('Authorising user - ' + JSON.stringify(jwtPayload))
+      const { username, roles } = jwtPayload
+      // verify user exists
+      const user = (config.users ?? []).find((user) => user.username === username)
+      if (isDefined(user)) {
+        // logger.info(`Authorised user: ${username}`)
+        return { username, roles } satisfies AuthorisedUser
+      } else {
+        logger.info(`Rejected user: ${username}`)
       }
     })
 

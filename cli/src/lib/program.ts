@@ -17,6 +17,7 @@ import {
 import { type RawEnvironment } from './utils/Environment.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
+import { HookedServerSchemaType } from './schema/HookedSchema.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -223,13 +224,13 @@ Provided Environment Variables:
 
       // show environment names...
       if (options.listEnvs === true) {
-        logger.info(`Available environments: ${yellow(Object.keys(config.env).join(', '))}`)
+        logger.info(`Available environments: ${yellow(Object.keys(config.env ?? {}).join(', '))}`)
         return
       }
 
       if (isServerMode) {
         // server mode
-        await server.startServer(port, systemProcessEnvs, options)
+        await server.startServer(port, systemProcessEnvs, options, config.server ?? {} as any)
       } else {
         // script mode
         const providedEnvNames = options.env.split(',')

@@ -159,8 +159,7 @@ const CmdScriptSchema: z.ZodObject<any> = z
 
 const ServerAuth = z.object({
   type: z.enum(['bcrypt']).describe('The type of authentication.'),
-  salt: z.string().min(10).max(100).describe('A salt for the bcrypt algorithm.'),
-  iterations: z.number().int().min(3).max(30).describe('The number of iterations for the bcrypt algorithm.')
+  salt: z.string().min(10).max(100).describe('A salt for the bcrypt algorithm.')
 }).describe('Local bcrypt secured credentials.')
 
 //   z.string().describe('A colon delimited user definition. e.g. username:password:role1,role2,...').regex(/^([^:]+:){2}/, 'Must match format username:password:role1,role2,...'),
@@ -185,7 +184,7 @@ const ServerDashboardSection = z.object({
 
 const ServerDashboard = z.object({
   title: z.string().describe('The title of the dashboard.'),
-  path: z.string().describe('The path to the dashboard.'),
+  path: z.string().regex(/^[\w\d_-]+$/, 'Path must only contain alphanumeric, underscore or hypen.').describe('The path to the dashboard.'),
   accessRoles: z.array(z.string()).describe('A list of roles that can access the dashboard.'),
   sections: z.array(ServerDashboardSection).describe('A list of sections.')
 }).describe('A dashboard configuration.')
@@ -269,6 +268,7 @@ export const toJsonSchema7Type = (): JsonSchema7Type => {
 }
 
 export type HookedSchemaType = z.infer<typeof HookedSchema>
+export type HookedServerSchemaType = z.infer<typeof Server>
 
 export const schemaValidator = (configFilePath: string, data: any): data is YamlConfig => {
   const result = HookedSchema.safeParse(data)
