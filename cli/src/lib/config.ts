@@ -5,6 +5,7 @@ import YAML from 'yaml'
 import defaults from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
 import { type ProgramOptions } from './program.js'
+import { schemaValidator } from './schema/HookedSchema.js'
 import { resolveScript } from './scriptExecutors/ScriptExecutor.js'
 import {
   isScript,
@@ -19,10 +20,6 @@ import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
-import Ajv, { type ValidateFunction, type ErrorObject } from 'ajv'
-import { findFileInAncestors } from './utils/packageJson.js'
-import { fileURLToPath } from 'url'
-import path from 'path'
 
 const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
 
@@ -320,29 +317,6 @@ export const resolveEnvironmentVariables = async (
   // }
 }
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
-const yamlSchema = findFileInAncestors(dirname, 'schemas/hooked.yaml.schema-v1.json', true)
-const schema = JSON.parse(fs.readFileSync(yamlSchema, 'utf-8'))
-
-const ajv = new Ajv({
-  allErrors: true, // do not bail
-  // jsonPointers: true, // totally needed for this
-  strict: 'log',
-  strictSchema: 'log',
-  strictTypes: 'log',
-  strictTuples: 'log',
-  strictRequired: 'log',
-  validateSchema: 'log',
-  logger
-})
-let validate: ValidateFunction
-try {
-  validate = ajv.compile(schema)
-} catch (err: any) {
-  logger.error(`Error compiling schema: ${err.message as string ?? '?'}`)
-  throw err
-}
-
 export const populateScriptPath = (scripts: TopLevelScripts, parentPaths: string[] = []): void => {
   for (const [key, script] of Object.entries(scripts)) {
     if (isScript(script)) {
@@ -360,26 +334,23 @@ export const loadConfig = async (configFile: string, pullLatestFlag = false): Pr
   // file exists
   if (fileExists) {
     const yamlStr = fs.readFileSync(configFile, 'utf-8')
-    const config: YamlConfig = YAML.parse(yamlStr)
+    const config = YAML.parse(yamlStr)
     if (config === null) {
       throw new Error(`Invalid YAML in ${configFile} - ${yamlStr}`)
     }
 
     // validate this configuration file (called recursively for imports)
-    const valid = validate(config)
-    if (valid) {
-      logger.debug(`Configuration file ${configFile} is valid.`)
+    if (schemaValidator(configFile, config)) {
+      // add _scriptPath fields to all scripts
+      populateScriptPath(config.scripts)
+
+      // merge imports with current configuration
+      await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
+
+      return config
     } else {
-      throw new Error(`Invalid configuration file: ${configFile}. ${ajv.errorsText(validate.errors)}`)
+      throw new Error(`Invalid configuration file: ${configFile}`)
     }
-
-    // add _scriptPath fields to all scripts
-    populateScriptPath(config.scripts)
-
-    // merge imports with current configuration
-    await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
-
-    return config
   } else {
     throw new Error(`No ${configFile} file found.`)
   }

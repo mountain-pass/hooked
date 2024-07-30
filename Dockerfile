@@ -1,7 +1,7 @@
 
 # host it...
 FROM node:current-alpine3.20
-RUN apk add --no-cache openssl=3.3.1-r1 curl docker-cli
+RUN apk add --no-cache openssl curl docker-cli
 # RUN apk add --no-cache openssl=3.3.1-r1 curl=8.8.0-r0 docker-cli=26.1.3-r1
 ARG HOOKED_TAG=NOT_A_VALID_LIBRARY
 RUN npm i -g ${HOOKED_TAG}

@@ -13,7 +13,6 @@ import { fileURLToPath } from 'url'
 import { findFileInAncestors } from '../utils/packageJson.js'
 import jwt from './auth/jwt.js'
 
-// var allowlist = ['http://localhost:3000', 'http://www.localhost:3000', 'https://www.localhost:4000', 'https://localhost:4000', /** other domains if any */ ]
 var corsOptions = {
   credentials: true,
   origin: (origin: any, callback: any) => callback(null, true)

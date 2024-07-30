@@ -15,6 +15,7 @@
         "cli": "yarn workspace @mountainpass/hooked-cli"
     },
     "devDependencies": {
+        "eslint-config-standard-with-typescript": "34.0.1",
         "lerna": "8.1.3"
     }
 }

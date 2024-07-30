@@ -9,6 +9,24 @@
     "[typescript]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "diffEditor.ignoreTrimWhitespace": false,
+    },
     "eslint.validate": [
         "javascript",
         "typescript",
@@ -20,7 +38,10 @@
         "overrideConfigFile": "./.eslintrc.json",
     },
     "eslint.nodePath": "./node_modules",
-    "colorize.languages": [
-        "javascript", "typescript"
-    ]
+    "eslint.enable": true,
+    "yaml.schemas": {
+        "/Users/nickpersonal/mountain-pass/hooked/cli/schemas/hooked.yaml.schema-v2.json": [
+            "hooked*.{yml,yaml}",
+        ]
+    },
 }

@@ -1,0 +1,580 @@
+{
+  "type": "object",
+  "properties": {
+    "imports": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "A file path or http endpoint, resolving to a hooked configuration file. File paths support glob pattern matching."
+      },
+      "description": "Specifies a `string[]` of file paths or http endpoints, of hooked configuration files. These files are (downloaded), loaded and merged into the current running configuration (in order)."
+    },
+    "server": {
+      "$ref": "#/$defs/Server",
+      "description": "The server configuration."
+    },
+    "plugin": {
+      "type": "object",
+      "properties": {
+        "icons": {
+          "type": "boolean",
+          "description": "Makes pretty icons to differentiate executable scripts vs groups."
+        },
+        "abi": {
+          "type": "boolean",
+          "description": "Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)"
+        },
+        "makefile": {
+          "type": "boolean",
+          "description": "Scans for a `Makefile` file, and imports the named tasks as scripts."
+        },
+        "npm": {
+          "type": "boolean",
+          "description": "Scans for a `package.json` file, and imports the named scripts as scripts."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Provides the ability to use built-in plugins."
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/EnvironmentGroup"
+      },
+      "description": "Globally defined environment variables, which can be referenced inside `scripts`."
+    },
+    "scripts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ScriptsGroup/additionalProperties"
+      },
+      "description": "Organises `$cmd`, `$path` and `$jobs_serial` objects, into a named hierarchy."
+    }
+  },
+  "additionalProperties": false,
+  "description": "Manage and execute your scripts from a single place.",
+  "$defs": {
+    "CronSchedule": {
+      "type": "string",
+      "pattern": "^([\\d-/,*]+\\s){4}([\\d-/,*\\w]+)\\s([\\d-/,*\\w]+)$",
+      "description": "A Cron schedule, including seconds. E.g. '0 0 * * * *'.\n\nfield          allowed values\n-----          --------------\nsecond         0-59\nminute         0-59\nhour           0-23\nday of month   1-31\nmonth          1-12 (or names, see below)\nday of week    0-7 (0 or 7 is Sunday, or use names)\n    "
+    },
+    "ScriptReference": {
+      "type": "string",
+      "description": "A path to a script."
+    },
+    "CronTrigger": {
+      "type": "object",
+      "properties": {
+        "$cron": {
+          "$ref": "#/$defs/CronSchedule"
+        },
+        "$script": {
+          "$ref": "#/$defs/ScriptReference"
+        }
+      },
+      "required": [
+        "$cron",
+        "$script"
+      ],
+      "additionalProperties": false,
+      "description": "The name of the Cron job."
+    },
+    "TriggersGroup": {
+      "anyOf": [
+        {
+          "not": {}
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CronTrigger"
+          },
+          "description": "Organises triggers."
+        }
+      ],
+      "description": "Organises triggers."
+    },
+    "WritePathScript": {
+      "type": "object",
+      "properties": {
+        "$path": {
+          "type": "string",
+          "description": "Sets the file/folder location."
+        },
+        "$content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          ],
+          "description": "Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder. Content is utf-8."
+        },
+        "$permissions": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "description": "Sets the read/write/execute access permissions on the file/folder."
+        },
+        "$owner": {
+          "type": "string",
+          "description": "Sets the 'uid:gid' of the file/folder. (Note: must be numerical!)."
+        },
+        "$image": {
+          "type": "string",
+          "description": "If supplied, file will be written in this docker image container."
+        },
+        "$ssh": {
+          "type": "string",
+          "description": "If supplied, file will be written in this remote server."
+        }
+      },
+      "required": [
+        "$path"
+      ],
+      "additionalProperties": false,
+      "description": "Configuration for writing a file/folder."
+    },
+    "JobsSerialScript": {
+      "type": "object",
+      "properties": {
+        "$jobs_serial": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ScriptReference"
+              },
+              {
+                "$ref": "#/$defs/WritePathScript"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "$env": {
+                    "$ref": "#/$defs/EnvironmentGroup",
+                    "description": "Additional environment variables to resolve (added to global environment)."
+                  }
+                },
+                "required": [
+                  "$env"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "$ref": "#/$defs/CmdScript"
+              }
+            ]
+          },
+          "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs."
+        }
+      },
+      "required": [
+        "$jobs_serial"
+      ],
+      "additionalProperties": false,
+      "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs."
+    },
+    "ScriptsGroup": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "$stdin": {
+                "type": "string",
+                "description": "Old script format no longer supported. Please use $ask instead of $stdin."
+              }
+            },
+            "required": [
+              "$stdin"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "$ref": "#/$defs/JobsSerialScript"
+          },
+          {
+            "$ref": "#/$defs/WritePathScript"
+          },
+          {
+            "$ref": "#/$defs/CmdScript"
+          },
+          {
+            "$ref": "#/$defs/ScriptsGroup"
+          }
+        ]
+      },
+      "description": "Organises scripts into a named hierarchy. Hint: start with $cmd, $path or $jobs_serial."
+    },
+    "StdinChoicesValue": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CmdScript"
+        },
+        {
+          "type": "string",
+          "description": "A multiline string, each line will become a choice."
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of string options, each entry will become a choice."
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "A name."
+              },
+              "value": {
+                "type": "string",
+                "description": "A value."
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "additionalProperties": false,
+            "description": "An array of name/value objects, each entry will become a choice."
+          }
+        }
+      ],
+      "description": "Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc."
+    },
+    "StdinFieldsMappingValue": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "A JSON path to the 'name' value."
+        },
+        "value": {
+          "type": "string",
+          "description": "A JSON path to the 'value' value."
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false,
+      "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths."
+    },
+    "StdinScript": {
+      "type": "object",
+      "properties": {
+        "$ask": {
+          "type": "string",
+          "description": "The prompt provided to the user."
+        },
+        "$default": {
+          "type": "string",
+          "description": "The default value provided to the user."
+        },
+        "$choices": {
+          "$ref": "#/$defs/StdinChoicesValue",
+          "description": "Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc."
+        },
+        "$fieldsMapping": {
+          "$ref": "#/$defs/StdinFieldsMappingValue",
+          "description": "For JSON arrays, name and value can be overridden by specifying alternative JSON paths."
+        },
+        "$filter": {
+          "type": "string",
+          "description": "A regex filter to apply to the 'name' or values."
+        },
+        "$sort": {
+          "type": "string",
+          "enum": [
+            "alpha",
+            "alphaDesc",
+            "none"
+          ],
+          "description": "Sorts the displayed 'name' values."
+        }
+      },
+      "required": [
+        "$ask"
+      ],
+      "additionalProperties": false,
+      "description": "Provides a prompt to the user, to select from a set of choices."
+    },
+    "EnvironmentValue": {
+      "anyOf": [
+        {
+          "not": {}
+        },
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CmdScript"
+            },
+            {
+              "$ref": "#/$defs/ScriptsGroup/additionalProperties/anyOf/0"
+            },
+            {
+              "$ref": "#/$defs/StdinScript"
+            },
+            {
+              "type": "string",
+              "description": "Resolves to a plain text string.\nResolves any environment variables within the string.\nThrows an error if an environment variable is missing. Can be used to enforce presence of variables."
+            },
+            {
+              "type": "number",
+              "description": "Resolves to a plain text string."
+            },
+            {
+              "type": "boolean",
+              "description": "Resolves to a plain text string."
+            }
+          ],
+          "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)"
+        }
+      ],
+      "description": "An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)"
+    },
+    "EnvironmentGroup": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/EnvironmentValue"
+      },
+      "description": "A named group of environment variables."
+    },
+    "CmdScript": {
+      "type": "object",
+      "properties": {
+        "$cmd": {
+          "type": "string",
+          "description": "The command to run. Supports multiline."
+        },
+        "$env": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/EnvironmentValue"
+          },
+          "description": "Additional environment variables to resolve (added to global environment). Resolved before $envNames"
+        },
+        "$envNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional environment group names to resolve ONLY when executing this command."
+        },
+        "$envFromHost": {
+          "type": "boolean",
+          "description": "If true, includes all environment variables from the host machine. (On by default for non-$ssh and non-$image commands."
+        },
+        "$errorMessage": {
+          "type": "string",
+          "description": "An error message to display, when the `$cmd` exits with a non-zero exit code."
+        },
+        "$image": {
+          "type": "string",
+          "description": "If supplied, command will execute in this docker image container."
+        },
+        "$ssh": {
+          "type": "string",
+          "description": "If supplied, command will execute in this remote server."
+        }
+      },
+      "required": [
+        "$cmd"
+      ],
+      "additionalProperties": false,
+      "description": "Executes a command, and optionally provides output to environment variables or stdin."
+    },
+    "ServerAuth": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "bcrypt"
+          ],
+          "description": "The type of authentication."
+        },
+        "salt": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 100,
+          "description": "A salt for the bcrypt algorithm."
+        },
+        "iterations": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 30,
+          "description": "The number of iterations for the bcrypt algorithm."
+        }
+      },
+      "required": [
+        "type",
+        "salt",
+        "iterations"
+      ],
+      "additionalProperties": false,
+      "description": "Local bcrypt secured credentials."
+    },
+    "ServerUser": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 50,
+          "description": "A unique username."
+        },
+        "password": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 999,
+          "description": "An encrypted password."
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of roles."
+        }
+      },
+      "required": [
+        "username",
+        "password",
+        "roles"
+      ],
+      "additionalProperties": false,
+      "description": "A user account."
+    },
+    "ServerDashboardSectionField": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "The label of the field."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "display",
+            "button"
+          ],
+          "description": "The type of the field."
+        },
+        "$script": {
+          "$ref": "#/$defs/ScriptReference"
+        }
+      },
+      "required": [
+        "label",
+        "type",
+        "$script"
+      ],
+      "additionalProperties": false
+    },
+    "ServerDashboardSection": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the section."
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServerDashboardSectionField"
+          },
+          "description": "A list of fields."
+        }
+      },
+      "required": [
+        "title",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "ServerDashboard": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the dashboard."
+        },
+        "path": {
+          "type": "string",
+          "description": "The path to the dashboard."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of roles that can access the dashboard."
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServerDashboardSection"
+          },
+          "description": "A list of sections."
+        }
+      },
+      "required": [
+        "title",
+        "path",
+        "accessRoles",
+        "sections"
+      ],
+      "additionalProperties": false,
+      "description": "A dashboard configuration."
+    },
+    "Server": {
+      "type": "object",
+      "properties": {
+        "triggers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CronTrigger"
+          },
+          "description": "Provides the ability to trigger jobs."
+        },
+        "auth": {
+          "$ref": "#/$defs/ServerAuth"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServerUser"
+          },
+          "description": "A list of user accounts."
+        },
+        "dashboards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServerDashboard"
+          },
+          "description": "A list of dashboards."
+        }
+      },
+      "required": [
+        "auth"
+      ],
+      "additionalProperties": false,
+      "description": "The server configuration."
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -18,6 +18,26 @@ workers - deploy / view logs
 - [x] Ability to cron schedule jobs and specify timezone
 - [x] UI - Ability to execute scripts
 
+# 19 JULY
+
+- [ ] Abilty to provide templates that resolve to ${TEMPLATE_NAME}
+  docker:
+    $template: ['ftp', 'web', 'cs2']
+    $template:
+      $cmd: docker ps -a --format "{{.Names}}"
+- [ ] Healthchecks - run on a cron schedule -> notify when down?
+ triggers:
+   cs2_isRunning:
+     $cron:
+     $job: 
+   cs2:
+     isRunning:
+       $health: 0 0 1 * * * 
+       $cmd: docker ps --filter "name=cs2" --format "{{.Names}}" | grep -q "cs2"
+
+- [ ] Environment dashboard - how do i know what's where?
+- [ ] Reporting and data - allow people to run jobs
+
 # NICE TO HAVE
 - [ ] Server - Clean up .tmp files
 - [x] Package UI with the NPM release
