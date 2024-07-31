@@ -132,6 +132,17 @@
         "$ssh": {
           "type": "string",
           "description": "If supplied, file will be written in this remote server."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
+          },
+          "description": "The roles required to run this script."
         }
       },
       "required": [
@@ -172,6 +183,17 @@
             ]
           },
           "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
+          },
+          "description": "The roles required to run this script."
         }
       },
       "required": [
@@ -180,22 +202,36 @@
       "additionalProperties": false,
       "description": "Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs."
     },
+    "OldStdinScript": {
+      "type": "object",
+      "properties": {
+        "$stdin": {
+          "type": "string",
+          "description": "Old script format no longer supported. Please use $ask instead of $stdin."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
+          },
+          "description": "The roles required to run this script."
+        }
+      },
+      "required": [
+        "$stdin"
+      ],
+      "additionalProperties": false
+    },
     "ScriptsGroup": {
       "type": "object",
       "additionalProperties": {
         "anyOf": [
           {
-            "type": "object",
-            "properties": {
-              "$stdin": {
-                "type": "string",
-                "description": "Old script format no longer supported. Please use $ask instead of $stdin."
-              }
-            },
-            "required": [
-              "$stdin"
-            ],
-            "additionalProperties": false
+            "$ref": "#/$defs/OldStdinScript"
           },
           {
             "$ref": "#/$defs/JobsSerialScript"
@@ -323,7 +359,7 @@
               "$ref": "#/$defs/CmdScript"
             },
             {
-              "$ref": "#/$defs/ScriptsGroup/additionalProperties/anyOf/0"
+              "$ref": "#/$defs/OldStdinScript"
             },
             {
               "$ref": "#/$defs/StdinScript"
@@ -389,6 +425,17 @@
         "$ssh": {
           "type": "string",
           "description": "If supplied, command will execute in this remote server."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
+          },
+          "description": "The roles required to run this script."
         }
       },
       "required": [
@@ -426,6 +473,7 @@
       "properties": {
         "username": {
           "type": "string",
+          "pattern": "^[\\w\\d_-]+$",
           "minLength": 3,
           "maxLength": 50,
           "description": "A unique username."
@@ -436,18 +484,21 @@
           "maxLength": 999,
           "description": "An encrypted password."
         },
-        "roles": {
+        "accessRoles": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
           },
-          "description": "A list of roles."
+          "description": "The access roles the User has."
         }
       },
       "required": [
         "username",
-        "password",
-        "roles"
+        "password"
       ],
       "additionalProperties": false,
       "description": "A user account."
@@ -509,14 +560,9 @@
         "path": {
           "type": "string",
           "pattern": "^[\\w\\d_-]+$",
+          "minLength": 2,
+          "maxLength": 255,
           "description": "The path to the dashboard."
-        },
-        "accessRoles": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "A list of roles that can access the dashboard."
         },
         "sections": {
           "type": "array",
@@ -524,12 +570,22 @@
             "$ref": "#/$defs/ServerDashboardSection"
           },
           "description": "A list of sections."
+        },
+        "accessRoles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w\\d_-]+$",
+            "minLength": 2,
+            "maxLength": 255,
+            "description": "The name of the access role."
+          },
+          "description": "The access role/s required to view this dashboard."
         }
       },
       "required": [
         "title",
         "path",
-        "accessRoles",
         "sections"
       ],
       "additionalProperties": false,

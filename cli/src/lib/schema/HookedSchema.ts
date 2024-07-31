@@ -4,6 +4,9 @@ import zodToJsonSchema, { type JsonSchema7Type } from 'zod-to-json-schema'
 import logger from '../utils/logger.js'
 import { type YamlConfig, isString } from '../types.js'
 
+const NameRegex = /^[\w\d_-]+$/
+const NameRegexErrorMessage = 'Must only contain alpha, numeric, underscore or hypen.'
+
 const CronSchedule = z
   .string()
   .regex(/^([\d-/,*]+\s){4}([\d-/,*\w]+)\s([\d-/,*\w]+)$/, 'Must match cron pattern.')
@@ -35,6 +38,21 @@ const TriggersGroup = z
   .describe('Organises triggers.')
   .optional()
 
+const HasAccessRoles = (description: string): z.ZodObject<{
+  accessRoles: z.ZodOptional<z.ZodArray<z.ZodString, 'many'>>
+}, 'strip', z.ZodTypeAny, {
+  accessRoles?: string[] | undefined
+}, {
+  accessRoles?: string[] | undefined
+}> => z.object({
+  accessRoles: z
+    .array(
+      z.string().regex(NameRegex, NameRegexErrorMessage).min(2).max(255).describe('The name of the access role.')
+    )
+    .optional()
+    .describe(description ?? 'A list of access roles.')
+})
+
 const WritePathScript = z
   .object({
     $path: z.string().describe('Sets the file/folder location.'),
@@ -44,6 +62,7 @@ const WritePathScript = z
     $image: z.string().describe('If supplied, file will be written in this docker image container.').optional(),
     $ssh: z.string().describe('If supplied, file will be written in this remote server.').optional()
   })
+  .merge(HasAccessRoles('The roles required to run this script.'))
   .strict()
   .describe('Configuration for writing a file/folder.')
 
@@ -54,15 +73,20 @@ const JobsSerialScript = z
         ScriptReference,
         WritePathScript,
         z.object({ $env: z.lazy(() => EnvironmentGroup).describe('Additional environment variables to resolve (added to global environment).') }),
-        z.lazy(() => CmdScriptSchema)
+        z.lazy(() => CmdScript)
       ]))
       .describe('Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.')
   })
+  .merge(HasAccessRoles('The roles required to run this script.'))
   .strict()
   .describe('Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.')
 
 /** @deprecated Please use $ask instead. */
-const OldStdinScript = z.object({ $stdin: z.string().describe('Old script format no longer supported. Please use $ask instead of $stdin.') })
+const OldStdinScript = z
+  .object({
+    $stdin: z.string().describe('Old script format no longer supported. Please use $ask instead of $stdin.')
+  })
+  .merge(HasAccessRoles('The roles required to run this script.'))
 //   .superRefine((val, ctx) => {
 //     if (typeof val.$stdin !== 'undefined') {
 //       ctx.addIssue({
@@ -80,7 +104,7 @@ const ScriptsGroup: z.ZodRecord<ZodType<string>, ZodType<any>> = z
     OldStdinScript,
     JobsSerialScript,
     WritePathScript,
-    z.lazy(() => CmdScriptSchema),
+    z.lazy(() => CmdScript),
     z.lazy(() => ScriptsGroup)
   ]))
   .describe('Organises scripts into a named hierarchy. Hint: start with $cmd, $path or $jobs_serial.')
@@ -89,7 +113,7 @@ const ScriptsGroup: z.ZodRecord<ZodType<string>, ZodType<any>> = z
 
 const StdinChoicesValue = z
   .union([
-    z.lazy(() => CmdScriptSchema),
+    z.lazy(() => CmdScript),
     z.string().describe('A multiline string, each line will become a choice.'),
     z.array(z.string()).describe('An array of string options, each entry will become a choice.'),
     z.array(z
@@ -127,7 +151,7 @@ const StdinScript = z
 // Environment
 
 const EnvironmentValue = z.union([
-  z.lazy(() => CmdScriptSchema),
+  z.lazy(() => CmdScript),
   OldStdinScript,
   StdinScript,
   z.string().describe('Resolves to a plain text string.\nResolves any environment variables within the string.\nThrows an error if an environment variable is missing. Can be used to enforce presence of variables.'),
@@ -140,7 +164,7 @@ const EnvironmentGroup = z
   .record(z.string(), EnvironmentValue)
   .describe('A named group of environment variables.')
 
-const CmdScriptSchema: z.ZodObject<any> = z
+const CmdScript: z.ZodObject<any> = z
   .object({
   // required
     $cmd: z.string().describe('The command to run. Supports multiline.'),
@@ -152,6 +176,7 @@ const CmdScriptSchema: z.ZodObject<any> = z
     $image: z.string().describe('If supplied, command will execute in this docker image container.').optional(),
     $ssh: z.string().describe('If supplied, command will execute in this remote server.').optional()
   })
+  .merge(HasAccessRoles('The roles required to run this script.'))
   .strict()
   .describe('Executes a command, and optionally provides output to environment variables or stdin.')
 
@@ -165,10 +190,10 @@ const ServerAuth = z.object({
 //   z.string().describe('A colon delimited user definition. e.g. username:password:role1,role2,...').regex(/^([^:]+:){2}/, 'Must match format username:password:role1,role2,...'),
 const ServerUser = z
   .object({
-    username: z.string().min(3).max(50).describe('A unique username.'),
-    password: z.string().min(8).max(999).describe('An encrypted password.'),
-    roles: z.array(z.string()).describe('A list of roles.')
+    username: z.string().regex(NameRegex).min(3).max(50).describe('A unique username.'),
+    password: z.string().min(8).max(999).describe('An encrypted password.')
   })
+  .merge(HasAccessRoles('The access roles the User has.'))
   .describe('A user account.')
 
 const ServerDashboardSectionField = z.object({
@@ -184,10 +209,11 @@ const ServerDashboardSection = z.object({
 
 const ServerDashboard = z.object({
   title: z.string().describe('The title of the dashboard.'),
-  path: z.string().regex(/^[\w\d_-]+$/, 'Path must only contain alphanumeric, underscore or hypen.').describe('The path to the dashboard.'),
-  accessRoles: z.array(z.string()).describe('A list of roles that can access the dashboard.'),
+  path: z.string().regex(NameRegex, NameRegexErrorMessage).min(2).max(255).describe('The path to the dashboard.'),
   sections: z.array(ServerDashboardSection).describe('A list of sections.')
-}).describe('A dashboard configuration.')
+})
+  .merge(HasAccessRoles('The access role/s required to view this dashboard.'))
+  .describe('A dashboard configuration.')
 
 const Server = z
   .object({
@@ -250,13 +276,14 @@ export const toJsonSchema7Type = (): JsonSchema7Type => {
       TriggersGroup,
       WritePathScript,
       JobsSerialScript,
+      OldStdinScript,
       ScriptsGroup,
       StdinChoicesValue,
       StdinFieldsMappingValue,
       StdinScript,
       EnvironmentValue,
       EnvironmentGroup,
-      CmdScript: CmdScriptSchema,
+      CmdScript,
       ServerAuth,
       ServerUser,
       ServerDashboardSectionField,
@@ -269,6 +296,7 @@ export const toJsonSchema7Type = (): JsonSchema7Type => {
 
 export type HookedSchemaType = z.infer<typeof HookedSchema>
 export type HookedServerSchemaType = z.infer<typeof Server>
+export type HookedServerDashboardSchemaType = z.infer<typeof ServerDashboard>
 
 export const schemaValidator = (configFilePath: string, data: any): data is YamlConfig => {
   const result = HookedSchema.safeParse(data)

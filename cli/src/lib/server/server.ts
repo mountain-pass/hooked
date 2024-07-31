@@ -1,20 +1,19 @@
+import bcrypt from 'bcryptjs'
+import cors from 'cors'
 import express from 'express'
+import fsPromise from 'fs/promises'
 import http from 'http'
 import https from 'https'
-import { type ProgramOptions } from '../program.js'
-import { isDefined, isString, isUndefined, type YamlConfig } from '../types.js'
-import { type RawEnvironment } from '../utils/Environment.js'
-import logger from '../utils/logger.js'
-import router from './router.js'
-import fsPromise from 'fs/promises'
-import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { findFileInAncestors } from '../utils/packageJson.js'
-import jwt, { HookedJwtPayload } from './auth/jwt.js'
-import { type JwtPayload } from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
+import { type ProgramOptions } from '../program.js'
 import { type HookedServerSchemaType } from '../schema/HookedSchema.js'
+import { isDefined, isString } from '../types.js'
+import { type RawEnvironment } from '../utils/Environment.js'
+import logger from '../utils/logger.js'
+import { findFileInAncestors } from '../utils/packageJson.js'
+import jwt from './auth/jwt.js'
+import router from './router.js'
 
 const corsOptions = {
   credentials: true,
@@ -29,7 +28,7 @@ const corsOptions = {
   // }
 }
 
-export interface AuthorisedUser { username: string, roles: string[] }
+export interface AuthorisedUser { username: string, accessRoles: string[] }
 
 /**
  * Starts the REST API server.
@@ -68,8 +67,8 @@ const startServer = async (
       if (isDefined(user)) {
         logger.debug(`Authenticating user: ${username}`)
         if (bcrypt.compareSync(password, user.password)) {
-          const { username, roles } = user
-          return { username, roles } satisfies AuthorisedUser
+          const { username, accessRoles = [] } = user
+          return { username, accessRoles } satisfies AuthorisedUser
         } else {
           logger.info(`Invalid password for user: ${username} pw: ${bcrypt.hashSync(password, config.auth.salt)}`)
         }
@@ -80,12 +79,12 @@ const startServer = async (
     // authoriser
     (jwtPayload) => {
       // logger.info('Authorising user - ' + JSON.stringify(jwtPayload))
-      const { username, roles } = jwtPayload
+      const { username, accessRoles } = jwtPayload
       // verify user exists
       const user = (config.users ?? []).find((user) => user.username === username)
       if (isDefined(user)) {
         // logger.info(`Authorised user: ${username}`)
-        return { username, roles } satisfies AuthorisedUser
+        return { username, accessRoles } satisfies AuthorisedUser
       } else {
         logger.info(`Rejected user: ${username}`)
       }

@@ -6,16 +6,22 @@ import { Spinner } from "./Spinner"
 import { BlackButton } from "./components"
 import { LoginPrompt } from "./modals/Login"
 import { Modal } from "./modals/Modal"
-import { TopLevelScripts } from "./types"
+import { AuthorisedUser, TopLevelScripts } from "./types"
 
-export const Banner = () => {
+export interface BannerProps {
+    showRefresh?: boolean
+    showLogout?: boolean
+    adminOnly?: boolean
+}
+
+export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = false }: BannerProps) => {
     console.debug('Re-rendering Banner...')
 
     const [showLogin, setShowLogin] = React.useState(true)
     const isFetching = useIsFetching()
     const isMutating = useIsMutating()
 
-    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, true)
+    const useGetScripts = useGet<AuthorisedUser>(`/api/me`, true)
     const useReload = useReloadConfiguration()
     const doLogoout = useLogout()
 
@@ -23,12 +29,14 @@ export const Banner = () => {
     React.useEffect(() => {
         if (useGetScripts.isError) {
             setShowLogin(true)
+        } else if (useGetScripts.isSuccess && adminOnly && !useGetScripts.data.accessRoles.includes('admin')) {
+            setShowLogin(true)
         }
     }, [useGetScripts.isError])
 
     // if success, hide login
     React.useEffect(() => {
-        if (useGetScripts.isSuccess) {
+        if (useGetScripts.isSuccess && (!adminOnly || useGetScripts.data.accessRoles.includes('admin'))) {
             setShowLogin(false)
         }
     }, [useGetScripts.isSuccess])
@@ -37,13 +45,13 @@ export const Banner = () => {
 
         {/* banner */}
         <div className="bg-blue-800 dark:bg-neutral-900 border-b border-neutral-700 text-white w-full flex justify-center">
-            <div className="flex items-center justify-between w-full max-w-[1000px] p-4">
+            <div className="flex items-center justify-between w-full py-4 px-5">
                 <div className="flex flex-col gap-0">
                     <h1 className="truncate">hooked</h1>
                     <div className="text-xs text-neutral-500">{process.env.NEXT_PUBLIC_VERSION}</div>
                 </div>
                 <div className="flex gap-1 items-center justify-end">
-                    <BlackButton
+                    { showRefresh && <BlackButton
                         size="md"
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
                         onClick={() => useReload.mutate()}
@@ -51,7 +59,8 @@ export const Banner = () => {
                     >
                         <TbReload className="text-xl" />
                     </BlackButton>
-                    <BlackButton
+}
+                    { showLogout && <BlackButton
                         size="md"
                         className="bg-transparent rounded h-[46px] w-[46px] text-xl text-blue-500"
                         onClick={() => doLogoout.mutate()}
@@ -59,6 +68,7 @@ export const Banner = () => {
                     >
                         <TbLogout className="text-xl" />
                     </BlackButton>
+}
                 </div>
             </div>
         </div >

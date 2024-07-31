@@ -104,7 +104,7 @@ export const ScriptsTab = ({ visible }: {
 
     return (<>
         <Section visible={visible} className="flex-1">
-            <div className="flex items-start max-sm:justify-end sm:justify-between">
+            <div className="flex items-start max-sm:justify-end justify-between">
                 <h2 className="max-sm:hidden sm:visible">Scripts</h2>
 
                 <BlackButton title="Toggle show Favourites" size="sm" active={showFavourites} className="rounded flex items-center justify-between gap-2" onClick={toggleFavourites}>

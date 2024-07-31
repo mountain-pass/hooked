@@ -2,6 +2,7 @@
 import { fetchGlobalEnvVars, findScript } from '../config.js'
 import { type ProgramOptions } from '../program.js'
 import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from '../scriptExecutors/ScriptExecutor.js'
+import { type AuthorisedUser } from '../server/server.js'
 import {
   isJobsSerialScript,
   isString,
@@ -42,6 +43,7 @@ export interface InvocationResult {
    * @returns
    */
 const invoke = async (
+  user: AuthorisedUser | null,
   systemProcessEnvs: RawEnvironment,
   options: ProgramOptions,
   config: YamlConfig,
@@ -57,6 +59,15 @@ const invoke = async (
   // find the script to execute...
   const rootScriptAndPaths = await findScript(config, scriptPath, options)
   const [script, paths] = rootScriptAndPaths
+
+  // verify user has access to invoke script
+  if (user !== null) {
+    const scriptAccessRoles: string[] = (script as any).accessRoles ?? ['admin']
+    const canInvoke = scriptAccessRoles.some(role => user.accessRoles.includes(role))
+    if (!canInvoke) {
+      throw new Error('User is not allowed to invoke this script.')
+    }
+  }
 
   // merge in the stdin...
   mergeEnvVars(envVars, stdin)

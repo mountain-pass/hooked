@@ -21,7 +21,7 @@ import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
 
-const isDefined = (o: any): boolean => typeof o !== 'undefined' && o !== null
+const isDefined = (o: any): o is object => typeof o !== 'undefined' && o !== null
 
 export const stripLeadingEmojiSpace = (str: string): string => {
   return str.replace(/^\p{Extended_Pictographic}\s+/u, '')
@@ -47,7 +47,7 @@ export const findScript = async (
   scriptPath: string[],
   options: ProgramOptions
 ): Promise<[Script, string[]]> => {
-  let script = config.scripts
+  let script = config.scripts ?? {}
 
   // inject _logs_ into scripts
   if (isDefined(config.scripts)) {
@@ -171,12 +171,8 @@ export const internalFindEnv = (
   envName = 'default',
   options: ProgramOptions
 ): [EnvironmentVariables, string] => {
-  if (!isDefined(config) || !isDefined(config.env)) {
-    throw new Error('No environments found in config. Must have at least one environment.')
-  }
-
   // look for exact match
-  if (isDefined(config.env[envName])) {
+  if (isDefined(config.env) && isDefined(config.env[envName])) {
     logger.debug(`Using environment: ${envName}`)
     const newLocal = config.env[envName]
     return [newLocal === null ? {} : newLocal, envName]
@@ -185,7 +181,7 @@ export const internalFindEnv = (
   // if only one environment, always use that? No
 
   // search by prefix
-  const envs = Object.entries(config.env)
+  const envs = Object.entries(config.env ?? {})
   const found = envs.filter(([key, value]) => key.startsWith(envName))
   if (found.length === 1) {
     const foundEnv = found[0][0]
@@ -342,7 +338,7 @@ export const loadConfig = async (configFile: string, pullLatestFlag = false): Pr
     // validate this configuration file (called recursively for imports)
     if (schemaValidator(configFile, config)) {
       // add _scriptPath fields to all scripts
-      populateScriptPath(config.scripts)
+      populateScriptPath(config.scripts ?? {})
 
       // merge imports with current configuration
       await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)

@@ -6,7 +6,7 @@ export interface UseTabsState<TabType extends string> {
     tabs: TabType[]
 }
 
-export const useTabs = <TabType extends string>(tabs: TabType[], initialTab: TabType): UseTabsState<TabType> => {
-    const [currentTab, setCurrentTab] = useLocalStorageBackedStateV4('currentTab', initialTab ?? tabs[0])
+export const useTabs = <TabType extends string>(storageKey: string, tabs: TabType[], initialTab: TabType): UseTabsState<TabType> => {
+    const [currentTab, setCurrentTab] = useLocalStorageBackedStateV4(storageKey, initialTab ?? tabs[0])
     return { currentTab: currentTab ?? initialTab ?? tabs[0], setCurrentTab, tabs }
 }

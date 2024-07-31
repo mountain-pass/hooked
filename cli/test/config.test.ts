@@ -561,14 +561,14 @@ describe('config', () => {
       await resolveEnvironmentVariables(config, envVars, stdin, env)
       return [env.resolved, envNames]
     }
-    await expect(tmp({ } as any, ['default'], {}), '#1').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: null } as any, ['default'], {}), '#2').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: {} } as any, ['default'], {}), '#3').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: [] } as any, ['default'], {}), '#4').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: null, imports: null } as any, ['default'], {}), '#5').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: null, imports: {} } as any, ['default'], {}), '#6').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: null, imports: [] } as any, ['default'], {}), '#7').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
-    await expect(tmp({ scripts: null, env: null } as any, ['default'], {}), '#8').to.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ } as any, ['default'], {}), '#1').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: null } as any, ['default'], {}), '#2').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: {} } as any, ['default'], {}), '#3').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: [] } as any, ['default'], {}), '#4').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: null, imports: null } as any, ['default'], {}), '#5').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: null, imports: {} } as any, ['default'], {}), '#6').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: null, imports: [] } as any, ['default'], {}), '#7').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
+    await expect(tmp({ scripts: null, env: null } as any, ['default'], {}), '#8').to.not.be.rejectedWith(`No environments found in config. Must have at least one environment.`)
     await expect(tmp({ scripts: null, env: {} } as any, ['default'], {}), '#9').to.eventually.eql([{}, ['default']])
     await expect(tmp({ scripts: null, env: [] } as any, ['default'], {}), '#10').to.eventually.eql([{}, ['default']])
     await expect(tmp({ scripts: null, env: { default: null } } as any, ['default'], {}), '#11').to.eventually.eql([{}, ['default']])
@@ -622,7 +622,7 @@ describe('config', () => {
       sinon.assert.calledOnce(spyFsReadFileSync)
     })
 
-    it('base config with remote https:// imports works', async () => {
+    it('wip base config with remote https:// imports works', async () => {
       // setup
       const importedConfig: YamlConfig = { 
         env: { default: { bbb: { $envFromHost: false, $cmd: 'echo "222"' } } }, 

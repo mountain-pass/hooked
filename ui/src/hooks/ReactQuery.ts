@@ -14,7 +14,7 @@ export const useGetValue = (key: string[]) => {
 const errorHandler = async (res: Response): Promise<any> => {
   const data = await res.json();
   if (res.status !== 200) {
-    const error: any = new Error(data.message ?? `Failed to post data to /auth/login: ${res.statusText}`);
+    const error: any = new Error(data.message ?? `Request failed : ${res.statusText}`);
     error.body = data;
     throw error
   }

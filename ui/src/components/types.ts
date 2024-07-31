@@ -1,6 +1,8 @@
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
+export interface AuthorisedUser { username: string, accessRoles: string[] }
+
 /**  */
 export interface Plugins {
   abi: boolean

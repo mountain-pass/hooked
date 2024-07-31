@@ -46,8 +46,8 @@ export const OutputPre = ({ visible, className = '', children }: { visible: bool
   </pre>
 )
 
-export const ListItem = ({ className = '', children, onClick }: { onClick?: () => void, className?: string, children: React.ReactNode }) => (
-  <div className={`border border-gray-200 dark:border-neutral-700 max-w-full w-full min-w-0 h-[54px] min-h-[54px] px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
+export const ListItem = ({ className = '', fixedHeight = true, children, onClick }: { onClick?: () => void, fixedHeight: boolean, className?: string, children: React.ReactNode }) => (
+  <div className={`border border-gray-200 dark:border-neutral-700 max-w-full w-full min-w-0 ${fixedHeight ? 'h-[54px] min-h-[54px]' : 'p-3'} px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
     onClick={onClick}>
     {children}
   </div>
@@ -56,7 +56,7 @@ export const ListItem = ({ className = '', children, onClick }: { onClick?: () =
 export const Section = ({ visible, naked, className = '', children }: { visible?: boolean, naked?: boolean, className?: string, children: React.ReactNode }) => (
   <section className={`
   rounded 
-  ${naked ? '' : 'max-sm:py-4 max-sm:px-2 sm:p-4 border border-neutral-300 dark:border-neutral-700 bg-slate-100 dark:bg-neutral-900'} 
+  ${naked ? '' : 'max-sm:py-4 max-sm:px-2 p-4 border border-neutral-300 dark:border-neutral-700 bg-slate-100 dark:bg-neutral-900'} 
   w-full flex flex-col gap-4 
   ${visible ? 'visible' : 'hidden'} 
   ${className}

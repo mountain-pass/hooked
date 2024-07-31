@@ -10,12 +10,12 @@ export default function Home() {
 
   type TabTypes = 'Overview' | 'Environment' | 'Scripts' | 'Triggers' | 'Imports' | 'Plugins'
   const TAB_VALUES: TabTypes[] = ['Environment', 'Scripts', 'Triggers'];
-  const tabs = useTabs<TabTypes>(TAB_VALUES, TAB_VALUES[0])
+  const tabs = useTabs<TabTypes>('adminTab', TAB_VALUES, TAB_VALUES[0])
 
   return (<>
     <main className="flex flex-col items-center gap-4">
-      <Banner />
-      <div className="flex flex-col items-center gap-4 w-full px-4 pb-4 max-w-[1000px]">
+      <Banner adminOnly={true} showRefresh={true} />
+      <div className="flex flex-col items-center gap-4 w-full px-4 pb-4">
         <Tabs {...tabs} />
         <ScriptsTab visible={tabs.currentTab === 'Scripts'} />
         <EnvTab visible={tabs.currentTab === 'Environment'} />

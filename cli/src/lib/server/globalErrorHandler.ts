@@ -14,6 +14,17 @@ const handleError = (err: Error, res: Response): void => {
   res.end()
 }
 
+export const hasRole = (role: string) => (req: Request, res: Response, next: any) => {
+  if ((req as AuthorisedRequest).user.accessRoles.includes(role)) {
+    next()
+  } else {
+    res.status(403).json({ message: 'Forbidden - insufficient roles.' })
+  }
+}
+
+/**
+ * Handles (/wraps) error handling for async routes.
+ */
 export const globalErrorHandler = (delegateFunction: RequestHandler | AsyncRequestHandler): any =>
   async (req: Request, res: Response, next: any) => {
     try {

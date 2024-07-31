@@ -25,9 +25,7 @@ export const TextArea = (doExecute: TextAreaProps) => {
         {/* results - error */}
         <OutputPre visible={doExecute.isError} className="text-red-500">
             {'Error:\n'}
-            {(doExecute.error as Error)?.message}
-            {'\n'}
-            {(doExecute.error as any)?.body?.message}
+            {(doExecute.error as Error)?.message ?? (doExecute.error as any)?.body?.message}
         </OutputPre>
     </>)
 }

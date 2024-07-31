@@ -14,8 +14,8 @@ import {
 } from '../types.js'
 import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
-import { globalErrorHandler } from './globalErrorHandler.js'
-import { HookedServerSchemaType } from '../schema/HookedSchema.js'
+import { AuthorisedRequest, hasRole, globalErrorHandler } from './globalErrorHandler.js'
+import { type HookedServerDashboardSchemaType, HookedServerSchemaType } from '../schema/HookedSchema.js'
 
 const getLastModifiedTimeMs = async (filepath: string): Promise<number> => {
   return (await fsPromise.stat(filepath)).mtimeMs
@@ -52,7 +52,7 @@ const rebuildCronJobs = async (
         cronTime,
         onTick: async function () {
           logger.debug(`Running cron job - "${name}" - nextRun=${job.nextDate().toISO() ?? '<unknown>'}`)
-          await common.invoke(systemProcessEnvs, options, config, ['default'], scriptPath, {}, true, false)
+          await common.invoke(null, systemProcessEnvs, options, config, ['default'], scriptPath, {}, true, false)
             .catch((err: Error) => { logger.error(`Error occurred running cron job - ${err.message}`) })
         },
         start: true,
@@ -122,10 +122,14 @@ const router = async (
     }
   }
 
+  app.get('/me', globalErrorHandler(async (req, res) => {
+    res.json(req.user)
+  }))
+
   /**
    * Reloads all configuration from disk.
    */
-  app.get('/reload', globalErrorHandler(async (req, res) => {
+  app.get('/reload', hasRole('admin'), globalErrorHandler(async (req, res) => {
     await reloadConfiguration()
     res.json({ message: 'Successfully reloaded configuration.' })
   }))
@@ -133,7 +137,7 @@ const router = async (
   /**
    * Prints the different environments available (and their environment variable names).
    */
-  app.get('/env', globalErrorHandler(async (req, res) => {
+  app.get('/env', hasRole('admin'), globalErrorHandler(async (req, res) => {
     const result = Object.entries(config.env ?? {}).reduce<Record<string, string[]>>((prev, curr) => {
       const [key, env] = curr
       prev[key] = Object.keys(env).sort(sortCaseInsensitive)
@@ -142,25 +146,31 @@ const router = async (
     res.json(result)
   }))
 
-  app.get('/imports', globalErrorHandler(async (req, res) => {
-    res.json(config.imports ?? [])
-  }))
+  // app.get('/imports', globalErrorHandler(async (req, res) => {
+  //   res.json(config.imports ?? [])
+  // }))
 
   app.get('/dashboard/list', globalErrorHandler(async (req, res) => {
     const user = req.user
-    const dashboards = (config.server?.dashboards ?? [])
-      .filter((d) => d.accessRoles.some((r) => user.roles.includes(r)))
-      .map((d) => {
-        const { title, path } = d
-        return { title, path: `/api/dashboard/get/${path}` }
-      })
-    res.json(dashboards)
+    if (isDefined(config.server)) {
+      const dashboardsList: HookedServerDashboardSchemaType[] = config.server.dashboards ?? []
+      const dashboards = dashboardsList
+        .filter((d) => {
+          // has access
+          return (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r))
+        })
+        .map((d) => {
+          const { title, path } = d
+          return { title, path }
+        })
+      res.json(dashboards)
+    }
   }))
 
   app.get('/dashboard/get/:dashboard', globalErrorHandler(async (req, res) => {
     const user = req.user
     const dashboard = (config.server?.dashboards ?? [])
-      .find((d) => d.path === req.params.dashboard && d.accessRoles.some((r) => user.roles.includes(r)))
+      .find((d) => d.path === req.params.dashboard && (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r)))
     if (isDefined(dashboard)) {
       res.json(dashboard)
     } else {
@@ -168,19 +178,22 @@ const router = async (
     }
   }))
 
-  app.get('/triggers', globalErrorHandler(async (req, res) => {
+  app.get('/triggers', hasRole('admin'), globalErrorHandler(async (req, res) => {
     res.json(config.server?.triggers ?? [])
   }))
 
-  app.get('/plugins', globalErrorHandler(async (req, res) => {
-    res.json(config.plugins ?? {})
-  }))
+  // app.get('/plugins', globalErrorHandler(async (req, res) => {
+  //   res.json(config.plugins ?? {})
+  // }))
 
-  app.get('/scripts', globalErrorHandler(async (req, res) => {
+  app.get('/scripts', hasRole('admin'), globalErrorHandler(async (req, res) => {
     res.json(config.scripts ?? {})
   }))
 
-  app.get('/scripts/:scriptPath', globalErrorHandler(async (req, res) => {
+  app.get('/scripts/:scriptPath', hasRole('admin'), globalErrorHandler(async (req, res) => {
+    if (!req.user.accessRoles.includes('admin')) {
+      return res.status(401).json({ message: 'Not an admin user.' })
+    }
     const scriptPath = req.params.scriptPath.split(' ')
     const [script, paths] = await findScript(config, scriptPath, options)
     res.json({ script, paths })
@@ -192,7 +205,7 @@ const router = async (
   app.get('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
     const providedEnvNames = req.params.env.split(',')
     const scriptPath = req.params.scriptPath.split(' ')
-    res.json(await common.invoke(systemProcessEnvs, options, config, providedEnvNames, scriptPath, {}, false, false))
+    res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, {}, false, false))
   }))
 
   /**
@@ -201,8 +214,7 @@ const router = async (
   app.post('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
     const providedEnvNames = req.params.env.split(',')
     const scriptPath = req.params.scriptPath.split(' ')
-    const stdin = req.body ?? {}
-    res.json(await common.invoke(systemProcessEnvs, options, config, providedEnvNames, scriptPath, stdin, false, false))
+    res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, req.body ?? {}, false, false))
   }))
 
   return app

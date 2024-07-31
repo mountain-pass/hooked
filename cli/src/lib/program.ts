@@ -235,7 +235,7 @@ Provided Environment Variables:
         // script mode
         const providedEnvNames = options.env.split(',')
         const stdin: RawEnvironment = HJSON.parse(options.stdin)
-        await common.invoke(systemProcessEnvs, options, config, providedEnvNames, options.scriptPath, stdin, true, false)
+        await common.invoke(null, systemProcessEnvs, options, config, providedEnvNames, options.scriptPath, stdin, true, false)
       }
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)

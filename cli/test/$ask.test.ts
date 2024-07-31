@@ -32,7 +32,7 @@ describe('$cmd', () => {
     sinon.restore()
   })
 
-  it('wip when $stdin is provided, then suggest a fix', async () => {
+  it('when $stdin is provided, then suggest a fix', async () => {
     const config = tmp.fileSync({ tmpdir: '/tmp', postfix: '.yml'})
     fs.writeFileSync(config.name, `
 scripts:

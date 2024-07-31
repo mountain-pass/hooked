@@ -10,6 +10,7 @@ import { resolveResolveScript } from './ScriptExecutor.js'
 import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
 import { type ProgramOptions } from '../program.js'
+import fsPromises from 'fs/promises'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -108,6 +109,9 @@ export const executeCmd = async (
   customOpts: CustomOptions,
   timeoutMs?: number // TODO implement?
 ): Promise<string> => {
+  // keep track of files that need to be cleaned up post run.
+  const cleanupFiles = []
+
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
     const rand = randomString()
@@ -116,6 +120,8 @@ export const executeCmd = async (
     const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
     const parent = options.dockerHookedDir ?? path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
+    cleanupFiles.push(filepath)
+    cleanupFiles.push(envfile)
 
     // add "HOOKED_ROOT=false" to all child environments...
     env.putResolved('HOOKED_ROOT', 'false')
@@ -124,6 +130,7 @@ export const executeCmd = async (
     if (isDockerCmdScript(script)) {
       // write a docker file, and an env file...
       const dockerfilepath = fileUtils.resolvePath(`.tmp-docker-${scriptName}.sh`)
+      cleanupFiles.push(dockerfilepath)
       writeScript(dockerfilepath, script.$cmd)
       writeScript(envfile, env.envToDockerEnvfile())
       const dockerName = rand
@@ -146,6 +153,7 @@ export const executeCmd = async (
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
       const sshfilepath = fileUtils.resolvePath(`.tmp-ssh-${scriptName}.sh`)
+      cleanupFiles.push(sshfilepath)
       writeScript(sshfilepath, script.$cmd, env)
       const DEFAULT_SSH_SCRIPT = 'ssh -q -T "${user_at_server}" < "${filepath}"'
       const { SSH_SCRIPT: sshScript = DEFAULT_SSH_SCRIPT } = env.global
@@ -174,5 +182,22 @@ export const executeCmd = async (
     `Underlying error: "${message}"\n` +
     'Consider adding a "set -ve" to your $cmd to see which line errored.'
     throw err
+  } finally {
+    // cleanup files... (if enabled!)
+    if (options.skipCleanup !== true) {
+      await Promise.all(cleanupFiles.map(async (f) => {
+        logger.debug(`Removing file - ${f}`)
+        if (fs.existsSync(f)) {
+          try {
+            await fsPromises.unlink(f)
+          } catch (err: any) {
+            const message = err.message as string
+            if (!message.startsWith('ENOENT: no such file or directory')) {
+              logger.warn(`WARN: could not delete file - ${f} Reason: ${err.message as string}`)
+            }
+          }
+        }
+      }))
+    }
   }
 }

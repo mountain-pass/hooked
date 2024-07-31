@@ -3,7 +3,8 @@ import express, { type NextFunction, type Response, type Request } from 'express
 import jwt, { type JwtPayload } from 'jsonwebtoken'
 import passport from 'passport'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
-import { isDefined, isUndefined } from '../../types'
+import { isDefined, isUndefined } from '../../types.js'
+import { type AuthorisedUser } from '../server.js'
 
 // lazy init
 
@@ -26,7 +27,7 @@ const jwtOptions = {
   jwtCookieName: 'jwt'
 }
 
-export type HookedJwtPayload = JwtPayload & { username: string, roles: string[] }
+export type HookedJwtPayload = JwtPayload & AuthorisedUser
 
 interface AuthRequest {
   username: string
@@ -86,7 +87,7 @@ const initialise = (
           }
         )
           .status(200)
-          .json({ message: 'Login successful.' })
+          .json({ message: 'Login successful.', ...user })
       }
       return res.status(401).json({ message: 'Unauthorised' })
     } catch (err: any) {
