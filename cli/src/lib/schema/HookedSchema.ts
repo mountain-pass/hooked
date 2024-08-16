@@ -1,13 +1,12 @@
 /* eslint-disable max-len */
 import { type ZodType, z } from 'zod'
-import zodToJsonSchema, { type JsonSchema7Type } from 'zod-to-json-schema'
 import logger from '../utils/logger.js'
 import { type YamlConfig, isString } from '../types.js'
 
 const NameRegex = /^[\w\d_-]+$/
 const NameRegexErrorMessage = 'Must only contain alpha, numeric, underscore or hypen.'
 
-const CronSchedule = z
+export const CronSchedule = z
   .string()
   .regex(/^([\d-/,*]+\s){4}([\d-/,*\w]+)\s([\d-/,*\w]+)$/, 'Must match cron pattern.')
   .describe(`A Cron schedule, including seconds. E.g. '0 0 * * * *'.
@@ -22,23 +21,23 @@ month          1-12 (or names, see below)
 day of week    0-7 (0 or 7 is Sunday, or use names)
     `)
 
-const ScriptReference = z
+export const ScriptReference = z
   .string()
   .describe('A path to a script.')
 
-const CronTrigger = z
+export const CronTrigger = z
   .object({
     $cron: CronSchedule,
     $script: ScriptReference
   })
   .describe('The name of the Cron job.')
 
-const TriggersGroup = z
+export const TriggersGroup = z
   .record(z.string(), CronTrigger)
   .describe('Organises triggers.')
   .optional()
 
-const HasAccessRoles = (description: string): z.ZodObject<{
+export const HasAccessRoles = (description: string): z.ZodObject<{
   accessRoles: z.ZodOptional<z.ZodArray<z.ZodString, 'many'>>
 }, 'strip', z.ZodTypeAny, {
   accessRoles?: string[] | undefined
@@ -53,7 +52,7 @@ const HasAccessRoles = (description: string): z.ZodObject<{
     .describe(description ?? 'A list of access roles.')
 })
 
-const WritePathScript = z
+export const WritePathScript = z
   .object({
     $path: z.string().describe('Sets the file/folder location.'),
     $content: z.union([z.string(), z.record(z.any())]).describe('Sets the contents of the file to match the string. If an object is provided, will attempt to serialise the content to match either Yaml or Json (using the file extension). If absent, treats the path as a folder. Content is utf-8.').optional(),
@@ -66,7 +65,7 @@ const WritePathScript = z
   .strict()
   .describe('Configuration for writing a file/folder.')
 
-const JobsSerialScript = z
+export const JobsSerialScript = z
   .object({
     $jobs_serial: z
       .array(z.union([
@@ -82,7 +81,7 @@ const JobsSerialScript = z
   .describe('Allows running multiple jobs, one after the other. Environment variables will be accumulated, and passed on to future jobs.')
 
 /** @deprecated Please use $ask instead. */
-const OldStdinScript = z
+export const OldStdinScript = z
   .object({
     $stdin: z.string().describe('Old script format no longer supported. Please use $ask instead of $stdin.')
   })
@@ -99,7 +98,7 @@ const OldStdinScript = z
 //     return true
 //   })
 
-const ScriptsGroup: z.ZodRecord<ZodType<string>, ZodType<any>> = z
+export const ScriptsGroup: z.ZodRecord<ZodType<string>, ZodType<any>> = z
   .record(z.string(), z.union([
     OldStdinScript,
     JobsSerialScript,
@@ -111,7 +110,7 @@ const ScriptsGroup: z.ZodRecord<ZodType<string>, ZodType<any>> = z
 
 // Stdin
 
-const StdinChoicesValue = z
+export const StdinChoicesValue = z
   .union([
     z.lazy(() => CmdScript),
     z.string().describe('A multiline string, each line will become a choice.'),
@@ -126,7 +125,7 @@ const StdinChoicesValue = z
   ])
   .describe('Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc.')
 
-const StdinFieldsMappingValue = z
+export const StdinFieldsMappingValue = z
   .object({
     name: z.string().describe("A JSON path to the 'name' value."),
     value: z.string().describe("A JSON path to the 'value' value.")
@@ -134,7 +133,7 @@ const StdinFieldsMappingValue = z
   .strict()
   .describe('For JSON arrays, name and value can be overridden by specifying alternative JSON paths.')
 
-const StdinScript = z
+export const StdinScript = z
   .object({
   // required
     $ask: z.string().describe('The prompt provided to the user.'),
@@ -150,7 +149,7 @@ const StdinScript = z
 
 // Environment
 
-const EnvironmentValue = z.union([
+export const EnvironmentValue = z.union([
   z.lazy(() => CmdScript),
   OldStdinScript,
   StdinScript,
@@ -160,11 +159,11 @@ const EnvironmentValue = z.union([
 ])
   .describe('An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)').optional()
 
-const EnvironmentGroup = z
+export const EnvironmentGroup = z
   .record(z.string(), EnvironmentValue)
   .describe('A named group of environment variables.')
 
-const CmdScript: z.ZodObject<any> = z
+export const CmdScript: z.ZodObject<any> = z
   .object({
   // required
     $cmd: z.string().describe('The command to run. Supports multiline.'),
@@ -182,13 +181,13 @@ const CmdScript: z.ZodObject<any> = z
 
 // Server
 
-const ServerAuth = z.object({
+export const ServerAuth = z.object({
   type: z.enum(['bcrypt']).describe('The type of authentication.'),
   salt: z.string().min(10).max(100).describe('A salt for the bcrypt algorithm.')
 }).describe('Local bcrypt secured credentials.')
 
 //   z.string().describe('A colon delimited user definition. e.g. username:password:role1,role2,...').regex(/^([^:]+:){2}/, 'Must match format username:password:role1,role2,...'),
-const ServerUser = z
+export const ServerUser = z
   .object({
     username: z.string().regex(NameRegex).min(3).max(50).describe('A unique username.'),
     password: z.string().min(8).max(999).describe('An encrypted password.')
@@ -196,18 +195,18 @@ const ServerUser = z
   .merge(HasAccessRoles('The access roles the User has.'))
   .describe('A user account.')
 
-const ServerDashboardSectionField = z.object({
+export const ServerDashboardSectionField = z.object({
   label: z.string().describe('The label of the field.'),
   type: z.enum(['display', 'button']).describe('The type of the field.'),
   $script: ScriptReference
 })
 
-const ServerDashboardSection = z.object({
+export const ServerDashboardSection = z.object({
   title: z.string().describe('The title of the section.'),
   fields: z.array(ServerDashboardSectionField).describe('A list of fields.')
 })
 
-const ServerDashboard = z.object({
+export const ServerDashboard = z.object({
   title: z.string().describe('The title of the dashboard.'),
   path: z.string().regex(NameRegex, NameRegexErrorMessage).min(2).max(255).describe('The path to the dashboard.'),
   sections: z.array(ServerDashboardSection).describe('A list of sections.')
@@ -215,7 +214,7 @@ const ServerDashboard = z.object({
   .merge(HasAccessRoles('The access role/s required to view this dashboard.'))
   .describe('A dashboard configuration.')
 
-const Server = z
+export const Server = z
   .object({
 
     triggers: z
@@ -262,37 +261,6 @@ export const HookedSchema = z.object({
     .optional()
 
 }).strict().describe('Manage and execute your scripts from a single place.')
-
-/**
- * Generates a JSON schema from the Zod schema.
- */
-export const toJsonSchema7Type = (): JsonSchema7Type => {
-  return zodToJsonSchema(HookedSchema, {
-    definitionPath: '$defs',
-    definitions: {
-      CronSchedule,
-      ScriptReference,
-      CronTrigger,
-      TriggersGroup,
-      WritePathScript,
-      JobsSerialScript,
-      OldStdinScript,
-      ScriptsGroup,
-      StdinChoicesValue,
-      StdinFieldsMappingValue,
-      StdinScript,
-      EnvironmentValue,
-      EnvironmentGroup,
-      CmdScript,
-      ServerAuth,
-      ServerUser,
-      ServerDashboardSectionField,
-      ServerDashboardSection,
-      ServerDashboard,
-      Server
-    }
-  })
-}
 
 export type HookedSchemaType = z.infer<typeof HookedSchema>
 export type HookedServerSchemaType = z.infer<typeof Server>

@@ -35,7 +35,8 @@
   "dir": [
     "dist",
     "public",
-    "schemas"
+    "schemas",
+    "!dist/lib/schema/writeSchema.script.js"
   ],
   "scripts": {
     "writeSchema": "tsx src/lib/schema/writeSchema.script.ts",

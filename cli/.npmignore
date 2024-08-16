@@ -4,3 +4,4 @@
 !public/**
 !dist/**
 !schemas/**
+dist/lib/schema/writeSchema.script.js
