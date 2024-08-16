@@ -21,10 +21,10 @@ export const ScriptRow = ({ name, script, disableExecution, favouritesState, exe
             { isDefined(favouritesState) && <BlackButton
                 title="Toggle Favourite"
                 size="lg"
-                className={`flex-shrink-0 h-[54px] min-w-[54px] text-xl border-l-0 ${favouritesState.isFavourite(script) ? 'text-yellow-400' : ''}`}
-                onClick={() => favouritesState.toggleFavourite(script)}
+                className={`flex-shrink-0 h-[54px] min-w-[54px] text-xl border-l-0 ${favouritesState.isFavourite(name) ? 'text-yellow-400' : ''}`}
+                onClick={() => favouritesState.toggleFavourite(name)}
             >
-                {favouritesState.isFavourite(script) ? <TbStarFilled /> : <TbStar />}
+                {favouritesState.isFavourite(name) ? <TbStarFilled /> : <TbStar />}
             </BlackButton>
 }
             <BlackButton

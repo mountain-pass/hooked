@@ -34,21 +34,26 @@ export const DashboardTab = ({ visible, dashboard }: {
 
     return (<>
     <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 w-full gap-4">
-        { dashboard.sections?.map(section => <Section visible={visible} className="flex-1">
+        { dashboard.sections?.map((section, i) => <Section key={section.title + i} visible={visible} className="flex-1">
             <div className="flex items-start max-sm:px-2">
                 <h2>{section.title}</h2>
             </div>
 
             <div className={`flex flex-col gap-1 overflow-auto [color-scheme:light_dark]`}>
-                { section.fields.map(field => {
+                { section.fields.map((field, i) => {
                     if (field.type === 'button') {
                         return <ScriptRow
+                            key={field.label + i}
                             name={field.label}
                             script={field.$script.split(' ')}
                             executeScript={executeScript}
                         />
                     } else if (field.type === 'display') {
-                        return <DisplayRow name={field.label} scriptPath={field.$script} />
+                        return <DisplayRow 
+                            key={field.label + i}
+                            name={field.label}
+                            scriptPath={field.$script}
+                        />
                     }
                 })}
             </div>

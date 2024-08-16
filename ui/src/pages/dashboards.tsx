@@ -5,7 +5,7 @@ import { useGet } from "@/hooks/ReactQuery";
 import { Tabs } from "@/hooks/Tabs";
 import { useTabs } from "@/hooks/useTabs";
 
-export default function() {
+export default function Dashboards() {
 
     const useGetDashboards = useGet<{ title: string, path: string}[]>(`/api/dashboard/list`, true)
     const tabs = useTabs<string>('dashboardTab', useGetDashboards.data?.map(x => x.path) ?? [], (useGetDashboards.data?.map(x => x.path).find(x => x)) ?? '')
