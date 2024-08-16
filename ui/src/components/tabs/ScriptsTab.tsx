@@ -1,47 +1,27 @@
-import { useExecuteScript, useGet } from "@/hooks/ReactQuery"
+import { FavouritesSection } from "@/components/FavouritesSection"
+import { BlackButton, GreyText, Section } from "@/components/components"
+import { GroupRow } from "@/components/scripts/GroupRow"
+import { ScriptRow } from "@/components/scripts/ScriptRow"
+import { TopLevelScripts, isScript } from "@/components/types"
+import { useExecuteScriptWrapper, useGet } from "@/hooks/ReactQuery"
 import { useFavourites } from "@/hooks/useFavourites"
 import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4"
 import React from "react"
-import { TbArrowBackUp, TbCheckbox, TbStar, TbStarFilled, TbX } from "react-icons/tb"
-import { BlackButton, GreyText, Section } from "@/components/components"
-import { GroupRow } from "@/components/scripts/GroupRow"
-import { TopLevelScripts, isScript } from "@/components/types"
-import { ScriptRow } from "@/components/scripts/ScriptRow"
-import { FavouritesSection } from "@/components/FavouritesSection"
-import { useRunTimer } from "@/hooks/useRunTimer"
-import { TextArea } from "../common/TextArea"
+import { TbArrowBackUp, TbStar, TbStarFilled, TbX } from "react-icons/tb"
 import { Input } from "../common/Input"
+import { TextArea } from "../common/TextArea"
 
 export const ScriptsTab = ({ visible }: {
     visible: boolean,
 }) => {
 
-    const doExecute = useExecuteScript()
+    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
+    const { doExecute, runTimer, executeScript } = useExecuteScriptWrapper(useGetScripts.data)
     const isTouchScreen = typeof window === 'undefined' ? false : window.matchMedia("(pointer: coarse)").matches
     const refSearchScript = React.useRef<HTMLInputElement>(null)
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
     const [showFavourites, setShowFavourites] = useLocalStorageBackedStateV4<boolean>('showFavourites', false)
-    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
     const FavouritesState = useFavourites()
-
-    const runTimer = useRunTimer()
-    const [lastScriptPath, setLastScriptPath] = React.useState<string | null>(null)
-
-    /** Attempts to run the script. */
-    const executeScript = React.useCallback((scriptPath: string) => {
-        if (doExecute.isPending) {
-            console.debug('Already executing script, skipping...')
-            return
-        }
-        if (runTimer.isRunning) {
-            runTimer.stop()
-        }
-        setLastScriptPath(scriptPath)
-        runTimer.start()
-        doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
-            .then(runTimer.stop)
-            .catch(runTimer.stop)
-    }, [setLastScriptPath, doExecute, runTimer])
 
     // useMemo
 
@@ -91,8 +71,8 @@ export const ScriptsTab = ({ visible }: {
 
     /** Selects the script group. */
     const selectScriptGroup = (name: string) => {
-        // NOTE: trailing space is important, for next selection
-        setSearchScripts((ps: string) => `${ps.trim()} ${name.trim()} `)
+        // NOTE: trailing space is important, for next selection. If name contains spaces, only use the first section.
+        setSearchScripts((ps: string) => `${ps.trim()} ${name.split(' ')[0].trim()} `)
         if (!isTouchScreen) refSearchScript.current?.focus()
     }
 
@@ -148,7 +128,7 @@ export const ScriptsTab = ({ visible }: {
                             return <ScriptRow
                                 key={name}
                                 name={groupOrJob._scriptPath ?? ''}
-                                scriptPath={groupOrJob._scriptPath ?? ''}
+                                script={groupOrJob._scriptPathArray!}
                                 favouritesState={FavouritesState}
                                 executeScript={executeScript}
                             />

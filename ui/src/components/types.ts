@@ -1,6 +1,10 @@
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
+export type ExecuteScriptParam = string[] // | (Script & BaseScript)
+
+export type ExecuteScriptFunction = (scriptConfig: ExecuteScriptParam) => void
+
 export interface AuthorisedUser { username: string, accessRoles: string[] }
 
 /**  */
@@ -54,6 +58,7 @@ export interface SuccessfulScript {
 
 export interface BaseScript {
   _scriptPath?: string
+  _scriptPathArray?: string[]
 }
 
 /** Configuration for writing a file/folder. */
@@ -143,6 +148,10 @@ export interface InternalScript extends BaseScript {
   $internal: (options: { key: string, stdin: StdinResponses }) => Promise<string>
 }
 
+export interface HasEnvScript extends BaseScript {
+  $env: EnvironmentVariables
+}
+
 export type Script = string
 | CmdScript
 | DockerCmdScript
@@ -155,6 +164,10 @@ export type Script = string
 | JobsSerialScript
 
 export type ScriptAndPaths = [Script, string[]]
+
+export const hasEnvScript = (script: any): script is HasEnvScript => {
+  return isDefined(script.$env)
+}
 
 export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {
   return Array.isArray((script as any).$jobs_serial)

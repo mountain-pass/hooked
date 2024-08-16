@@ -42,11 +42,13 @@ export const DisplayRow = ({ name, scriptPath }: {
 
     return (
         <div className="flex max-w-full w-full">
-            <ListItem className="rounded-l" fixedHeight={false}>
-                <TbActivityHeartbeat className="text-xl flex-shrink-0 text-red-500" />
-                <div className="flex w-full align-middle justify-between gap-5">
+            <ListItem className="rounded-l max-sm:flex-col" fixedHeight={false}>
+                <div className="flex gap-2">
+                    <TbActivityHeartbeat className="text-xl flex-shrink-0 text-red-500" />
                     <span className="truncate self-center">{name}</span>
-                    <pre>{lastResult?.outputs.join('\n')}</pre>
+                </div>
+                <div className="flex w-full overflow-auto">
+                    <pre className="max-sm:m-auto sm:ml-auto">{lastResult?.outputs.join('\n')}</pre>
                 </div>
             </ListItem>
         </div>

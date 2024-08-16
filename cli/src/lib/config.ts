@@ -317,6 +317,7 @@ export const populateScriptPath = (scripts: TopLevelScripts, parentPaths: string
   for (const [key, script] of Object.entries(scripts)) {
     if (isScript(script)) {
       script._scriptPath = [...parentPaths, key].join(' ')
+      script._scriptPathArray = [...parentPaths, key]
     } else {
       // TODO verify unique paths?
       const firstWord = key.trim().split(' ')[0]

@@ -1,4 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRunTimer } from "./useRunTimer";
+import { ExecuteScriptFunction, ExecuteScriptParam, Script, StdinScript, TopLevelScripts, hasEnvScript, isDefined, isStdinScript } from "@/components/types";
+import React from "react";
 
 export const KEYS = {
   // apiKey: () => ['apiKey'],
@@ -60,8 +63,9 @@ export const useLogout = () => {
  * @param bearerToken 
  * @returns 
  */
-export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
+export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchInterval = 10_000) => {
     const queryClient = useQueryClient()
+    console.debug("useGet", url, enabled)
     return useQuery<any, Error, ResponseDataType, any[]>({
       queryKey: [url],
       queryFn: () => {
@@ -82,7 +86,7 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
           }
         })
       },
-      refetchInterval: 10000,
+      refetchInterval,
       retry: 0,
       enabled
     })
@@ -105,12 +109,18 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
       }
     })
   }
+
+  export type UseExecuteScriptParams = {
+    scriptPath: string
+    envNames?: string
+    env: Record<string, string>
+  }
   
   export const useExecuteScript = () => {
     console.debug('Use execute script...', { baseUrl })
-    return useMutation({
+    return useMutation<any, Error, UseExecuteScriptParams>({
       mutationKey: [baseUrl],
-      mutationFn: (postData: any) => {
+      mutationFn: (postData: UseExecuteScriptParams) => {
         const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
         return fetch(url, {
           method: 'post',
@@ -123,4 +133,56 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean) => {
         }).then(async res => await errorHandler(res))
       }
     })
+  }
+
+  export type AskUserQuestionHandler = (config: StdinScript) => Promise<string>
+
+  /** Wraps the execution in a timer, and ensure no parallel requests. */
+  export const useExecuteScriptWrapper = (scripts: TopLevelScripts | undefined) => { //, askUserQuestionHandler: AskUserQuestionHandler) => {
+    const doExecute = useExecuteScript()
+    const runTimer = useRunTimer()
+    /** Attempts to run the script. */
+    const executeScript: ExecuteScriptFunction = React.useCallback(async (scriptPath: ExecuteScriptParam) => {
+        // find the config for the provided script...
+        let prev = scripts
+        scriptPath.forEach(path => {
+          if (prev) {
+            const entryPair = Object.entries(prev).find(([k, v]) => {
+              if (k.toLowerCase().startsWith(path.toLowerCase())) {
+                return v;
+              }
+            });
+            prev = isDefined(entryPair) ? entryPair[1] : undefined
+          }
+        })
+        const scriptConfig = prev
+        
+        // ask user for inputs...
+        const env: Record<string, string> = {}
+        if (hasEnvScript(scriptConfig)) {
+          for (const [k, v] of Object.entries(scriptConfig.$env)) {
+            if (isStdinScript(v)) {
+              const answer = prompt(v.$ask);
+              if (!answer) return
+              env[k] = answer
+            }
+          }
+        }
+
+        // execute the script
+        console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
+        if (doExecute.isPending) {
+            console.debug('Already executing script, skipping...')
+            return
+        }
+        if (runTimer.isRunning) {
+            runTimer.stop()
+        }
+        runTimer.start()
+        doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
+            .then(runTimer.stop)
+            .catch(runTimer.stop)
+    }, [doExecute, runTimer, scripts])
+
+    return { executeScript, runTimer, doExecute}
   }

@@ -57,6 +57,7 @@ export interface SuccessfulScript {
 
 export interface BaseScript {
   _scriptPath?: string
+  _scriptPathArray?: string[]
 }
 
 /** Configuration for writing a file/folder. */

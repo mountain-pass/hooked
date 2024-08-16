@@ -21,7 +21,7 @@ export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = fal
     const isFetching = useIsFetching()
     const isMutating = useIsMutating()
 
-    const useGetScripts = useGet<AuthorisedUser>(`/api/me`, true)
+    const useGetScripts = useGet<AuthorisedUser>(`/api/me`, true, 0)
     const useReload = useReloadConfiguration()
     const doLogoout = useLogout()
 

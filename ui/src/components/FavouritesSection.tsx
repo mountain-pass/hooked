@@ -1,9 +1,14 @@
 import { useFavourites } from "@/hooks/useFavourites"
 import { GreyText, Section } from "./components"
+import { ExecuteScriptFunction } from "./types"
 import { ScriptRow } from "./scripts/ScriptRow"
 
+export interface FavouritesSectionProps {
+    visible: boolean
+    executeScript: ExecuteScriptFunction
+}
 
-export const FavouritesSection = ({ visible, executeScript }: { visible: boolean, executeScript: (scriptPath: string) => void }) => {
+export const FavouritesSection = ({ visible, executeScript }: FavouritesSectionProps) => {
 
     const favouritesState = useFavourites()
     const { favourites } = favouritesState
@@ -19,7 +24,7 @@ export const FavouritesSection = ({ visible, executeScript }: { visible: boolean
                             return <ScriptRow
                                 key={scriptPath}
                                 name={scriptPath}
-                                scriptPath={scriptPath}
+                                script={scriptPath.split(' ')}
                                 favouritesState={favouritesState}
                                 executeScript={executeScript}
                             />

@@ -46,7 +46,7 @@ export const OutputPre = ({ visible, className = '', children }: { visible: bool
   </pre>
 )
 
-export const ListItem = ({ className = '', fixedHeight = true, children, onClick }: { onClick?: () => void, fixedHeight: boolean, className?: string, children: React.ReactNode }) => (
+export const ListItem = ({ className = '', fixedHeight = true, children, onClick }: { onClick?: () => void, fixedHeight?: boolean, className?: string, children: React.ReactNode }) => (
   <div className={`border border-gray-200 dark:border-neutral-700 max-w-full w-full min-w-0 ${fixedHeight ? 'h-[54px] min-h-[54px]' : 'p-3'} px-4 text-sm text-left flex gap-2 items-center bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-white/5 ${className}`}
     onClick={onClick}>
     {children}

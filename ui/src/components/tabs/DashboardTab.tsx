@@ -1,10 +1,10 @@
 import { BlackButton, GreyText, Section } from "@/components/components"
 import { ScriptRow } from "@/components/scripts/ScriptRow"
-import { useExecuteScript } from "@/hooks/ReactQuery"
-import { useRunTimer } from "@/hooks/useRunTimer"
+import { useExecuteScriptWrapper, useGet } from "@/hooks/ReactQuery"
 import React from "react"
 import { TextArea } from "../common/TextArea"
 import { DisplayRow } from "../scripts/DisplayRow"
+import { TopLevelScripts } from "../types"
 
 export interface DashboardConfiguration {
     title: string,
@@ -24,26 +24,11 @@ export const DashboardTab = ({ visible, dashboard }: {
     dashboard: DashboardConfiguration
 }) => {
 
-    const doExecute = useExecuteScript()
-    const runTimer = useRunTimer()
+    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
+    const { doExecute, runTimer, executeScript } = useExecuteScriptWrapper(useGetScripts.data)
 
     // reset the log on tab change
     React.useEffect(() => doExecute.reset(), [dashboard])
-
-    /** Attempts to run the script. */
-    const executeScript = React.useCallback((scriptPath: string) => {
-        if (doExecute.isPending) {
-            console.debug('Already executing script, skipping...')
-            return
-        }
-        if (runTimer.isRunning) {
-            runTimer.stop()
-        }
-        runTimer.start()
-        doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
-            .then(runTimer.stop)
-            .catch(runTimer.stop)
-    }, [doExecute, runTimer])
 
     // useMemo
 
@@ -59,7 +44,7 @@ export const DashboardTab = ({ visible, dashboard }: {
                     if (field.type === 'button') {
                         return <ScriptRow
                             name={field.label}
-                            scriptPath={field.$script}
+                            script={field.$script.split(' ')}
                             executeScript={executeScript}
                         />
                     } else if (field.type === 'display') {
