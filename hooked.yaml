@@ -1,0 +1,148 @@
+# imports:
+#   - ./hooked-*.yml
+
+plugin:
+  icons: true
+  abi: true
+  makefile: true
+  npm: true
+
+env:
+  default:
+    SKIP_VERSION_CHECK: true
+    # username: ${USER}
+    # GIT_COMMIT:
+    #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"
+    # RECENT_DOWNLOAD:
+    #   $ask: "Please choose a recently Downloaded file:"
+    #   $choices:
+    #     $cmd: ls -1t ~/Downloads | head -10
+    # NOW:
+    #   $cmd: date +%Y-%m-%dT%H:%M:%S%z
+    # JAVASCRIPT:
+    #   $cmd: node -e "console.log(1+1)" || echo 'ERROR'
+    # DOCKER:
+    #   $cmd: docker run --rm node:lts-alpine -e "console.log(1+2)" || echo 'NOT_PRESENT'
+    # JQ_VERSION:
+    #   $cmd: |
+    #     #!/bin/sh -ev
+    #     jq --version || echo 'NOT_PRESENT'
+
+# This is the scripts section. It uses hierarchies to guide the user. Go as deep as you want!
+scripts:
+  which:
+    $cmd: which npx
+  🌞 echo:
+    $cmd: echo Hello there!
+    # $cmd: echo now=${NOW}, javascript=${JAVASCRIPT}, docker=${DOCKER}, jq=${JQ_VERSION}
+  🍹 copy:
+    $cmd: |
+      mkdir -p ~/.hooked/imports
+      cp imports/*.yaml ~/.hooked/imports
+  install:
+    local:
+      $cmd: |
+        npx lerna exec --scope @mountainpass/* npm install
+        npx lerna run --scope @mountainpass/* build
+        npm i -g --force .
+    global:
+      $cmd: npm i -g --prefer-online --force @mountainpass/hooked-cli
+
+  uninstall:
+    local:
+      $cmd: npm uninstall -g --force hooked
+    global:
+      $cmd: npm uninstall -g --force @mountainpass/hooked-cli
+
+  lerna:
+    graph:
+      $cmd: npx nx graph
+    bootstrap:
+      $cmd: npx lerna bootstrap
+    install:
+      $cmd: npx lerna exec --scope @mountainpass/* npm install
+    build:
+      $cmd: npx lerna run --scope @mountainpass/* build
+    bump:
+      $cmd: npx lerna version patch --yes --force-publish --message '%s [skip ci]'
+    publish:
+      $cmd: npx lerna publish from-package --yes
+
+  cli:
+    version - print the current version:
+      $image: node:lts-alpine
+      $cmd: node -e 'console.log(require("./cli/package.json").version)'
+    test_build_and_bump:
+      $cmd: |
+        #!/bin/sh -ve
+        if [[ `git status --porcelain` ]]; then
+          >&2 echo "Local git changes found, please commit before releasing."
+          exit 99
+        fi
+        npx lerna exec --scope @mountainpass/* npm install
+        npx lerna run --scope @mountainpass/* test
+        rm cli/.tmp-*.sh || true
+        npx lerna run --scope @mountainpass/* build
+        npx lerna version patch --yes --force-publish --message '%s [skip ci]'
+
+    publish:
+      $cmd: npx lerna publish from-package --yes
+
+  # ui
+  ui:
+    build:
+      $env:
+        NEXT_PUBLIC_VERSION:
+          $image: node:lts-alpine
+          $cmd: node -e 'console.log(require("./cli/package.json").version)'
+      $cmd: |
+        #!/bin/sh -e
+        echo Building UI - version: \"${NEXT_PUBLIC_VERSION}\"
+        cd ui && npm run build
+
+  # docker build for production
+  docker:
+    build:
+      $cmd: |
+        #!/bin/sh -e
+        docker build --build-arg="HOOKED_TAG=@mountainpass/hooked-cli@latest" --tag="mountainpass/hooked" .
+    publish:
+      $jobs_serial:
+        - $env:
+            VERSION:
+              $image: node:lts-alpine
+              $cmd: node -e 'console.log(require("./cli/package.json").version)'
+            HOOKED_TAG:
+              $cmd: echo "@mountainpass/hooked-cli@${VERSION}"
+            DOCKER_TAG:
+              $cmd: echo "mountainpass/hooked:${VERSION}"
+          $cmd: |
+            #!/bin/sh -e
+            echo Building and publishing - version: \"${VERSION}\"
+            docker buildx build \
+              --push \
+              --build-arg="HOOKED_TAG=${HOOKED_TAG}" \
+              --platform linux/amd64,linux/arm64/v8 \
+              --tag mountainpass/hooked:latest \
+              --tag ${DOCKER_TAG} \
+              --output=type=registry \
+              .
+        - $cmd: docker rmi ${DOCKER_TAG} || true
+        - $cmd: docker pull ${DOCKER_TAG}
+        - $cmd: docker run -it --rm ${DOCKER_TAG} -v
+
+  # Just for local builds.
+  local_build:
+    $jobs_serial:
+      - ui build
+      - docker build
+
+  # THIS WILL BUILD AND RELEASE EVERYTHING
+  publish_all:
+    $jobs_serial:
+      - cli test_build_and_bump
+      - ui build
+      - $cmd: rm -rf cli/public || true && mv ui/out cli/public
+      - cli publish
+      - $cmd: sleep 5
+      - docker publish
