@@ -60,9 +60,9 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
     }, [show, onCloseModal])
 
     return (<>
-        <Section visible={show}>
+        <Section visible={show} className="max-h-full min-h-1">
             <h2 className="flex justify-between align-middle">
-              <span>Execute: &quote;{scriptConfig._scriptPath}&quot;</span>
+              <span>Execute: &quot;{scriptConfig._scriptPath}&quot;</span>
               <span>({nextEnvIndex + 1}/{envEntries.length})</span>
             </h2>
 
@@ -81,14 +81,14 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
               />
             </div>
 
-          <div className={`grid grid-cols-1 gap-3 ${currentEnvConfig.data?.$choices ? 'visible' : 'hidden'}`}>
+            <div className={`grid grid-cols-1 gap-3 min-h-1 ${currentEnvConfig.data?.$choices ? 'visible' : 'hidden'}`}>
               <h3>Choices:</h3>
-              <div className="grid grid-cols-1 gap-0">
+              <div className="grid grid-cols-1 gap-0 overflow-y-auto">
                   { (currentEnvConfig.data?.$choices as { name: string, value: string}[])?.map(choice => {
                       return (<BlackButton key={choice.name} title={choice.name} size="md" onClick={() => onChange(choice.value)}>{choice.name}</BlackButton>)
                   }) }
               </div>
-          </div>
+            </div>
 
             <div className="grid grid-cols-2 grid-flow-row gap-2">
 
@@ -118,7 +118,7 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
 
 export const ExecuteScriptModal = () => {
     return (
-        <ReactQueryTriggeredModal queryKey={['showExecuteScriptModal']}>
+        <ReactQueryTriggeredModal queryKey={['showExecuteScriptModal']} className="border-2 border-green-500">
               {ExcuteScriptContent}
         </ReactQueryTriggeredModal>
         )

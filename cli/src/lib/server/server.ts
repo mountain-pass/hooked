@@ -5,6 +5,7 @@ import fsPromise from 'fs/promises'
 import http from 'http'
 import https from 'https'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { type ProgramOptions } from '../program.js'
 import { type HookedServerSchemaType } from '../schema/HookedSchema.js'
@@ -102,6 +103,18 @@ const startServer = async (
   app.get('/api/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
   app.use('/api', await router.router(systemProcessEnvs, options))
   app.use('/', express.static(publicPath))
+  app.get('*', (req, res) => {
+    let httpPath = req.path
+    if (httpPath.endsWith('/')) httpPath = httpPath.slice(0, -1)
+    const target = path.join(publicPath, httpPath + '.html')
+    const relative = path.relative(publicPath, target)
+    const isSubdir = isString(relative) && !relative.startsWith('..') && !path.isAbsolute(relative)
+    if (isSubdir && fs.existsSync(target)) {
+      res.sendFile(target)
+    } else {
+      res.sendStatus(403)
+    }
+  })
 
   // ssl setup
   if ((isString(options.sslCert) && !isString(options.sslKey)) || (!isString(options.sslCert) && isString(options.sslKey))) {

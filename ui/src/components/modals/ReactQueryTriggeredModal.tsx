@@ -4,6 +4,7 @@ import { Modal, ModalChild } from './Modal'
 import { isDefined } from '../types'
 
 export type ReactQueryTriggeredModalProps = { 
+    className?: string
     queryKey: QueryKey & QueryFilters,
     children: ModalChild,
     showOverride?: boolean
@@ -14,7 +15,7 @@ export type ReactQueryTriggeredModalProps = {
  * @param param0 
  * @returns 
  */
-export const ReactQueryTriggeredModal = ({ queryKey, children, showOverride }: ReactQueryTriggeredModalProps) => {
+export const ReactQueryTriggeredModal = ({ queryKey, children, showOverride, className = '' }: ReactQueryTriggeredModalProps) => {
     const queryClient = useQueryClient()
     const showQuery = useQuery<any, Error, boolean>({
         queryKey,
@@ -31,5 +32,5 @@ export const ReactQueryTriggeredModal = ({ queryKey, children, showOverride }: R
         queryClient.setQueryData(queryKey, show)
     }
 
-    return <Modal show={show} setShow={setShow} context={showQuery.data}>{children}</Modal>
+    return <Modal show={show} setShow={setShow} context={showQuery.data} className={className}>{children}</Modal>
 }

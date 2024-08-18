@@ -12,6 +12,7 @@ export type ModalChild = ({ show, setShow }: ModalChildProps) => React.JSX.Eleme
 export type ModalProps = ModalChildProps & {
     children: ModalChild
     enableBackgroundClose?: boolean
+    className?: string
 }
 
 /**
@@ -24,7 +25,8 @@ export const Modal = ({
     setShow,
     context,
     children,
-    enableBackgroundClose = true
+    enableBackgroundClose = true,
+    className = ''
 }: ModalProps) => {
     const Child = children
     return (
@@ -32,7 +34,7 @@ export const Modal = ({
             className={`animate-fade-in-out ${show ? 'show' : ''} flex items-start justify-center w-full h-full absolute top-0 left-0 right-0 bottom-0 backdrop-filter backdrop-blur-md`}
             onClick={() => enableBackgroundClose && setShow(false)}
         >
-            <div className="flex flex-col items-center justify-center p-4 w-full max-w-[500px]" onClick={(e) => e.stopPropagation()}>
+            <div className={`flex flex-col items-center justify-center p-4 w-full max-w-[500px] max-h-full ${className}`} onClick={(e) => e.stopPropagation()}>
                 <Child show={isDefined(show) && show} setShow={setShow} context={context || {}} />
             </div>
         </div>
