@@ -118,7 +118,7 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
 
 export const ExecuteScriptModal = () => {
     return (
-        <ReactQueryTriggeredModal queryKey={['showExecuteScriptModal']} className="border-2 border-green-500">
+        <ReactQueryTriggeredModal queryKey={['showExecuteScriptModal']}>
               {ExcuteScriptContent}
         </ReactQueryTriggeredModal>
         )
