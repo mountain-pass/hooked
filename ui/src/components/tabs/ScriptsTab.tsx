@@ -10,6 +10,7 @@ import React from "react"
 import { TbArrowBackUp, TbStar, TbStarFilled, TbX } from "react-icons/tb"
 import { Input } from "../common/Input"
 import { TextArea } from "../common/TextArea"
+import { ResultsSection } from "../ResultsSection"
 
 export const ScriptsTab = ({ visible }: {
     visible: boolean,
@@ -144,17 +145,6 @@ export const ScriptsTab = ({ visible }: {
         </Section>
 
         {/* Results */}
-        <Section visible={visible && (doExecute.isSuccess || doExecute.isPending || doExecute.isError)} className="flex-1">
-            <div className="flex items-start justify-between">
-                <h2>Results</h2>
-                <div className="flex gap-3 items-center">
-                    <GreyText>{`${(runTimer.durationMs / 1000).toFixed(3)} seconds`}</GreyText>
-                    <BlackButton title="Clear Results" className="rounded" size="md" onClick={() => doExecute.reset()}>Clear</BlackButton>
-                </div>
-            </div>
-
-            <TextArea {...doExecute} renderText={(data) => `Success:\n${(data?.outputs ?? []).join('\n')}`} />
-
-        </Section>
+        <ResultsSection visible={true} />
     </>)
 }

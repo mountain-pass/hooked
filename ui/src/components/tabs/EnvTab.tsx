@@ -8,7 +8,7 @@ export const EnvTab = ({ visible }: { visible: boolean }) => {
     return (<>
         <Section visible={visible} className="flex flex-col">
             <h2 className="max-sm:hidden">Environment</h2>
-            <TextArea {...useGetEnv} renderText={(data) => JSON.stringify(data, null, 2)} />
+            <TextArea isLoading={useGetEnv.isLoading || useGetEnv.isPending} style="success" text={JSON.stringify(useGetEnv.data, null, 2)} />
         </Section>
     </>)
 }

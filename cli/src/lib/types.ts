@@ -1,6 +1,7 @@
 import { type Mode } from 'fs'
 import { type Environment } from './utils/Environment'
 import { type HookedServerSchemaType } from './schema/HookedSchema'
+import { type ProgramOptions } from './program'
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
@@ -125,6 +126,17 @@ export interface StdinScriptFieldsMapping {
   value: string
 }
 
+export interface RuntimeContext {
+  stdin: StdinResponses
+  env: Environment
+  config: YamlConfig
+  options: ProgramOptions
+  envVars: EnvironmentVariables
+}
+
+export type StdinChoices = string | string[] | boolean[] | number[] | StdinScriptFieldsMapping[] | Record<string, string> |
+CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | null
+
 /** Provides a prompt to the user, to select from a set of choices. */
 export interface StdinScript extends BaseScript {
   /** The prompt provided to the user. */
@@ -132,8 +144,7 @@ export interface StdinScript extends BaseScript {
   /** The default value provided to the user. */
   $default?: string
   /** Provides different choices to the user. Can be a multiline string, array, object, arrays of name/value objects, Scripts, etc. */
-  $choices?: string | string[] | boolean[] | number[] | StdinScriptFieldsMapping[] | Record<string, string> |
-  CmdScript | DockerCmdScript | SSHCmdScript | StdinScript | EnvScript | ResolveScript | InternalScript | null
+  $choices?: StdinChoices
   /** For JSON arrays, name and value can be overridden by specifying alternative JSON paths. */
   $fieldsMapping?: StdinScriptFieldsMapping
   /** A regex filter to apply to the 'name' or values. */
@@ -158,6 +169,10 @@ export type Script = string
 | WritePathScript
 | JobsSerialScript
 
+export interface HasEnvScript extends BaseScript {
+  $env: EnvironmentVariables
+}
+
 export type ScriptAndPaths = [Script, string[]]
 
 export const checkIfRecognisedAsOldScript = (script: any): void => {
@@ -165,6 +180,10 @@ export const checkIfRecognisedAsOldScript = (script: any): void => {
   if (typeof script.$stdin === 'string') {
     throw new Error('Old script format detected. Please use $ask instead of $stdin.')
   }
+}
+
+export const hasEnvScript = (script: any): script is HasEnvScript => {
+  return typeof script !== 'undefined' && isDefined(script.$env)
 }
 
 export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {

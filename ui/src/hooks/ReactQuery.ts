@@ -1,10 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRunTimer } from "./useRunTimer";
-import { ExecuteScriptFunction, ExecuteScriptParam, Script, StdinScript, TopLevelScripts, hasEnvScript, isDefined, isStdinScript } from "@/components/types";
+import { EnvironmentVariables, ExecuteScriptFunction, ExecuteScriptParam, Script, StdinScript, TopLevelScripts, hasEnvScript, isDefined, isStdinScript } from "@/components/types";
 import React from "react";
+
+export interface InvocationResult {
+  /** True, if Script finished successfully. */
+  success: boolean
+  /** ISO Date when Script finished. */
+  finishedAt: number
+  /** The resolved Env Names. */
+  envNames: string[]
+  /** The resolved Script Path. */
+  paths: string[]
+  /** The resolved Environment Variables. */
+  envVars: EnvironmentVariables
+  /** Script outputs. */
+  outputs: string[]
+}
+
+export interface TimedInvocationResult extends InvocationResult {
+  isLoading: boolean
+  durationMillis: number
+}
 
 export const KEYS = {
   // apiKey: () => ['apiKey'],
+  getLastResults: () => ['doExecute', 'results', 'last']
 }
 
 export const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
@@ -38,6 +59,7 @@ export const useLogin = () => {
         },
         body: JSON.stringify(postData)
       }).then(async res => await errorHandler(res))
+      .catch(err => Promise.reject(new Error("Error contacting server")))
     },
     onSuccess: () => {
       queryClient.invalidateQueries()
@@ -117,11 +139,14 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
   }
   
   export const useExecuteScript = () => {
+    const queryClient = useQueryClient()
     console.debug('Use execute script...', { baseUrl })
     return useMutation<any, Error, UseExecuteScriptParams>({
       mutationKey: [baseUrl],
       mutationFn: (postData: UseExecuteScriptParams) => {
         const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
+        const startTime = Date.now()
+        queryClient.resetQueries({ queryKey: KEYS.getLastResults() })
         return fetch(url, {
           method: 'post',
           credentials: 'include',
@@ -131,6 +156,12 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
           },
           body: JSON.stringify(postData.env ?? {})
         }).then(async res => await errorHandler(res))
+          .then(result => {
+            queryClient.setQueryData(KEYS.getLastResults(), { ...result, durationMillis: Date.now() - startTime, isLoading: false})
+          })
+          .catch(error => {
+            queryClient.setQueryData(KEYS.getLastResults(), { success: false, outputs: [error.message], durationMillis: Date.now() - startTime, isLoading: false})
+          })
       }
     })
   }
@@ -139,50 +170,79 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
 
   /** Wraps the execution in a timer, and ensure no parallel requests. */
   export const useExecuteScriptWrapper = (scripts: TopLevelScripts | undefined) => { //, askUserQuestionHandler: AskUserQuestionHandler) => {
+    const queryClient = useQueryClient()
     const doExecute = useExecuteScript()
     const runTimer = useRunTimer()
     /** Attempts to run the script. */
     const executeScript: ExecuteScriptFunction = React.useCallback(async (scriptPath: ExecuteScriptParam) => {
+      try {
         // find the config for the provided script...
+
+        // TODO wrap this in backend call.
         let prev = scripts
-        scriptPath.forEach(path => {
+        for (const path of scriptPath) {
           if (prev) {
-            const entryPair = Object.entries(prev).find(([k, v]) => {
+            // look through children for a match
+            const foundMatch = Object.entries(prev).find(([k, v]) => {
               if (k.toLowerCase().startsWith(path.toLowerCase())) {
                 return v;
               }
             });
-            prev = isDefined(entryPair) ? entryPair[1] : undefined
+            prev = isDefined(foundMatch) ? foundMatch[1] : undefined
+            if (isDefined(prev) && isDefined((prev as any).$cmd)) {
+              break;
+            }
           }
-        })
+        }
+        // scriptPath.forEach(path => {
+        // })
         const scriptConfig = prev
+
+        if (!isDefined(scriptConfig)) {
+          throw new Error(`Script not found. Was it removed? - '${scriptPath}'`)
+        } else {
+          console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
+        }
         
         // ask user for inputs...
         const env: Record<string, string> = {}
         if (hasEnvScript(scriptConfig)) {
-          for (const [k, v] of Object.entries(scriptConfig.$env)) {
-            if (isStdinScript(v)) {
-              const answer = prompt(v.$ask);
-              if (!answer) return
-              env[k] = answer
-            }
-          }
-        }
+          console.debug(`Running script modal: ${scriptPath}`)
+          // show the modal
+          queryClient.setQueryData(['showExecuteScriptModal'], scriptConfig)
+        } else {
+          console.debug(`Running script: ${scriptPath}`)
 
-        // execute the script
-        console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
-        if (doExecute.isPending) {
-            console.debug('Already executing script, skipping...')
-            return
+          // execute the script
+          if (doExecute.isPending) {
+              console.debug('Already executing script, skipping...')
+              return
+          }
+          if (runTimer.isRunning) {
+              runTimer.stop()
+          }
+          // runTimer.start()
+          doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
         }
-        if (runTimer.isRunning) {
-            runTimer.stop()
-        }
-        runTimer.start()
-        doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
-            .then(runTimer.stop)
-            .catch(runTimer.stop)
-    }, [doExecute, runTimer, scripts])
+      } catch (err: any) {
+        queryClient.setQueryData(KEYS.getLastResults(), { success: false, durationMillis: 0, outputs: [err.message]})
+      }
+    }, [doExecute, runTimer, scripts, queryClient])
 
     return { executeScript, runTimer, doExecute}
   }
+
+export const useClearLastResult = () => {
+  const queryClient = useQueryClient()
+  const clear = React.useCallback(() => {
+    queryClient.resetQueries({ queryKey: KEYS.getLastResults() })
+  }, [queryClient])
+  return { clear }
+}
+
+export const useLastResult = () => {
+  const queryClient = useQueryClient()
+  return useQuery<TimedInvocationResult>({ queryKey: KEYS.getLastResults(), queryFn: () => {
+    return queryClient.getQueryData(KEYS.getLastResults()) as TimedInvocationResult
+  } })
+}

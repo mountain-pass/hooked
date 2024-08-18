@@ -38,7 +38,7 @@ export const DisplayRow = ({ name, scriptPath }: {
         if (isString(scriptPath)) {
             executeScript(scriptPath)
         }
-    }, [scriptPath])
+    }, [scriptPath, executeScript])
 
     return (
         <div className="flex max-w-full w-full">

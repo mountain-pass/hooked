@@ -13,7 +13,7 @@ export const mergeEnvVars = (baseEnvVars1: EnvironmentVariables, addEnvVars2: En
     // to facilitate server/batch mode.
     if (isString(baseEnvVars1[key]) && isStdinScript(value)) {
       // don't overwrite key... continue...
-      logger.debug(`Not overwriting ${key} value=${baseEnvVars1[key] as string} with stdin script ${JSON.stringify(value)}`)
+      logger.debug(`Not overwriting ${key} value=${baseEnvVars1[key]} with stdin script ${JSON.stringify(value)}`)
       continue
     } else {
       logger.debug(`Overwriting ${key} value=${baseEnvVars1[key] as string} with stdin script ${JSON.stringify(value)}`)

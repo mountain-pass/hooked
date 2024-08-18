@@ -7,15 +7,17 @@ import loaders from '../common/loaders.js'
 import { findScript } from '../config.js'
 import defaults from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
+import { type HookedServerDashboardSchemaType } from '../schema/HookedSchema.js'
+import { StdinChoicesResolver } from '../scriptExecutors/resolvers/StdinChoicesResolver.js'
 import {
   isDefined,
+  isStdinScript,
   sortCaseInsensitive,
   type YamlConfig
 } from '../types.js'
 import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
-import { AuthorisedRequest, hasRole, globalErrorHandler } from './globalErrorHandler.js'
-import { type HookedServerDashboardSchemaType, HookedServerSchemaType } from '../schema/HookedSchema.js'
+import { globalErrorHandler, hasRole } from './globalErrorHandler.js'
 
 const getLastModifiedTimeMs = async (filepath: string): Promise<number> => {
   return (await fsPromise.stat(filepath)).mtimeMs
@@ -197,6 +199,39 @@ const router = async (
     const scriptPath = req.params.scriptPath.split(' ')
     const [script, paths] = await findScript(config, scriptPath, options)
     res.json({ script, paths })
+  }))
+
+  /**
+   * Fetch a single, script's, environment value config (with resolved choices, by env name)
+   */
+  app.get('/resolveEnvValue/:env/script/:scriptPath/env/:envKeyName', globalErrorHandler(async (req, res) => {
+    const envKeyName = req.params.envKeyName
+    const scriptPath = req.params.scriptPath.split(' ')
+
+    // setup
+    const { env, envVars } = await loaders.initialiseEnvironment(systemProcessEnvs, options, config)
+
+    // find the script to execute...
+    const rootScriptAndPaths = await findScript(config, scriptPath, options)
+    const script: any = rootScriptAndPaths[0]
+    if (isDefined(script.$env)) {
+      const envValueScript = script.$env[envKeyName]
+
+      if (isStdinScript(envValueScript)) {
+        const choices = await StdinChoicesResolver(envKeyName, envValueScript, {
+          config,
+          env,
+          envVars,
+          options,
+          stdin: req.body ?? {}
+        })
+
+        return res.json({ ...envValueScript, $choices: choices })
+      } else if (isDefined(envValueScript)) {
+        return res.json({ ...envValueScript })
+      }
+    }
+    return res.json({ message: 'Invalid script or environment key name.' }).status(400).end()
   }))
 
   /**

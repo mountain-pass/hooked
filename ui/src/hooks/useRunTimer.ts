@@ -18,11 +18,12 @@ export const useRunTimer = () => {
       }, 1000)
     }
   
-    const stop = () => {
+    const stop = (): number => {
       endTime.current = Date.now()
       clearInterval(intervalRef.current)
       setDurationMs(Date.now() - startTime.current)
       setIsRunning(false)
+      return endTime.current
     }
   
     return { isRunning, durationMs, start, stop }

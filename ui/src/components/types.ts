@@ -148,10 +148,6 @@ export interface InternalScript extends BaseScript {
   $internal: (options: { key: string, stdin: StdinResponses }) => Promise<string>
 }
 
-export interface HasEnvScript extends BaseScript {
-  $env: EnvironmentVariables
-}
-
 export type Script = string
 | CmdScript
 | DockerCmdScript
@@ -165,8 +161,12 @@ export type Script = string
 
 export type ScriptAndPaths = [Script, string[]]
 
+export interface HasEnvScript extends BaseScript {
+  $env: EnvironmentVariables
+}
+
 export const hasEnvScript = (script: any): script is HasEnvScript => {
-  return isDefined(script.$env)
+  return typeof script !== 'undefined' && isDefined(script.$env)
 }
 
 export const isJobsSerialScript = (script: Script): script is JobsSerialScript => {

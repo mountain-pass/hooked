@@ -32,14 +32,14 @@ export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = fal
         } else if (useGetScripts.isSuccess && adminOnly && !useGetScripts.data.accessRoles.includes('admin')) {
             setShowLogin(true)
         }
-    }, [useGetScripts.isError])
+    }, [useGetScripts.isError, adminOnly, useGetScripts.data?.accessRoles, useGetScripts.isSuccess])
 
     // if success, hide login
     React.useEffect(() => {
         if (useGetScripts.isSuccess && (!adminOnly || useGetScripts.data.accessRoles.includes('admin'))) {
             setShowLogin(false)
         }
-    }, [useGetScripts.isSuccess])
+    }, [useGetScripts.isSuccess, adminOnly, useGetScripts.data?.accessRoles])
 
     return (<>
 
@@ -74,13 +74,13 @@ export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = fal
         </div >
 
         {/* global loading spinner */}
-        <div className={`animate-fade-in-out ${isFetching > 0 || isMutating > 0 ? 'show' : ''} fixed bottom-0 right-0 pb-6 pr-6 flex items-end justify-end z-10`}>
+        <div className={`animate-fade-in-out ${isFetching > 0 || isMutating > 0 ? 'show' : ''} fixed bottom-0 left-0 pb-6 pl-6 flex items-end justify-end z-10`}>
             <Spinner className="w-10 h-10" />
         </div>
 
         {/* api key */}
 
-        <Modal show={showLogin} setShow={setShowLogin} allowBackgroundClose={false}>
+        <Modal show={showLogin} setShow={setShowLogin} enableBackgroundClose={false}>
             {LoginPrompt}
         </Modal>
 

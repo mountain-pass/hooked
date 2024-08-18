@@ -41,6 +41,7 @@ import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
+import { StdinChoicesResolver } from './resolvers/StdinChoicesResolver.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
@@ -375,7 +376,7 @@ export const resolveJobsSerialScript = async (
   return await executeScriptsSequentially(executableScriptsAndPaths, stdin, env, config, options, envVars, true, false)
 }
 
-class InvalidConfigError extends Error {
+export class InvalidConfigError extends Error {
   constructor (m: string) {
     super(m)
 
@@ -384,6 +385,9 @@ class InvalidConfigError extends Error {
   }
 }
 
+/**
+ * This resolves a single environment StdinScript.
+ */
 export const resolveStdinScript = async (
   key: string,
   script: StdinScript,
@@ -400,90 +404,100 @@ export const resolveStdinScript = async (
     // else if we already have a value in the environment, use that
     stdin[key] = env.resolveByKey(key)
   } else {
-    let choices: any = script.$choices
-    // resolve choices if they are a script
-    if (isScript(choices)) {
-      choices = await resolveScript(key, choices, stdin, env, config, options, envVars, false, false)
-      if (typeof choices === 'string') {
-        try {
-          // try (STRICT!) json to parse input...
-          choices = JSON.parse(choices)
-        } catch (err: any) {
-          // could not parse as json, use string instead...
-        }
-      }
-    }
+    const choices = await StdinChoicesResolver(key, script, {
+      config,
+      env,
+      envVars,
+      options,
+      stdin
+    })
 
-    if (isString(choices)) {
-      choices = (choices).split('\n').map((choice: string | boolean | number) => ({ name: String(choice), value: String(choice) }))
-    } else if (isObject(choices) && !Array.isArray(choices)) {
-      choices = Object.entries(choices).map(([name, value]) => ({ name, value }))
-    } else if (Array.isArray(choices)) {
-      if (choices.length === 0) {
-        throw new Error('Invalid $choices, must be a non-empty array')
-      }
-      if (isObject(choices[0]) || isStdinScriptFieldsMapping(choices[0])) {
-        // do nothing
-      } else {
-        // ensure name is a string
-        choices = choices.map((choice: string | boolean | number | any) => {
-          return { name: String(choice), value: String(choice) }
-        })
-      }
-    }
+    // let choices: any = script.$choices
 
-    // apply field mappings
-    if (isStdinScriptFieldsMapping(script.$fieldsMapping)) {
-      const mapping = script.$fieldsMapping
-      choices = choices.map((choice: any) => {
-        const newChoice: any = {}
-        // if a 'name' mapping is provided, check that it resolves to a defined object
-        if (isString(mapping.name)) {
-          if (isDefined(choice[mapping.name])) {
-            newChoice.name = String(choice[mapping.name])
-          } else if (isDefined(jp.value(choice, mapping.name))) {
-            newChoice.name = String(jp.value(choice, mapping.name))
-          } else {
-            throw new InvalidConfigError(`Invalid $fieldsMapping.name, '${mapping.name}' does not resolve - ${JSON.stringify(choice)}`)
-          }
-        }
-        // if a 'value' mapping is provided, check that it resolves to a defined object
-        if (isString(mapping.value)) {
-          if (isDefined(choice[mapping.value])) {
-            newChoice.value = String(choice[mapping.value])
-          } else if (isDefined(jp.value(choice, mapping.value))) {
-            newChoice.value = String(jp.value(choice, mapping.value))
-          } else {
-            throw new InvalidConfigError(`Invalid $fieldsMapping.value, '${mapping.value}' does not resolve - ${JSON.stringify(choice)}`)
-          }
-        }
-        return newChoice
-      })
-    }
+    // // resolve choices if they are a script
+    // if (isScript(choices)) {
+    //   choices = await resolveScript(key, choices, stdin, env, config, options, envVars, false, false)
+    //   if (typeof choices === 'string') {
+    //     try {
+    //       // try (STRICT!) json to parse input...
+    //       choices = JSON.parse(choices)
+    //     } catch (err: any) {
+    //       // could not parse as json, use string instead...
+    //     }
+    //   }
+    // }
 
-    // apply filters and sorting
-    if (typeof choices !== 'undefined' && choices !== null && choices.length > 0) {
-      // sort, if requested
-      if (script.$sort === 'alpha') {
-        choices.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-      } else if (script.$sort === 'alphaDesc') {
-        choices.sort((a: any, b: any) => b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }))
-      }
-      // filter, if requested
-      if (isString(script.$filter)) {
-        const regexStr = script.$filter
-        // by default, assume not a fully qualified regex...
-        let pattern = regexStr
-        let flags = 'im' // NOTE using 'g' will save state!
-        // if a fully qualified regex, parse it
-        if (regexStr.startsWith('/')) {
-          pattern = regexStr.slice(1, regexStr.lastIndexOf('/'))
-          flags = regexStr.slice(regexStr.lastIndexOf('/') + 1)
-        }
-        const regex = new RegExp(pattern, flags)
-        choices = choices.filter((choice: any) => regex.test(choice.name))
-      }
-    }
+    // // post process choices
+    // if (isString(choices)) {
+    //   choices = (choices).split('\n').map((choice: string | boolean | number) => ({ name: String(choice), value: String(choice) }))
+    // } else if (isObject(choices) && !Array.isArray(choices)) {
+    //   choices = Object.entries(choices).map(([name, value]) => ({ name, value }))
+    // } else if (Array.isArray(choices)) {
+    //   if (choices.length === 0) {
+    //     throw new Error('Invalid $choices, must be a non-empty array')
+    //   }
+    //   if (isObject(choices[0]) || isStdinScriptFieldsMapping(choices[0])) {
+    //     // do nothing
+    //   } else {
+    //     // ensure name is a string
+    //     choices = choices.map((choice: string | boolean | number | any) => {
+    //       return { name: String(choice), value: String(choice) }
+    //     })
+    //   }
+    // }
+
+    // // apply field mappings
+    // if (isStdinScriptFieldsMapping(script.$fieldsMapping)) {
+    //   const mapping = script.$fieldsMapping
+    //   choices = choices.map((choice: any) => {
+    //     const newChoice: any = {}
+    //     // if a 'name' mapping is provided, check that it resolves to a defined object
+    //     if (isString(mapping.name)) {
+    //       if (isDefined(choice[mapping.name])) {
+    //         newChoice.name = String(choice[mapping.name])
+    //       } else if (isDefined(jp.value(choice, mapping.name))) {
+    //         newChoice.name = String(jp.value(choice, mapping.name))
+    //       } else {
+    //         throw new InvalidConfigError(`Invalid $fieldsMapping.name, '${mapping.name}' does not resolve - ${JSON.stringify(choice)}`)
+    //       }
+    //     }
+    //     // if a 'value' mapping is provided, check that it resolves to a defined object
+    //     if (isString(mapping.value)) {
+    //       if (isDefined(choice[mapping.value])) {
+    //         newChoice.value = String(choice[mapping.value])
+    //       } else if (isDefined(jp.value(choice, mapping.value))) {
+    //         newChoice.value = String(jp.value(choice, mapping.value))
+    //       } else {
+    //         throw new InvalidConfigError(`Invalid $fieldsMapping.value, '${mapping.value}' does not resolve - ${JSON.stringify(choice)}`)
+    //       }
+    //     }
+    //     return newChoice
+    //   })
+    // }
+
+    // // apply filters and sorting
+    // if (typeof choices !== 'undefined' && choices !== null && choices.length > 0) {
+    //   // sort, if requested
+    //   if (script.$sort === 'alpha') {
+    //     choices.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+    //   } else if (script.$sort === 'alphaDesc') {
+    //     choices.sort((a: any, b: any) => b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }))
+    //   }
+    //   // filter, if requested
+    //   if (isString(script.$filter)) {
+    //     const regexStr = script.$filter
+    //     // by default, assume not a fully qualified regex...
+    //     let pattern = regexStr
+    //     let flags = 'im' // NOTE using 'g' will save state!
+    //     // if a fully qualified regex, parse it
+    //     if (regexStr.startsWith('/')) {
+    //       pattern = regexStr.slice(1, regexStr.lastIndexOf('/'))
+    //       flags = regexStr.slice(regexStr.lastIndexOf('/') + 1)
+    //     }
+    //     const regex = new RegExp(pattern, flags)
+    //     choices = choices.filter((choice: any) => regex.test(choice.name))
+    //   }
+    // }
 
     // check if already resolved in environment variables...
     if (env.isResolvableByKey(key)) {
@@ -493,8 +507,7 @@ export const resolveStdinScript = async (
     }
 
     if (options.batch === true) {
-      throw new Error('Interactive prompts not supported in batch mode. ' +
-        `Could not retrieve stdin for key '${key}'.`)
+      throw new Error(`Could not retrieve stdin for key (interactive prompts not supported in batch mode). key='${key}'.`)
     }
     // resolve env vars in name and default...
     const newMessage = resolveResolveScript('', { $resolve: script.$ask }, env, false)

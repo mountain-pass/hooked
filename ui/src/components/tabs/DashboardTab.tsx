@@ -5,6 +5,7 @@ import React from "react"
 import { TextArea } from "../common/TextArea"
 import { DisplayRow } from "../scripts/DisplayRow"
 import { TopLevelScripts } from "../types"
+import { ResultsSection } from "../ResultsSection"
 
 export interface DashboardConfiguration {
     title: string,
@@ -28,7 +29,7 @@ export const DashboardTab = ({ visible, dashboard }: {
     const { doExecute, runTimer, executeScript } = useExecuteScriptWrapper(useGetScripts.data)
 
     // reset the log on tab change
-    React.useEffect(() => doExecute.reset(), [dashboard])
+    React.useEffect(() => doExecute.reset(), [dashboard, doExecute])
 
     // useMemo
 
@@ -62,17 +63,6 @@ export const DashboardTab = ({ visible, dashboard }: {
     </div>
 
         {/* Results */}
-        <Section visible={visible && (doExecute.isSuccess || doExecute.isPending || doExecute.isError)} className="flex-1">
-            <div className="flex items-start justify-between">
-                <h2>Results</h2>
-                <div className="flex gap-3 items-center">
-                    <GreyText>{`${(runTimer.durationMs / 1000).toFixed(3)} seconds`}</GreyText>
-                    <BlackButton title="Clear Results" className="rounded" size="md" onClick={() => doExecute.reset()}>Clear</BlackButton>
-                </div>
-            </div>
-
-            <TextArea {...doExecute} renderText={(data) => `Success:\n${(data?.outputs ?? []).join('\n')}`} />
-
-        </Section>
+        <ResultsSection visible={true} />
     </>)
 }
