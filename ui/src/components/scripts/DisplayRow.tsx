@@ -9,7 +9,7 @@ export const DisplayRow = ({ name, scriptPath }: {
     scriptPath: string,
 }) => {
     
-    const doGet = useGet<InvocationResult>(`/api/run/default/${scriptPath}`, !!scriptPath, 0)
+    const doGet = useGet<InvocationResult>('display', `/api/run/default/${scriptPath}`, !!scriptPath, 60_000)
     console.log(`%cRe-rendering DisplayRow`, 'color:magenta;')
 
     return (

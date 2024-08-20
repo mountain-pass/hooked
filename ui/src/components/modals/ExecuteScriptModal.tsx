@@ -25,7 +25,7 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
         return isDefined(envEntries) && isDefined(envEntries[nextEnvIndex]) ? envEntries[nextEnvIndex][0] : ''
     }, [envEntries, nextEnvIndex])
 
-    const currentEnvConfig = useGet<StdinScript>(`/api/resolveEnvValue/default/script/${scriptConfig._scriptPath}/env/${currentEnvKey}`, !!show, 0)
+    const currentEnvConfig = useGet<StdinScript>('execute', `/api/resolveEnvValue/default/script/${scriptConfig._scriptPath}/env/${currentEnvKey}`, !!show, 0)
 
     const onNextEnv = () => {
       setNextEnvIndex(ps => ps + 1)

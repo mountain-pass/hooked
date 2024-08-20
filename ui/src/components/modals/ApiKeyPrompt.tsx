@@ -5,10 +5,15 @@ import { Input } from '../common/Input'
 import { BlackButton, GreyText, Section } from '../components'
 import { TopLevelScripts } from '../types'
 
+/**
+ * THIS IS THE OLD LOGIN SCREEN, WHERE WE USED TO USE AN API KEY (STILL PRESENT!)
+ * @param param0 
+ * @returns 
+ */
 export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, setShowLogin: (show: boolean) => void }) => {
 
     const [apiKey, setApiKey] = React.useState<string>('')
-    const useGetScripts = useGet<TopLevelScripts>('/api/scripts', showLogin)
+    const useGetScripts = useGet<TopLevelScripts>('meta', '/api/scripts', showLogin)
 
     // refs
 

@@ -7,7 +7,7 @@ import React from "react"
 
 
 export const TriggersTab = ({ visible }: { visible: boolean }) => {
-    const useGetTriggers = useGet<Triggers>('/api/triggers', visible)
+    const useGetTriggers = useGet<Triggers>('meta', '/api/triggers', visible)
     const [showEdit, setShowEdit] = React.useState<boolean>(false)
 
     const onEdit = (name: string, trigger: CronTrigger) => {

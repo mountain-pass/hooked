@@ -15,7 +15,7 @@ export const ScriptsTab = ({ visible }: {
     visible: boolean,
 }) => {
 
-    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
+    const useGetScripts = useGet<TopLevelScripts>('meta', `/api/scripts`, visible)
     const isTouchScreen = typeof window === 'undefined' ? false : window.matchMedia("(pointer: coarse)").matches
     const refSearchScript = React.useRef<HTMLInputElement>(null)
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')

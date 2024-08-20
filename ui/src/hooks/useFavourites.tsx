@@ -19,7 +19,7 @@ export const useFavourites = (): UseFavouritesState => {
 
     React.useEffect(() => {
         queryClient.setQueryData(KEYS.cachedFavourites(), favourites)
-    }, [favourites])
+    }, [favourites, queryClient])
 
     // utility functions
 

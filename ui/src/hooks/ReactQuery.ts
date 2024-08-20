@@ -24,6 +24,8 @@ export interface TimedInvocationResult extends InvocationResult {
 }
 
 export const KEYS = {
+  getCategory: (category: UseGetCagtegories) => ['useGet', category],
+  getCategoryAndUrl: (category: UseGetCagtegories, url: string) => ['useGet', category, url],
   getLastResults: () => ['doExecute', 'results', 'last'],
   executeScript: () => ['doExecute', 'results', 'current'],
   showExecuteModal: () => ['showExecuteScriptModal'],
@@ -87,25 +89,28 @@ export const useLogout = () => {
   })
 }
 
+type UseGetCagtegories = 'auth' | 'meta' | 'execute' | 'display'
+
 /**
  * Fetches data from the given URL using a GET request with the given bearer token.
  * @param url 
  * @param bearerToken 
  * @returns 
  */
-export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchInterval = 10_000) => {
+export const useGet = <ResponseDataType>(category: UseGetCagtegories, url: string, enabled: boolean, refetchInterval = 10_000) => {
     const queryClient = useQueryClient()
     if (enabled) {
       console.debug(`%cuseGet('${url}')`, "color:grey;")
     }
     return useQuery<any, Error, ResponseDataType, any[]>({
-      queryKey: [url],
+      queryKey: KEYS.getCategoryAndUrl(category, url),
       queryFn: ({ signal }) => {
         return fetch(`${baseUrl}${url}`, {
           method: 'get',
           credentials: 'include',
           signal
         }).then(async res => {
+          // checks the data for equality, and if so, returns the old object, which prevents trigger a refresh.
           const newData = await errorHandler(res)
           const oldData = queryClient.getQueryData([url]);
           const newString = JSON.stringify(Object.entries(newData ?? {}).sort());
@@ -170,6 +175,8 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
           .then(result => {
             const invResult: TimedInvocationResult = { ...result, durationMillis: Date.now() - startTime, isLoading: false };
             queryClient.setQueryData(KEYS.getLastResults(), invResult)
+            // refetch display values
+            queryClient.invalidateQueries({ queryKey: KEYS.getCategory('display') })
             return result
           })
           .catch(error => {
@@ -182,75 +189,6 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
     })
   }
 
-  export type AskUserQuestionHandler = (config: StdinScript) => Promise<string>
-
-  /** Wraps the execution in a timer, and ensure no parallel requests. */
-  export const useExecuteScriptWrapper = (scripts: TopLevelScripts | undefined) => { //, askUserQuestionHandler: AskUserQuestionHandler) => {
-    const queryClient = useQueryClient()
-    const doExecute = useExecuteScript()
-    // const runTimer = useRunTimer()
-    /** Attempts to run the script. */
-    const executeScript: ExecuteScriptFunction = React.useCallback(async (scriptPath: ExecuteScriptParam): Promise<TimedInvocationResult | undefined> => {
-      try {
-        // find the config for the provided script...
-
-        // TODO wrap this in backend call.
-        let prev = scripts
-        for (const path of scriptPath) {
-          if (prev) {
-            // look through children for a match
-            const foundMatch = Object.entries(prev).find(([k, v]) => {
-              if (k.toLowerCase().startsWith(path.toLowerCase())) {
-                return v;
-              }
-            });
-            prev = isDefined(foundMatch) ? foundMatch[1] : undefined
-            if (isDefined(prev) && isDefined((prev as any).$cmd)) {
-              break;
-            }
-          }
-        }
-        // scriptPath.forEach(path => {
-        // })
-        const scriptConfig = prev
-
-        if (!isDefined(scriptConfig)) {
-          throw new Error(`Script not found. Was it removed? - '${scriptPath}'`)
-        // } else {
-        //   console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
-        }
-        
-        // ask user for inputs...
-        const env: Record<string, string> = {}
-        if (hasEnvScript(scriptConfig)) {
-          console.debug(`Running script modal: ${scriptPath}`)
-          // show the modal
-          queryClient.setQueryData(KEYS.showExecuteModal(), scriptConfig)
-        } else {
-
-          // execute the script
-          if (doExecute.isPending) {
-              console.debug('%cAlready executing script, skipping...', 'color:grey;')
-              return
-          } else {
-            console.debug(`%cRunning script: ${scriptPath}`, 'color:grey;')
-          }
-          // if (runTimer.isRunning) {
-          //     runTimer.stop()
-          // }
-          // runTimer.start()
-          return await doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
-        }
-      } catch (err: any) {
-        const result: TimedInvocationResult = { success: false, durationMillis: 0, outputs: [err.message], finishedAt: Date.now(), envNames: [], envVars: {}, isLoading: false, paths: [] };
-        queryClient.setQueryData(KEYS.getLastResults(), result)
-        return result
-      }
-    }, [queryClient, doExecute.isPending, doExecute.mutateAsync])
-
-    return { executeScript, doExecute}
-  }
-
 export const useClearLastResult = () => {
   const queryClient = useQueryClient()
   const clear = React.useCallback(() => {
@@ -260,8 +198,5 @@ export const useClearLastResult = () => {
 }
 
 export const useLastResult = () => {
-  const queryClient = useQueryClient()
-  return useQuery<TimedInvocationResult>({ queryKey: KEYS.getLastResults(), queryFn: () => {
-    return queryClient.getQueryData(KEYS.getLastResults()) as TimedInvocationResult
-  } })
+  return useCacheValue<TimedInvocationResult>(KEYS.getLastResults())
 }

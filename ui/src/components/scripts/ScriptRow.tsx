@@ -19,7 +19,7 @@ export const ScriptRow = ({ name, disabled, showFavourites, scriptPath }: Script
     const useExecute = useExecuteScript()
     const { isFavourite, toggleFavourite } = useFavourites()
     const isCurrentFavourite = React.useMemo(() => isFavourite(scriptPath), [isFavourite, scriptPath])
-    const scriptConfig = useGet<Script>(`/api/scripts/${scriptPath}`, !disabled, 0)
+    const scriptConfig = useGet<Script>('meta', `/api/scripts/${scriptPath}`, !disabled, 0)
 
     const requiresModal = React.useMemo(() => {
         return hasEnvScript(scriptConfig.data) && Object.values(scriptConfig.data.$env).some((v: any) => isDefined(v.$ask))

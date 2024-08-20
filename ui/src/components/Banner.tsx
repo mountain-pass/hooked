@@ -1,13 +1,11 @@
 import { useGet, useLogout, useReloadConfiguration } from "@/hooks/ReactQuery"
-import { useIsFetching, useIsMutating } from "@tanstack/react-query"
 import React from "react"
 import { TbLogout, TbReload } from "react-icons/tb"
-import { Spinner } from "./Spinner"
+import { GlobalSpinner } from "./GlobalSpinner"
 import { BlackButton } from "./components"
 import { LoginPrompt } from "./modals/Login"
 import { Modal } from "./modals/Modal"
-import { AuthorisedUser, TopLevelScripts } from "./types"
-import { GlobalSpinner } from "./GlobalSpinner"
+import { AuthorisedUser } from "./types"
 
 export interface BannerProps {
     showRefresh?: boolean
@@ -20,7 +18,7 @@ export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = fal
 
     const [showLogin, setShowLogin] = React.useState(true)
 
-    const useGetScripts = useGet<AuthorisedUser>(`/api/me`, true, 0)
+    const useGetScripts = useGet<AuthorisedUser>('auth', `/api/me`, true, 0)
     const useReload = useReloadConfiguration()
     const doLogoout = useLogout()
 
