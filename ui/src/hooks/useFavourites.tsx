@@ -1,5 +1,7 @@
 import React from "react"
 import { useLocalStorageBackedStateV4 } from "./useLocalStorageBackedStateV4"
+import { useQueryClient } from "@tanstack/react-query"
+import { KEYS } from "./ReactQuery"
 
 export interface UseFavouritesState {
     favourites: string[]
@@ -11,7 +13,15 @@ export interface UseFavouritesState {
 export const useFavourites = (): UseFavouritesState => {
 
     const [favourites, setFavourites] = useLocalStorageBackedStateV4<string[]>(`favourites`, [])
-    // const [favourites, setFavourites] = React.useState<string[]>([])
+    const queryClient = useQueryClient()
+
+    // onload
+
+    React.useEffect(() => {
+        queryClient.setQueryData(KEYS.cachedFavourites(), favourites)
+    }, [favourites])
+
+    // utility functions
 
     const isFavourite = React.useCallback((scriptPath: string): boolean => {
         return (favourites ?? []).includes(scriptPath) ?? false

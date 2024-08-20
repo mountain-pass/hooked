@@ -1,14 +1,12 @@
+import { baseUrl, useGet } from '@/hooks/ReactQuery'
 import React from 'react'
-import { BlackButton, GreyText, Section } from '../components'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { KEYS, baseUrl, useGet } from '@/hooks/ReactQuery'
 import { TbLockCancel, TbLockCheck } from 'react-icons/tb'
-import { TopLevelScripts } from '../types'
 import { Input } from '../common/Input'
+import { BlackButton, GreyText, Section } from '../components'
+import { TopLevelScripts } from '../types'
 
 export const ApiKeyPrompt = ({ showLogin, setShowLogin }: { showLogin: boolean, setShowLogin: (show: boolean) => void }) => {
 
-    const queryClient = useQueryClient()
     const [apiKey, setApiKey] = React.useState<string>('')
     const useGetScripts = useGet<TopLevelScripts>('/api/scripts', showLogin)
 

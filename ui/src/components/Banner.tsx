@@ -7,6 +7,7 @@ import { BlackButton } from "./components"
 import { LoginPrompt } from "./modals/Login"
 import { Modal } from "./modals/Modal"
 import { AuthorisedUser, TopLevelScripts } from "./types"
+import { GlobalSpinner } from "./GlobalSpinner"
 
 export interface BannerProps {
     showRefresh?: boolean
@@ -15,11 +16,9 @@ export interface BannerProps {
 }
 
 export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = false }: BannerProps) => {
-    console.debug('Re-rendering Banner...')
+    console.debug('%cRe-rendering Banner', 'color:magenta;')
 
     const [showLogin, setShowLogin] = React.useState(true)
-    const isFetching = useIsFetching()
-    const isMutating = useIsMutating()
 
     const useGetScripts = useGet<AuthorisedUser>(`/api/me`, true, 0)
     const useReload = useReloadConfiguration()
@@ -74,9 +73,7 @@ export const Banner = ({ showLogout = true, showRefresh = false, adminOnly = fal
         </div >
 
         {/* global loading spinner */}
-        <div className={`animate-fade-in-out ${isFetching > 0 || isMutating > 0 ? 'show' : ''} fixed bottom-0 left-0 pb-6 pl-6 flex items-end justify-end z-10`}>
-            <Spinner className="w-10 h-10" />
-        </div>
+        <GlobalSpinner />
 
         {/* api key */}
 

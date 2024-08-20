@@ -1,11 +1,7 @@
-import { UseFavouritesState } from "@/hooks/useFavourites"
-import { TbPlayerPlay, TbStar, TbStarFilled, TbActivityHeartbeat } from "react-icons/tb"
-import { BlackButton, ListItem } from "../components"
-import { isDefined, isString } from "../types"
-import { useExecuteScript, useGet } from "@/hooks/ReactQuery"
-import { useRunTimer } from "@/hooks/useRunTimer"
-import React from "react"
-import { useInterval } from "@/hooks/useInterval"
+import { InvocationResult, useGet } from "@/hooks/ReactQuery"
+import { TbActivityHeartbeat } from "react-icons/tb"
+import { TextArea } from "../common/TextArea"
+import { ListItem } from "../components"
 
 
 export const DisplayRow = ({ name, scriptPath }: {
@@ -13,32 +9,8 @@ export const DisplayRow = ({ name, scriptPath }: {
     scriptPath: string,
 }) => {
     
-    const doExecute = useExecuteScript()
-    const [lastResult, setLastResult] = React.useState<any>()
-
-    /** Attempts to run the script. */
-    const executeScript = React.useCallback((scriptPath: string) => {
-        if (doExecute.isPending) {
-            console.debug('Already executing script, skipping...')
-            return
-        }
-        doExecute.mutateAsync({ scriptPath, envNames: 'default', env: {} as Record<string, string> })
-            .then((result) => {
-                setLastResult(result)
-            })
-    }, [doExecute])
-
-    useInterval(() => {
-        if (isString(scriptPath)) {
-            executeScript(scriptPath)
-        }
-    }, 30_000)
-
-    React.useEffect(() => {
-        if (isString(scriptPath)) {
-            executeScript(scriptPath)
-        }
-    }, [scriptPath, executeScript])
+    const doGet = useGet<InvocationResult>(`/api/run/default/${scriptPath}`, !!scriptPath, 0)
+    console.log(`%cRe-rendering DisplayRow`, 'color:magenta;')
 
     return (
         <div className="flex max-w-full w-full">
@@ -48,7 +20,12 @@ export const DisplayRow = ({ name, scriptPath }: {
                     <span className="truncate self-center">{name}</span>
                 </div>
                 <div className="flex w-full overflow-auto">
-                    <pre className="max-sm:m-auto sm:ml-auto">{lastResult?.outputs.join('\n')}</pre>
+                    <TextArea
+                        className="max-sm:m-auto sm:ml-auto"
+                        isLoading={doGet.isLoading}
+                        style={doGet.data?.success ? 'success' : 'error'}
+                        text={doGet.data?.success ? (doGet.data?.outputs.join('\n') || '-') : (doGet.error?.message || 'An error occurred.')}
+                    />
                 </div>
             </ListItem>
         </div>

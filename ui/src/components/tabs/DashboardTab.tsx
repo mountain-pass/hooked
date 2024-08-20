@@ -1,11 +1,10 @@
-import { BlackButton, GreyText, Section } from "@/components/components"
+import { Section } from "@/components/components"
 import { ScriptRow } from "@/components/scripts/ScriptRow"
-import { useExecuteScriptWrapper, useGet } from "@/hooks/ReactQuery"
+import { KEYS } from "@/hooks/ReactQuery"
+import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
-import { TextArea } from "../common/TextArea"
-import { DisplayRow } from "../scripts/DisplayRow"
-import { TopLevelScripts } from "../types"
 import { ResultsSection } from "../ResultsSection"
+import { DisplayRow } from "../scripts/DisplayRow"
 
 export interface DashboardConfiguration {
     title: string,
@@ -24,12 +23,16 @@ export const DashboardTab = ({ visible, dashboard }: {
     visible: boolean,
     dashboard: DashboardConfiguration
 }) => {
-
-    const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
-    const { doExecute, runTimer, executeScript } = useExecuteScriptWrapper(useGetScripts.data)
+    
+    const queryClient = useQueryClient()
+    console.log('%cRe-rendering DashboardTab', 'color:magenta;')
 
     // reset the log on tab change
-    React.useEffect(() => doExecute.reset(), [dashboard, doExecute])
+    React.useEffect(() => {
+        if (!visible) {
+            queryClient.invalidateQueries({ queryKey: KEYS.executeScript() })
+        }
+    }, [visible, queryClient])
 
     // useMemo
 
@@ -46,8 +49,9 @@ export const DashboardTab = ({ visible, dashboard }: {
                         return <ScriptRow
                             key={field.label + i}
                             name={field.label}
-                            script={field.$script.split(' ')}
-                            executeScript={executeScript}
+                            scriptPath={field.$script}
+                            showFavourites={false}
+                            disabled={false}
                         />
                     } else if (field.type === 'display') {
                         return <DisplayRow 

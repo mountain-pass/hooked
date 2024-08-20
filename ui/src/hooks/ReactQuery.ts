@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryFilters, QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRunTimer } from "./useRunTimer";
 import { EnvironmentVariables, ExecuteScriptFunction, ExecuteScriptParam, Script, StdinScript, TopLevelScripts, hasEnvScript, isDefined, isStdinScript } from "@/components/types";
 import React from "react";
@@ -24,15 +24,23 @@ export interface TimedInvocationResult extends InvocationResult {
 }
 
 export const KEYS = {
-  // apiKey: () => ['apiKey'],
-  getLastResults: () => ['doExecute', 'results', 'last']
+  getLastResults: () => ['doExecute', 'results', 'last'],
+  executeScript: () => ['doExecute', 'results', 'current'],
+  showExecuteModal: () => ['showExecuteScriptModal'],
+  cachedFavourites: () => ['favourites']
 }
 
 export const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
-export const useGetValue = (key: string[]) => {
+/**
+ * Generic watcher for a query cache value.
+ */
+export const useCacheValue = <DataType>(queryKey: QueryKey & QueryFilters) => {
   const queryClient = useQueryClient()
-  return useQuery({ queryKey: key, queryFn: () => queryClient.getQueryData(key)})
+  return useQuery<DataType>({
+    queryKey,
+    queryFn: () => queryClient.getQueryData(queryKey) as DataType
+  })
 }
 
 const errorHandler = async (res: Response): Promise<any> => {
@@ -87,14 +95,16 @@ export const useLogout = () => {
  */
 export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchInterval = 10_000) => {
     const queryClient = useQueryClient()
-    console.debug("useGet", url, enabled)
+    if (enabled) {
+      console.debug(`%cuseGet('${url}')`, "color:grey;")
+    }
     return useQuery<any, Error, ResponseDataType, any[]>({
       queryKey: [url],
-      queryFn: () => {
+      queryFn: ({ signal }) => {
         return fetch(`${baseUrl}${url}`, {
           method: 'get',
           credentials: 'include',
-
+          signal
         }).then(async res => {
           const newData = await errorHandler(res)
           const oldData = queryClient.getQueryData([url]);
@@ -108,6 +118,7 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
           }
         })
       },
+      staleTime: refetchInterval * 2,
       refetchInterval,
       retry: 0,
       enabled
@@ -140,11 +151,11 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
   
   export const useExecuteScript = () => {
     const queryClient = useQueryClient()
-    console.debug('Use execute script...', { baseUrl })
     return useMutation<any, Error, UseExecuteScriptParams>({
-      mutationKey: [baseUrl],
+      mutationKey: [KEYS.executeScript()],
       mutationFn: (postData: UseExecuteScriptParams) => {
         const url = `${baseUrl}/api/run/${postData.envNames ?? 'default'}/${postData.scriptPath}`
+        console.log(`%cuseExecuteScript('${url}')`, 'color:yellow;')
         const startTime = Date.now()
         queryClient.resetQueries({ queryKey: KEYS.getLastResults() })
         return fetch(url, {
@@ -157,12 +168,17 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
           body: JSON.stringify(postData.env ?? {})
         }).then(async res => await errorHandler(res))
           .then(result => {
-            queryClient.setQueryData(KEYS.getLastResults(), { ...result, durationMillis: Date.now() - startTime, isLoading: false})
+            const invResult: TimedInvocationResult = { ...result, durationMillis: Date.now() - startTime, isLoading: false };
+            queryClient.setQueryData(KEYS.getLastResults(), invResult)
+            return result
           })
           .catch(error => {
-            queryClient.setQueryData(KEYS.getLastResults(), { success: false, outputs: [error.message], durationMillis: Date.now() - startTime, isLoading: false})
+            const invResult: TimedInvocationResult = { success: false, outputs: [error.message], durationMillis: Date.now() - startTime, finishedAt: Date.now(), envNames: [], envVars: {}, isLoading: false, paths: [] };
+            queryClient.setQueryData(KEYS.getLastResults(), invResult)
           })
-      }
+      },
+      retry: 0,
+      // networkMode: "always"
     })
   }
 
@@ -172,9 +188,9 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
   export const useExecuteScriptWrapper = (scripts: TopLevelScripts | undefined) => { //, askUserQuestionHandler: AskUserQuestionHandler) => {
     const queryClient = useQueryClient()
     const doExecute = useExecuteScript()
-    const runTimer = useRunTimer()
+    // const runTimer = useRunTimer()
     /** Attempts to run the script. */
-    const executeScript: ExecuteScriptFunction = React.useCallback(async (scriptPath: ExecuteScriptParam) => {
+    const executeScript: ExecuteScriptFunction = React.useCallback(async (scriptPath: ExecuteScriptParam): Promise<TimedInvocationResult | undefined> => {
       try {
         // find the config for the provided script...
 
@@ -200,8 +216,8 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
 
         if (!isDefined(scriptConfig)) {
           throw new Error(`Script not found. Was it removed? - '${scriptPath}'`)
-        } else {
-          console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
+        // } else {
+        //   console.debug(`Found script config scriptPath="${JSON.stringify(scriptPath)}"`, scriptConfig, scripts)
         }
         
         // ask user for inputs...
@@ -209,27 +225,30 @@ export const useGet = <ResponseDataType>(url: string, enabled: boolean, refetchI
         if (hasEnvScript(scriptConfig)) {
           console.debug(`Running script modal: ${scriptPath}`)
           // show the modal
-          queryClient.setQueryData(['showExecuteScriptModal'], scriptConfig)
+          queryClient.setQueryData(KEYS.showExecuteModal(), scriptConfig)
         } else {
-          console.debug(`Running script: ${scriptPath}`)
 
           // execute the script
           if (doExecute.isPending) {
-              console.debug('Already executing script, skipping...')
+              console.debug('%cAlready executing script, skipping...', 'color:grey;')
               return
+          } else {
+            console.debug(`%cRunning script: ${scriptPath}`, 'color:grey;')
           }
-          if (runTimer.isRunning) {
-              runTimer.stop()
-          }
+          // if (runTimer.isRunning) {
+          //     runTimer.stop()
+          // }
           // runTimer.start()
-          doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
+          return await doExecute.mutateAsync({ scriptPath: scriptConfig!._scriptPath, envNames: 'default', env })
         }
       } catch (err: any) {
-        queryClient.setQueryData(KEYS.getLastResults(), { success: false, durationMillis: 0, outputs: [err.message]})
+        const result: TimedInvocationResult = { success: false, durationMillis: 0, outputs: [err.message], finishedAt: Date.now(), envNames: [], envVars: {}, isLoading: false, paths: [] };
+        queryClient.setQueryData(KEYS.getLastResults(), result)
+        return result
       }
-    }, [doExecute, runTimer, scripts, queryClient])
+    }, [queryClient, doExecute.isPending, doExecute.mutateAsync])
 
-    return { executeScript, runTimer, doExecute}
+    return { executeScript, doExecute}
   }
 
 export const useClearLastResult = () => {

@@ -3,26 +3,23 @@ import { BlackButton, GreyText, Section } from "@/components/components"
 import { GroupRow } from "@/components/scripts/GroupRow"
 import { ScriptRow } from "@/components/scripts/ScriptRow"
 import { TopLevelScripts, isScript } from "@/components/types"
-import { useExecuteScriptWrapper, useGet } from "@/hooks/ReactQuery"
-import { useFavourites } from "@/hooks/useFavourites"
+import { useGet } from "@/hooks/ReactQuery"
 import { useLocalStorageBackedStateV4 } from "@/hooks/useLocalStorageBackedStateV4"
 import React from "react"
 import { TbArrowBackUp, TbStar, TbStarFilled, TbX } from "react-icons/tb"
-import { Input } from "../common/Input"
-import { TextArea } from "../common/TextArea"
 import { ResultsSection } from "../ResultsSection"
+import { Input } from "../common/Input"
+import { ExecuteScriptModal } from "../modals/ExecuteScriptModal"
 
 export const ScriptsTab = ({ visible }: {
     visible: boolean,
 }) => {
 
     const useGetScripts = useGet<TopLevelScripts>(`/api/scripts`, visible)
-    const { doExecute, runTimer, executeScript } = useExecuteScriptWrapper(useGetScripts.data)
     const isTouchScreen = typeof window === 'undefined' ? false : window.matchMedia("(pointer: coarse)").matches
     const refSearchScript = React.useRef<HTMLInputElement>(null)
     const [searchScripts, setSearchScripts] = useLocalStorageBackedStateV4<string>('searchScripts', '')
     const [showFavourites, setShowFavourites] = useLocalStorageBackedStateV4<boolean>('showFavourites', false)
-    const FavouritesState = useFavourites()
 
     // useMemo
 
@@ -84,6 +81,7 @@ export const ScriptsTab = ({ visible }: {
     }
 
     return (<>
+
         <Section visible={visible} className="flex-1">
             <div className="flex items-start max-sm:justify-end justify-between">
                 <h2 className="max-sm:hidden sm:visible">Scripts</h2>
@@ -95,7 +93,7 @@ export const ScriptsTab = ({ visible }: {
             </div>
 
             {/* Favourites */}
-            <FavouritesSection visible={showFavourites ?? false} executeScript={executeScript} />
+            <FavouritesSection visible={showFavourites ?? false} />
 
             {/* Scripts */}
             <div className={`flex ${showFavourites ? 'hidden' : 'visible'}`}>
@@ -129,13 +127,18 @@ export const ScriptsTab = ({ visible }: {
                             return <ScriptRow
                                 key={name}
                                 name={groupOrJob._scriptPath ?? ''}
-                                script={groupOrJob._scriptPathArray!}
-                                favouritesState={FavouritesState}
-                                executeScript={executeScript}
+                                scriptPath={groupOrJob._scriptPath ?? ''}
+                                showFavourites={true}
+                                disabled={false}
                             />
                         } else {
                             // Script Group
-                            return <GroupRow key={name} name={name} childrenCount={Object.values(groupOrJob).length} selectScriptGroup={selectScriptGroup} />
+                            return <GroupRow 
+                                key={name} 
+                                name={name} 
+                                childrenCount={Object.values(groupOrJob).length} 
+                                selectScriptGroup={selectScriptGroup} 
+                            />
                         }
                     })}
                 {useGetScripts.isLoading && <GreyText>Loading...</GreyText>}
@@ -145,6 +148,6 @@ export const ScriptsTab = ({ visible }: {
         </Section>
 
         {/* Results */}
-        <ResultsSection visible={true} />
+        <ResultsSection visible={visible} />
     </>)
 }

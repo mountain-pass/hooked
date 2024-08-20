@@ -2,6 +2,7 @@ import { QueryFilters, QueryKey, useQuery, useQueryClient } from '@tanstack/reac
 import React from 'react'
 import { Modal, ModalChild } from './Modal'
 import { isDefined } from '../types'
+import { KEYS, useCacheValue } from '@/hooks/ReactQuery'
 
 export type ReactQueryTriggeredModalProps = { 
     className?: string
@@ -16,21 +17,24 @@ export type ReactQueryTriggeredModalProps = {
  * @returns 
  */
 export const ReactQueryTriggeredModal = ({ queryKey, children, showOverride, className = '' }: ReactQueryTriggeredModalProps) => {
+
     const queryClient = useQueryClient()
-    const showQuery = useQuery<any, Error, boolean>({
-        queryKey,
-        queryFn: () => {
-            const data = queryClient.getQueryData(queryKey)
-            console.log(`Fetching query data for key "${queryKey}" - data=`, JSON.stringify(data))
-            return data
-        }
-    })
+    const showQuery = useCacheValue(queryKey)
+
     const show = React.useMemo(() => {
         return isDefined(showOverride) ? showOverride : isDefined(showQuery.data) ? showQuery.data : false
     }, [showQuery.data, showOverride])
+
     const setShow = (show: boolean) => {
         queryClient.setQueryData(queryKey, show)
     }
 
-    return <Modal show={show} setShow={setShow} context={showQuery.data} className={className}>{children}</Modal>
+    return <Modal
+        show={!!show} 
+        setShow={setShow} 
+        context={showQuery.data} 
+        className={className}
+        >
+            {children}
+        </Modal>
 }

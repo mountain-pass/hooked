@@ -188,17 +188,23 @@ const router = async (
   //   res.json(config.plugins ?? {})
   // }))
 
+  /**
+   * Get all script configs.
+   */
   app.get('/scripts', hasRole('admin'), globalErrorHandler(async (req, res) => {
     res.json(config.scripts ?? {})
   }))
 
+  /**
+   * Get a specific script config.
+   */
   app.get('/scripts/:scriptPath', hasRole('admin'), globalErrorHandler(async (req, res) => {
     if (!req.user.accessRoles.includes('admin')) {
       return res.status(401).json({ message: 'Not an admin user.' })
     }
     const scriptPath = req.params.scriptPath.split(' ')
-    const [script, paths] = await findScript(config, scriptPath, options)
-    res.json({ script, paths })
+    const [script] = await findScript(config, scriptPath, options)
+    res.json(script) // { script, paths }
   }))
 
   /**

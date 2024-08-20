@@ -1,9 +1,10 @@
+import { TimedInvocationResult } from "@/hooks/ReactQuery"
 
 export type Dictionary<ValueType> = Record<string, ValueType>
 
 export type ExecuteScriptParam = string[] // | (Script & BaseScript)
 
-export type ExecuteScriptFunction = (scriptConfig: ExecuteScriptParam) => void
+export type ExecuteScriptFunction = (scriptConfig: ExecuteScriptParam) => Promise<TimedInvocationResult | undefined>
 
 export interface AuthorisedUser { username: string, accessRoles: string[] }
 

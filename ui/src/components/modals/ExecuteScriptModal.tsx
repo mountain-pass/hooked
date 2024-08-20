@@ -1,4 +1,4 @@
-import { useExecuteScript, useGet } from "@/hooks/ReactQuery"
+import { KEYS, useExecuteScript, useGet } from "@/hooks/ReactQuery"
 import React from "react"
 import { Spinner } from "../Spinner"
 import { Input } from "../common/Input"
@@ -60,6 +60,8 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
     }, [show, onCloseModal])
 
     return (<>
+        {/* <pre>{JSON.stringify(scriptConfig, null, 2)}</pre> */}
+        
         <Section visible={show} className="max-h-full min-h-1">
             <h2 className="flex justify-between align-middle">
               <span>Execute: &quot;{scriptConfig._scriptPath}&quot;</span>
@@ -112,13 +114,12 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
             </div>
         </Section>
 
-        {/* <ResultsSection visible={true} /> */}
     </>)
 }
 
 export const ExecuteScriptModal = () => {
     return (
-        <ReactQueryTriggeredModal queryKey={['showExecuteScriptModal']}>
+        <ReactQueryTriggeredModal queryKey={KEYS.showExecuteModal()}>
               {ExcuteScriptContent}
         </ReactQueryTriggeredModal>
         )
