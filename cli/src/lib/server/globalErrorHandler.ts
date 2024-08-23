@@ -18,7 +18,7 @@ export const hasRole = (role: string) => (req: Request, res: Response, next: any
   if ((req as AuthorisedRequest).user.accessRoles.includes(role)) {
     next()
   } else {
-    res.status(403).json({ message: 'Forbidden - insufficient roles.' })
+    res.status(403).json({ message: `Forbidden - user requires 'hasRole(${role})'.` })
   }
 }
 

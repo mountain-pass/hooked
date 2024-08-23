@@ -164,6 +164,7 @@ const router = async (
         .map((d) => {
           return { title: d.title }
         })
+      if (dashboards.length === 0) console.debug(`No dashboards for user '${req.user.username}' with accessRoles '${req.user.accessRoles.join(',')}'`)
       res.json(dashboards)
     }
   }))
@@ -198,12 +199,10 @@ const router = async (
   /**
    * Get a specific script config.
    */
-  app.get('/scripts/:scriptPath', hasRole('admin'), globalErrorHandler(async (req, res) => {
-    if (!req.user.accessRoles.includes('admin')) {
-      return res.status(401).json({ message: 'Not an admin user.' })
-    }
+  app.get('/scripts/:scriptPath', globalErrorHandler(async (req, res) => {
     const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
-    const [script] = await findScript(config, scriptPath, options)
+    const [script] = await findScript(config, scriptPath, options) 
+    // TODO check access roles!
     res.json(script) // { script, paths }
   }))
 

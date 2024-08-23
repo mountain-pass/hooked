@@ -92,25 +92,24 @@ export const ExcuteScriptContent = (props: ModalChildProps) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 grid-flow-row gap-2">
+            <div className="grid grid-cols-2 gap-2">
+
+                {/* left */}
+                <BlackButton title="Cancel" size="md"
+                  onClick={() => onCloseModal()}
+                >Cancel</BlackButton>
 
                 {/* right */}
                 <BlackButton title="Next" size="md"
-                  className={"order-2 " + (!isLastEntry ? 'visible' : 'hidden')}
+                  className={!isLastEntry ? 'visible' : 'hidden'}
                   onClick={() => onNextEnv()}
                   disabled={(env[currentEnvKey] || '') === ''}
                 >Next</BlackButton>
                 <BlackButton title="Execute" size="md"
-                  className={"order-2 " + (isLastEntry ? 'visible' : 'hidden')}
+                  className={isLastEntry ? 'visible' : 'hidden'}
                   onClick={() => onExecute()}
                   disabled={(env[currentEnvKey] || '') === ''}
                 >Execute</BlackButton>
-
-                {/* left */}
-                <BlackButton title="Cancel" size="md"
-                  className="order-1"
-                  onClick={() => onCloseModal()}
-                >Cancel</BlackButton>
             </div>
         </Section>
 
