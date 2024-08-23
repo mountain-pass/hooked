@@ -162,17 +162,17 @@ const router = async (
           return (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r))
         })
         .map((d) => {
-          const { title } = d
-          return { title }
+          return { title: d.title }
         })
       res.json(dashboards)
     }
   }))
 
   app.get('/dashboard/get/:dashboard', globalErrorHandler(async (req, res) => {
+    const fetchDashboard = decodeURIComponent(req.params.dashboard)
     const user = req.user
     const dashboard = (config.server?.dashboards ?? [])
-      .find((d) => d.title === req.params.dashboard && (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r)))
+      .find((d) => d.title === fetchDashboard && (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r)))
     if (isDefined(dashboard)) {
       res.json(dashboard)
     } else {
@@ -202,7 +202,7 @@ const router = async (
     if (!req.user.accessRoles.includes('admin')) {
       return res.status(401).json({ message: 'Not an admin user.' })
     }
-    const scriptPath = req.params.scriptPath.split(' ')
+    const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
     const [script] = await findScript(config, scriptPath, options)
     res.json(script) // { script, paths }
   }))
@@ -211,8 +211,8 @@ const router = async (
    * Fetch a single, script's, environment value config (with resolved choices, by env name)
    */
   app.get('/resolveEnvValue/:env/script/:scriptPath/env/:envKeyName', globalErrorHandler(async (req, res) => {
-    const envKeyName = req.params.envKeyName
-    const scriptPath = req.params.scriptPath.split(' ')
+    const envKeyName = decodeURIComponent(req.params.envKeyName)
+    const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
 
     // setup
     const { env, envVars } = await loaders.initialiseEnvironment(systemProcessEnvs, options, config)
@@ -244,8 +244,8 @@ const router = async (
    * Runs the given script.
    */
   app.get('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
-    const providedEnvNames = req.params.env.split(',')
-    const scriptPath = req.params.scriptPath.split(' ')
+    const providedEnvNames = decodeURIComponent(req.params.env).split(',')
+    const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
     res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, {}, false, false))
   }))
 
@@ -253,8 +253,8 @@ const router = async (
    * Runs the given script with environment variables.
    */
   app.post('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
-    const providedEnvNames = req.params.env.split(',')
-    const scriptPath = req.params.scriptPath.split(' ')
+    const providedEnvNames = decodeURIComponent(req.params.env).split(',')
+    const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
     res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, req.body ?? {}, false, false))
   }))
 
