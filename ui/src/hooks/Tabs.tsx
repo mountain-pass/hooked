@@ -3,13 +3,13 @@ import { UseTabsState } from "./useTabs"
 
 export const Tabs = ({ tabs, currentTab, setCurrentTab, className = '' }: UseTabsState<any> & { className?: string }) => {
     return (
-        <div className="flex flex-start gap-2 w-full">
+        <div className="flex flex-start flex-wrap gap-2 w-full">
             {tabs.map(tab => (
                 <BlackButton
                     title={`Show ${tab} tab`}
                     key={tab}
                     active={tab === currentTab}
-                    className={`px-6 rounded ${className}`}
+                    className={`px-6 rounded ${className} text-nowrap`}
                     size="sm"
                     onClick={() => setCurrentTab(tab)}
                 >

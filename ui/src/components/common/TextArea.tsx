@@ -5,11 +5,12 @@ import { Spinner } from '../Spinner'
 interface TextAreaProps {
     isLoading: boolean
     style: 'success' | 'error'
+    size?: 'sm' | 'lg'
     text: string,
     className?: string
 }
 
-export const TextArea = ({ isLoading, style, text, className = '' }: TextAreaProps) => {
+export const TextArea = ({ isLoading, style, text, size, className = '' }: TextAreaProps) => {
     return (<>
         {/* shimmer */}
         <div className={`${isLoading ? 'visible' : 'hidden'} animate-pulse flex space-x-4 w-full ${className}`}>
@@ -18,7 +19,11 @@ export const TextArea = ({ isLoading, style, text, className = '' }: TextAreaPro
         </div>
 
         {/* results - success */}
-        <OutputPre visible={!isLoading} className={`${style === 'error' ? 'text-red-500' : 'text-blue-500'} ${className}`}>
+        <OutputPre 
+            visible={!isLoading}
+            className={`${style === 'error' ? 'text-red-500' : 'text-blue-500'} ${className}`}
+            size={size}
+        >
             {text}
         </OutputPre>
     </>)

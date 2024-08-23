@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes } from "react"
+import React from "react"
 import { Spinner } from "./Spinner"
 
 export const GreyText = ({ className = '', children }: { className?: string, children: React.ReactNode }) => (
@@ -40,8 +40,8 @@ export const BlackButton = ({ children, disabled, active, loading, size = 'lg', 
   )
 }
 
-export const OutputPre = ({ visible, className = '', children }: { visible: boolean, className?: string, children: React.ReactNode }) => (
-  <pre className={`${visible ? 'visible' : 'hidden'} ${className} text-sm p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
+export const OutputPre = ({ visible, className = '', size, children }: { visible: boolean, className?: string, size?: 'sm' | 'lg', children: React.ReactNode }) => (
+  <pre className={`${visible ? 'visible' : 'hidden'} ${className} ${size === 'lg' ? 'text-2xl min-h-[56px]' : 'text-sm min-h-[44px]'} p-3 bg-slate-200 dark:bg-slate-900 overflow-auto [color-scheme:light_dark]`}>
     {children}
   </pre>
 )

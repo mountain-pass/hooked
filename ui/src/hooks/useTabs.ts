@@ -14,6 +14,6 @@ export const useTabs = <TabType extends string>(storageKey: string, tabs: TabTyp
         if (isString(currentTab) && tabs.length > 0 && !tabs.some(t => t === currentTab)) {
             setCurrentTab(initialTab)
         }
-    }, [currentTab, tabs])
+    }, [currentTab, tabs, initialTab, setCurrentTab])
     return { currentTab: currentTab ?? initialTab ?? tabs[0], setCurrentTab, tabs }
 }

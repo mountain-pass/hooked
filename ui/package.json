@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
+    "serve": "npx http-server --port 3000 --proxy http://localhost:4000 ./out/",
     "start": "next start",
     "lint": "next lint",
     "clearCache": "rm -rf .next/"

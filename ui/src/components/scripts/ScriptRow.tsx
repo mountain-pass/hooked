@@ -46,7 +46,7 @@ export const ScriptRow = ({ name, disabled, showFavourites, buttonOnly, scriptPa
             onClick={doExecute}
             disabled={disabled}
         >
-            <TbPlayerPlay className="text-xl flex-shrink-0 text-blue-500" />
+            <TbPlayerPlay className="text-xl flex-shrink-0 text-green-500" />
             <div className="truncate">{name}</div>
         </BlackButton>
 
@@ -54,7 +54,7 @@ export const ScriptRow = ({ name, disabled, showFavourites, buttonOnly, scriptPa
 
             {/* Label */}
             <ListItem className="rounded-l">
-                <TbPlayerPlay className="text-xl flex-shrink-0 text-blue-500" />
+                <TbPlayerPlay className="text-xl flex-shrink-0 text-green-500" />
                 <div className="truncate">{name}</div>
             </ListItem>
 

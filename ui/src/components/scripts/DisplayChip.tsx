@@ -14,7 +14,8 @@ export const DisplayChip = ({ name, scriptPath }: {
     return (
         <ListItem className="rounded flex-col overflow-hidden" fixedHeight={false}>
             <TextArea
-                className="text-2xl min-h-[56px] overflow-hidden"
+                className="overflow-hidden"
+                size="lg"
                 isLoading={doGet.isLoading}
                 style={doGet.data?.success ? 'success' : 'error'}
                 text={doGet.data?.success ? (doGet.data?.outputs.join('\n') || '-') : (doGet.error?.message || 'An error occurred.')}
