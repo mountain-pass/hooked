@@ -10,10 +10,11 @@ export interface ScriptRowProps {
     name: string,
     disabled?: boolean,
     showFavourites?: boolean,
+    buttonOnly?: boolean,
     scriptPath: string,
 }
 
-export const ScriptRow = ({ name, disabled, showFavourites, scriptPath }: ScriptRowProps) => {
+export const ScriptRow = ({ name, disabled, showFavourites, buttonOnly, scriptPath }: ScriptRowProps) => {
 
     const queryClient = useQueryClient()
     const useExecute = useExecuteScript()
@@ -36,8 +37,20 @@ export const ScriptRow = ({ name, disabled, showFavourites, scriptPath }: Script
         }
     }
 
-    return (
-        <div className="flex max-w-full w-full">
+    return (<>
+
+        <BlackButton
+            title="Execute Script"
+            size="lg"
+            className={`${buttonOnly ? 'visible' : 'hidden'} rounded flex-shrink-0 h-[54px] min-w-[54px] gap-3 px-4`}
+            onClick={doExecute}
+            disabled={disabled}
+        >
+            <TbPlayerPlay className="text-xl flex-shrink-0 text-blue-500" />
+            <div className="truncate">{name}</div>
+        </BlackButton>
+
+        <div className={`${!buttonOnly ? 'visible' : 'hidden'} flex max-w-full w-full`}>
 
             {/* Label */}
             <ListItem className="rounded-l">
@@ -49,7 +62,7 @@ export const ScriptRow = ({ name, disabled, showFavourites, scriptPath }: Script
             <BlackButton
                 title="Toggle Favourite"
                 size="lg"
-                className={`flex-shrink-0 h-[54px] min-w-[54px] text-xl border-l-0 ${isCurrentFavourite ? 'text-yellow-400' : ''} ${showFavourites ? 'visible' : 'hidden' }`}
+                className={`${showFavourites ? 'visible' : 'hidden' } justify-center flex-shrink-0 h-[54px] min-w-[54px] text-xl border-l-0 ${isCurrentFavourite ? 'text-yellow-400' : ''}`}
                 onClick={() => toggleFavourite(scriptPath)}
             >
                 {isCurrentFavourite ? <TbStarFilled /> : <TbStar />}
@@ -67,5 +80,5 @@ export const ScriptRow = ({ name, disabled, showFavourites, scriptPath }: Script
                 <TbPlayerPlay className="text-green-500 text-xl sm:hidden" />
             </BlackButton>
         </div>
-    )
+    </>)
 }

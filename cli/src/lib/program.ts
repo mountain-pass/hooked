@@ -18,6 +18,7 @@ import { type RawEnvironment } from './utils/Environment.js'
 import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { HookedServerSchemaType } from './schema/HookedSchema.js'
+import bcrypt from './server/bcrypt.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -30,6 +31,7 @@ export interface ProgramOptions {
   skipVersionCheck?: boolean
   dockerHookedDir?: string
   timezone?: string
+  hashPassword?: string
   init?: boolean
   initConfig?: boolean
   initSsl?: boolean
@@ -54,6 +56,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
     .name('hooked')
     .description('CLI to execute preconfigured scripts.\n\nUpdate: npm i -g --prefer-online --force @mountainpass/hooked-cli')
     .version(packageJson.version, '-v, --version', 'Output the current version of hooked.')
+
+    .addOption(new Option('-pw, --hashPassword <hashPassword>', 'Hashes the provided password, and exits.')
+      .env('HASH_PASSWORD'))
 
     .addOption(new Option('-i, --init', 'Runs the initialisation wizard, and exits.')
       .env('INIT'))
@@ -221,6 +226,12 @@ Provided Environment Variables:
 
       // load configuration (after init, in case the config file was just created!)
       const config = await loaders.loadConfiguration(systemProcessEnvs, options)
+
+      // hash the provided password and exit
+      if (isString(options.hashPassword)) {
+        logger.info(bcrypt.hash(options.hashPassword, config.server?.auth.salt ?? bcrypt.generateSalt()))
+        return
+      }
 
       // show environment names...
       if (options.listEnvs === true) {

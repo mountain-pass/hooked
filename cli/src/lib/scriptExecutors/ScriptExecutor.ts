@@ -1,11 +1,11 @@
 import inquirer from 'inquirer'
-import jp from 'jsonpath'
 import path from 'path'
 import YAML from 'yaml'
 import { fetchGlobalEnvVars, findScript, resolveEnvironmentVariables } from '../config.js'
 import defaults from '../defaults.js'
 import { type ProgramOptions } from '../program.js'
 import {
+  checkIfRecognisedAsOldScript,
   isBoolean,
   isCmdScript,
   isDefined,
@@ -14,12 +14,8 @@ import {
   isInternalScript,
   isJobsSerialScript,
   isNumber,
-  isObject,
-  checkIfRecognisedAsOldScript,
   isSSHCmdScript,
-  isScript,
   isStdinScript,
-  isStdinScriptFieldsMapping,
   isString,
   isWritePathScript,
   type CmdScript,
@@ -40,8 +36,8 @@ import { toJsonString, type Environment } from '../utils/Environment.js'
 import { mergeEnvVars } from '../utils/envVarUtils.js'
 import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
-import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 import { StdinChoicesResolver } from './resolvers/StdinChoicesResolver.js'
+import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']

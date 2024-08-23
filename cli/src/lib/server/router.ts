@@ -162,8 +162,8 @@ const router = async (
           return (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r))
         })
         .map((d) => {
-          const { title, path } = d
-          return { title, path }
+          const { title } = d
+          return { title }
         })
       res.json(dashboards)
     }
@@ -172,7 +172,7 @@ const router = async (
   app.get('/dashboard/get/:dashboard', globalErrorHandler(async (req, res) => {
     const user = req.user
     const dashboard = (config.server?.dashboards ?? [])
-      .find((d) => d.path === req.params.dashboard && (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r)))
+      .find((d) => d.title === req.params.dashboard && (d.accessRoles ?? ['admin']).some((r) => user.accessRoles.includes(r)))
     if (isDefined(dashboard)) {
       res.json(dashboard)
     } else {

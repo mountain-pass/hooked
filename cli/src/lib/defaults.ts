@@ -5,6 +5,8 @@ import path from 'path'
 import { isString, type YamlConfig } from './types.js'
 import fileUtils from './utils/fileUtils.js'
 import logger from './utils/logger.js'
+import { randomString } from './scriptExecutors/$cmd.js'
+import bcrypt from './server/bcrypt.js'
 
 /**
  * Look for hooked.yaml in local dir and home.
@@ -66,7 +68,7 @@ const getDefaults = (): Defaults => {
 
 const getLocalImportsCachePath = (filename: string): string => path.join(getDefaults().LOCAL_CACHE_PATH, filename)
 
-const CONFIG_BLANK = (): YamlConfig => {
+const CONFIG_BLANK = (saltOverride?: string): YamlConfig => {
   return {
     imports: [
       './imports/*.{yaml,yml}?'
@@ -77,13 +79,49 @@ const CONFIG_BLANK = (): YamlConfig => {
       }
     },
     scripts: {
-      say: {
+      say_hello: {
         $cmd: 'echo "${GREETING}!"'
       },
       docker_test: {
         $image: 'alpine',
         $cmd: 'echo "Docker worked - Alpine $(cat /etc/alpine-release)!"'
       }
+    },
+    server: {
+      auth: {
+        type: 'bcrypt',
+        salt: saltOverride ?? bcrypt.generateSalt()
+      },
+      users: [
+        {
+          username: 'admin',
+          password: '<HASH_YOUR_PASSWORD>',
+          accessRoles: ['admin']
+        }
+      ],
+      dashboards: [
+        {
+          title: 'My Dashboard',
+          accessRoles: ['admin'],
+          sections: [
+            {
+              title: 'My Section',
+              fields: [
+                {
+                  label: 'Say Hello',
+                  type: 'button',
+                  $script: 'say_hello'
+                },
+                {
+                  label: 'Show Docker Output',
+                  type: 'display',
+                  $script: 'docker_test'
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }

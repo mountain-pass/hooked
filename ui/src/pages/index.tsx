@@ -7,9 +7,9 @@ import { useTabs } from "@/hooks/useTabs";
 
 export default function Dashboards() {
 
-    const useGetDashboards = useGet<{ title: string, path: string}[]>('meta', `/api/dashboard/list`, true, 60_000)
-    const tabs = useTabs<string>('dashboardTab', useGetDashboards.data?.map(x => x.path) ?? [], (useGetDashboards.data?.map(x => x.path).find(x => x)) ?? '')
-    const useGetDashboardConfig = useGet<{ title: string, path: string}[]>('meta', `/api/dashboard/get/${tabs.currentTab}`, isString(tabs.currentTab) && tabs.currentTab.trim().length > 0, 60_000)
+    const useGetDashboards = useGet<{ title: string}[]>('meta', `/api/dashboard/list`, true, 60_000)
+    const tabs = useTabs<string>('dashboardTab', useGetDashboards.data?.map(x => x.title) ?? [], (useGetDashboards.data?.map(x => x.title).find(x => x)) ?? '')
+    const useGetDashboardConfig = useGet<{ title: string}[]>('meta', `/api/dashboard/get/${tabs.currentTab}`, isString(tabs.currentTab) && tabs.currentTab.trim().length > 0, 60_000)
 
     return (<>
       <main className="flex flex-col items-center gap-4">

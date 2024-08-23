@@ -23,8 +23,8 @@ const HEADER = `#
 /**
  * Generates a blank hooked.yaml file contents.
  */
-export const generateBlankTemplateFileContents = (): string => {
-  return `${HEADER}${YAML.stringify(defaults.CONFIG_BLANK(), { blockQuote: 'literal' })}`
+export const generateBlankTemplateFileContents = (saltOverride?: string): string => {
+  return `${HEADER}${YAML.stringify(defaults.CONFIG_BLANK(saltOverride), { blockQuote: 'literal' })}`
 }
 
 /** Creates a blank hooked.yaml file. */
@@ -53,7 +53,7 @@ export const initialiseDocker = async (options: ProgramOptions): Promise<void> =
 services:
   hooked:
     image: mountainpass/hooked:${packageJson.version}
-    container_name: hooked_${options.server ?? '4000'}
+saltOverride?: string | undefined    container_name: hooked_${options.server ?? '4000'}
     environment:
       - TZ=${options.timezone ?? 'UTC'}
     volumes:

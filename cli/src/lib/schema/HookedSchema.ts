@@ -197,7 +197,7 @@ export const ServerUser = z
 
 export const ServerDashboardSectionField = z.object({
   label: z.string().describe('The label of the field.'),
-  type: z.enum(['display', 'button']).describe('The type of the field.'),
+  type: z.enum(['display', 'button', 'chip']).describe('The type of the field.'),
   $script: ScriptReference
 })
 
@@ -208,7 +208,7 @@ export const ServerDashboardSection = z.object({
 
 export const ServerDashboard = z.object({
   title: z.string().describe('The title of the dashboard.'),
-  path: z.string().regex(NameRegex, NameRegexErrorMessage).min(2).max(255).describe('The path to the dashboard.'),
+  // path: z.string().regex(NameRegex, NameRegexErrorMessage).min(2).max(255).describe('The path to the dashboard.'),
   sections: z.array(ServerDashboardSection).describe('A list of sections.')
 })
   .merge(HasAccessRoles('The access role/s required to view this dashboard.'))

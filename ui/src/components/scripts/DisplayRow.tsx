@@ -14,7 +14,7 @@ export const DisplayRow = ({ name, scriptPath }: {
 
     return (
         <div className="flex max-w-full w-full">
-            <ListItem className="rounded-l max-sm:flex-col" fixedHeight={false}>
+            <ListItem className="rounded max-sm:flex-col" fixedHeight={false}>
                 <div className="flex gap-2">
                     <TbActivityHeartbeat className="text-xl flex-shrink-0 text-red-500" />
                     <span className="truncate self-center">{name}</span>

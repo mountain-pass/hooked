@@ -514,7 +514,8 @@
           "type": "string",
           "enum": [
             "display",
-            "button"
+            "button",
+            "chip"
           ],
           "description": "The type of the field."
         },
@@ -557,13 +558,6 @@
           "type": "string",
           "description": "The title of the dashboard."
         },
-        "path": {
-          "type": "string",
-          "pattern": "^[\\w\\d_-]+$",
-          "minLength": 2,
-          "maxLength": 255,
-          "description": "The path to the dashboard."
-        },
         "sections": {
           "type": "array",
           "items": {
@@ -585,7 +579,6 @@
       },
       "required": [
         "title",
-        "path",
         "sections"
       ],
       "additionalProperties": false,

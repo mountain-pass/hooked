@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs'
+import bcrypt from './bcrypt.js'
 import cors from 'cors'
 import express from 'express'
 import fsPromise from 'fs/promises'
@@ -45,8 +45,6 @@ const startServer = async (
   options: ProgramOptions,
   config: HookedServerSchemaType
 ): Promise<void> => {
-  logger.info(`Need salt? Try this: ${bcrypt.genSaltSync(10)}`)
-
   // determine public path
   const dirname = path.dirname(fileURLToPath(import.meta.url))
   const publicPath = findFileInAncestors(dirname, 'public', false)
@@ -67,11 +65,11 @@ const startServer = async (
       const user = (config.users ?? []).find((user) => user.username === username)
       if (isDefined(user)) {
         logger.debug(`Authenticating user: ${username}`)
-        if (bcrypt.compareSync(password, user.password)) {
+        if (bcrypt.compare(password, user.password)) {
           const { username, accessRoles = [] } = user
           return { username, accessRoles } satisfies AuthorisedUser
         } else {
-          logger.info(`Invalid password for user: ${username} pw: ${bcrypt.hashSync(password, config.auth.salt)}`)
+          logger.info(`Invalid password for user: ${username} pw: ${bcrypt.hash(password, config.auth.salt)}`)
         }
       } else {
         logger.info(`Rejecting unknown user: ${username}`)
