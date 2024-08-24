@@ -119,7 +119,7 @@ const writeFile = async (filepath: string, contents: string, overwrite: boolean,
 export const init = async (options: ProgramOptions): Promise<void> => {
   // throw error
   if (options.batch === true) {
-    throw new Error(`No config file found (interactive prompts not supported in batch mode). file="${defaults.getDefaults().HOOKED_FILE}".`)
+    throw new Error(`No config file found (interactive prompts disabled). file="${defaults.getDefaults().HOOKED_FILE}".`)
   }
 
   // ask user which hooked.yaml template to use (NOTE: even if only one option, still ask user the chance to escape without creating a file!)

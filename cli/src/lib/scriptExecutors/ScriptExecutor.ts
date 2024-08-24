@@ -503,7 +503,7 @@ export const resolveStdinScript = async (
     }
 
     if (options.batch === true) {
-      throw new Error(`Could not retrieve stdin for key (interactive prompts not supported in batch mode). key='${key}'.`)
+      throw new Error(`Could not retrieve stdin for key (interactive prompts disabled). key='${key}'.`)
     }
     // resolve env vars in name and default...
     const newMessage = resolveResolveScript('', { $resolve: script.$ask }, env, false)

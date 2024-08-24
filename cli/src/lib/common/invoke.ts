@@ -58,7 +58,6 @@ const invoke = async (
 
   // find the script to execute...
   const rootScriptAndPaths = await findScript(config, scriptPath, options)
-  console.log('rootScriptAndPaths', rootScriptAndPaths)
   const [script, paths] = rootScriptAndPaths
 
   // verify user has access to invoke script

@@ -158,12 +158,12 @@ describe('program', () => {
   // })
 
   it('should throw error, if no config file exists (and run in batch mode)', async () => {
-    await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith(`No config file found (interactive prompts not supported in batch mode). file="${defaults.getDefaults().HOOKED_FILE}".`)
+    await expect(program.parseAsync('node index.ts -b test'.split(' '))).to.be.rejectedWith(`No config file found (interactive prompts disabled). file="${defaults.getDefaults().HOOKED_FILE}".`)
   })
 
   it('should throw error, if script cannot be found (and run in batch mode)', async () => {
     const tmp = writeConfig(BASE_CONFIG)
-    await expect(program.parseAsync(`node index.ts --config ${tmp} -b notavalidscript`.split(' '))).to.be.rejectedWith(`Script not found (interactive prompts not supported in batch mode). scriptPath='notavalidscript'`)
+    await expect(program.parseAsync(`node index.ts --config ${tmp} -b notavalidscript`.split(' '))).to.be.rejectedWith(`Script not found - 'notavalidscript' (interactive prompts disabled).`)
   })
 
 

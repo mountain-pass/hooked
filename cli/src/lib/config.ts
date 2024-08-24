@@ -88,7 +88,7 @@ export const findScript = async (
   }
   // no match... prompt user for which script to select
   if (!isScript(script) && options.batch === true) {
-    throw new Error(`Script not found (interactive prompts not supported in batch mode). scriptPath='${scriptPath.join(' ')}'`)
+    throw new Error(`Script not found - '${scriptPath.join(' ')}' (interactive prompts disabled).`)
   }
   while (!isScript(script)) {
     if (
