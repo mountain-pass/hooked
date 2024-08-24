@@ -108,7 +108,7 @@ export const DashboardTab = ({ visible, dashboard }: {
                             scriptPath={field.$script}
                         />
                     } else if (field.type === 'chip') {
-                        return <div key={field.label + i} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2">
+                        return <div key={field.label + i} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                             <DisplayChip 
                                 name={field.label}
                                 scriptPath={field.$script}

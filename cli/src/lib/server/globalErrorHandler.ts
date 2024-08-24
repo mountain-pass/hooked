@@ -15,10 +15,11 @@ const handleError = (err: Error, res: Response): void => {
 }
 
 export const hasRole = (role: string) => (req: Request, res: Response, next: any) => {
-  if ((req as AuthorisedRequest).user.accessRoles.includes(role)) {
+  const user = (req as AuthorisedRequest).user
+  if (user.accessRoles.includes(role)) {
     next()
   } else {
-    res.status(403).json({ message: `Forbidden - user requires 'hasRole(${role})'.` })
+    res.status(403).json({ message: `User '${user.username}' does not have required role '${role}' #2` })
   }
 }
 

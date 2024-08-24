@@ -46,20 +46,13 @@ export const useCacheValue = <DataType>(queryKey: QueryKey & QueryFilters) => {
 }
 
 const errorHandler = async (res: Response): Promise<any> => {
-  try {
-    const data = await res.json();
-    if (res.status !== 200) {
-      const error: any = new Error(data.message ?? `Request failed : ${res.statusText}`);
-      error.body = data;
-      throw error
-    }
-    return data
-  } catch (err: any) {
-    console.debug(`Caught error: ${err.message}`)
-    const error: any = new Error(res.statusText);
-    error.body = res.body;
+  const data = await res.json();
+  if (res.status !== 200) {
+    const error: any = new Error(data.message ?? `Request failed : ${res.statusText}`);
+    error.body = data;
     throw error
   }
+  return data
 }
 
 type LoginRequest = { username: string, password: string }

@@ -201,7 +201,7 @@ const router = async (
    */
   app.get('/scripts/:scriptPath', globalErrorHandler(async (req, res) => {
     const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
-    const [script] = await findScript(config, scriptPath, options) 
+    const [script] = await findScript(config, scriptPath, options)
     // TODO check access roles!
     res.json(script) // { script, paths }
   }))
@@ -245,7 +245,17 @@ const router = async (
   app.get('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
     const providedEnvNames = decodeURIComponent(req.params.env).split(',')
     const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
-    res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, {}, false, false))
+    res.json(await common.invoke(
+      req.user,
+      systemProcessEnvs,
+      options,
+      config,
+      providedEnvNames,
+      scriptPath,
+      {},
+      false,
+      false
+    ))
   }))
 
   /**
@@ -254,7 +264,17 @@ const router = async (
   app.post('/run/:env/:scriptPath', globalErrorHandler(async (req, res) => {
     const providedEnvNames = decodeURIComponent(req.params.env).split(',')
     const scriptPath = decodeURIComponent(req.params.scriptPath).split(' ')
-    res.json(await common.invoke(req.user, systemProcessEnvs, options, config, providedEnvNames, scriptPath, req.body ?? {}, false, false))
+    res.json(await common.invoke(
+      req.user,
+      systemProcessEnvs,
+      options,
+      config,
+      providedEnvNames,
+      scriptPath,
+      req.body ?? {},
+      false,
+      false
+    ))
   }))
 
   return app

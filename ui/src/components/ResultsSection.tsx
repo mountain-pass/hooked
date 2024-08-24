@@ -13,7 +13,7 @@ export const ResultsSection = ({ visible } : ResultsSectionProps) => {
     const clearLastResult = useClearLastResult()
 
     return (<>
-        {/* <div>results={JSON.stringify(results)}</div> */}
+        {/* <pre>results={JSON.stringify(results, null, 2)}</pre> */}
 
         <Section visible={visible} className="flex-1">
             <div className="flex items-start justify-between">

@@ -1,6 +1,6 @@
 import bcrypt from './bcrypt.js'
 import cors from 'cors'
-import express from 'express'
+import express, { type Request, type Response } from 'express'
 import fsPromise from 'fs/promises'
 import http from 'http'
 import https from 'https'
@@ -112,6 +112,11 @@ const startServer = async (
     } else {
       res.sendStatus(403)
     }
+  })
+
+  app.use((err: Error, req: Request, res: Response, next: any): void => {
+    console.error(err.stack)
+    res.status(500).json({ message: err.message }).end()
   })
 
   // ssl setup
