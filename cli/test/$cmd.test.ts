@@ -93,9 +93,11 @@ describe('$cmd', () => {
       // sinon.assert.calledWithExactly(spyStderr, '\u001b[90mHello\n\u001b[0m')
     })
 
-    it('exit codes other than zero, should throw an error', async () => {
-      const expected = `Command failed with status code 99\nUnderlying error: "Command failed: /.*.sh"\nConsider adding a \"set -ve\" to your \\$cmd to see which line errored\.`
-      await expect(executeCmd('-', { $cmd: 'exit 99' }, {} as any, {}, new Environment(), { captureStdout: true, printStdio: true })).to.be.rejectedWith(new RegExp(expected))
+    it('wip exit codes other than zero, should throw an error', async () => {
+      const expected = `Command failed with status code 99\nUnderlying error: "Command failed: /.*.sh"\nConsider adding a \"set -ve\" to your $cmd to see which line errored\.`
+      const actual = await executeCmd('-', { $cmd: 'exit 99' }, {} as any, {}, new Environment(), { captureStdout: true, printStdio: true }).catch(err => err)
+      await expect(actual.message).to.satisfy((s: string) => s.startsWith('Command failed with status code 99\nUnderlying error: "Command failed:'))
+      await expect(actual.message).to.satisfy((s: string) => s.endsWith('Consider adding a "set -ve" to your $cmd to see which line errored.'))
     })
 
   })

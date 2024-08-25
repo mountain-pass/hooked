@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process, { type ChildProcess, type ExecSyncOptions, type SpawnOptionsWithoutStdio } from 'child_process'
+import child_process, { type ExecException, type ChildProcess, type ExecSyncOptions, type SpawnOptionsWithoutStdio } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -51,6 +51,9 @@ export interface CustomOptions {
   printStdio: boolean
 }
 
+type ExecCallback = (error: ExecException | null, stdout: string, stderr: string) => void
+interface ExecOutput { error: ExecException | null, stdout: string, stderr: string }
+
 /**
  * Internal function for running a process.
  * @param cmd
@@ -60,10 +63,20 @@ export interface CustomOptions {
  */
 export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
   logger.debug(`Creating process - ${cmd}`)
-  const buffer = child_process.execSync(cmd, { ...opts, stdio: undefined })
   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
-  const stdout = buffer !== null ? buffer.toString() : ''
-  if (!customOpts.captureStdout && customOpts.printStdio) logger.info(stdout)
+  // const stdout = buffer !== null ? buffer.toString() : ''
+  const { stdout } = await new Promise<ExecOutput>((resolve, reject) => {
+    child_process.exec(cmd, { ...opts }, (error, stdout, stderr) => {
+      if (error != null) {
+        reject(error)
+      } else {
+        resolve({ error, stdout, stderr })
+      }
+    })
+  })
+  if (!customOpts.captureStdout && customOpts.printStdio) {
+    logger.info(stdout)
+  }
   return customOpts.captureStdout ? stdout : ''
 }
 
@@ -176,11 +189,11 @@ export const executeCmd = async (
       // end
     }
   } catch (err: any) {
-    const status = err.status as string
+    const status = isDefined(err.status) ? err.status : err.code
     const message = err.message as string
     err.message = `Command failed with status code ${status}\n` +
-    `Underlying error: "${message}"\n` +
-    'Consider adding a "set -ve" to your $cmd to see which line errored.'
+      `Underlying error: "${message}"\n` +
+      'Consider adding a "set -ve" to your $cmd to see which line errored.'
     throw err
   } finally {
     // cleanup files... (if enabled!)

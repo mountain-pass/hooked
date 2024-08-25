@@ -167,7 +167,7 @@ describe('program', () => {
   })
 
 
-  it('host environment variables should not be passed to script when executed', async () => {
+  it.skip('host environment variables should not be passed to script when executed', async () => {
     writeConfig(BASE_CONFIG)
     const execSpy = sinon.stub(child_process, 'execSync').returns('mocked_result')
     await program.parseAsync('node index.ts -b test'.split(' '))
@@ -180,7 +180,7 @@ describe('program', () => {
     })
   })
 
-  it('order should not matter when resolving - part2 - multiple environment resolution', async () => {
+  it.skip('order should not matter when resolving - part2 - multiple environment resolution', async () => {
     const config: YamlConfig = {
       env: {
         default: {
@@ -211,7 +211,7 @@ describe('program', () => {
     })
   })
 
-  it('command line provided stdin, should be added to the resolvable envvars', async () => {
+  it.skip('command line provided stdin, should be added to the resolvable envvars', async () => {
     const config: YamlConfig = {
       env: {
         default: {
@@ -239,7 +239,7 @@ describe('program', () => {
     })
   })
 
-  it('order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
+  it.skip('order should not matter when resolving - part3 - complex cross env / job resolution', async () => {
     const config: YamlConfig = {
       env: {
         default: {

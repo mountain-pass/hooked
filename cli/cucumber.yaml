@@ -1,0 +1,8 @@
+default:
+  # a lot of tests depend on hooked.yaml file existing... TODO fix?
+  parallel: 1
+  strict: true
+  import:
+    - features/support/**/*.ts
+  format:
+    - "html:cucumber-report.html"

@@ -1,9 +1,10 @@
 {
     "watch": [
         "src",
-        "test"
+        "test",
+        "features"
     ],
-    "ext": "ts,js,json,yml,csv",
+    "ext": "feature,ts,js,json,yml,csv",
     "ignore": [
         "src/**/*.spec.ts",
         "**/_snapshots*/**",

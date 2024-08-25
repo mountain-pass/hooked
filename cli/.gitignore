@@ -4,3 +4,4 @@ does*.yaml
 hooked*.yaml
 hooked*.pem
 Makefile
+cucumber-report.html

@@ -49,7 +49,7 @@ export interface ProgramOptions {
   scriptPath?: string[] // this is here because of the command args
 }
 
-export const newProgram = (systemProcessEnvs: RawEnvironment): Command => {
+export const newProgram = (systemProcessEnvs: RawEnvironment, serverShutdownSignal: AbortSignal): Command => {
   const program = new Command()
 
   program
@@ -241,7 +241,7 @@ Provided Environment Variables:
 
       if (isServerMode) {
         // server mode
-        await server.startServer(port, systemProcessEnvs, options, config.server ?? {} as any)
+        await server.startServer(port, systemProcessEnvs, options, config.server ?? {} as any, serverShutdownSignal)
       } else {
         // script mode
         const providedEnvNames = options.env.split(',')
@@ -274,6 +274,7 @@ Provided Environment Variables:
 }
 
 export default async (argv: string[] = process.argv): Promise<Command> => {
-  const program = newProgram(process.env as RawEnvironment)
+  const serverShutdownController = new AbortController()
+  const program = newProgram(process.env as RawEnvironment, serverShutdownController.signal)
   return await program.parseAsync(argv)
 }

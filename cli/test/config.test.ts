@@ -622,7 +622,7 @@ describe('config', () => {
       sinon.assert.calledOnce(spyFsReadFileSync)
     })
 
-    it('wip base config with remote https:// imports works', async () => {
+    it('base config with remote https:// imports works', async () => {
       // setup
       const importedConfig: YamlConfig = { 
         env: { default: { bbb: { $envFromHost: false, $cmd: 'echo "222"' } } }, 

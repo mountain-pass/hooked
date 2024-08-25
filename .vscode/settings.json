@@ -44,4 +44,15 @@
             "hooked*.{yml,yaml}",
         ]
     },
+    "[cucumber]": {
+        "editor.defaultFormatter": "CucumberOpen.cucumber-official"
+    },
+    "cucumber.features": [
+        "features/**/*.feature",
+        "cli/features/**/*.feature",
+    ],
+    "cucumber.glue": [
+        "features/**/*.ts",
+        "cli/features/**/*.ts",
+    ]
 }

@@ -43,8 +43,15 @@ const startServer = async (
   port: number,
   systemProcessEnvs: RawEnvironment,
   options: ProgramOptions,
-  config: HookedServerSchemaType
+  config: HookedServerSchemaType,
+  serverShutdownSignal: AbortSignal
 ): Promise<void> => {
+
+  if (serverShutdownSignal.aborted) {
+    logger.info(`Server startup aborted. Reason=${serverShutdownSignal.reason}`)
+    return;
+  }
+
   // determine public path
   const dirname = path.dirname(fileURLToPath(import.meta.url))
   const publicPath = findFileInAncestors(dirname, 'public', false)
@@ -89,6 +96,8 @@ const startServer = async (
       }
     })
 
+  app.get('/api/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+
   // auth by apikey or jwt
   app.use('/api', (req, res, next) => {
     if (isString(options.apiKey) && req.header('authorization') === `Bearer ${options.apiKey}`) {
@@ -98,7 +107,6 @@ const startServer = async (
     }
   })
 
-  app.get('/api/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
   app.use('/api', await router.router(systemProcessEnvs, options))
   app.use('/', express.static(publicPath))
   app.get('*', (req, res) => {
@@ -131,6 +139,13 @@ const startServer = async (
     }, app)
     : http.createServer(app)
 
+
+  // check again if we should abort, before starting up the server...
+  if (serverShutdownSignal.aborted) {
+    logger.info(`Server startup aborted. Reason=${serverShutdownSignal.reason}`)
+    return;
+  }
+
   // listen
   server.listen(port, () => {
     const apiKey = options.apiKey
@@ -151,6 +166,7 @@ const startServer = async (
     }
   }
   process.on('SIGTERM', shutdownServer)
+  serverShutdownSignal.addEventListener('abort', shutdownServer, { once: true })
 }
 
 export default { startServer }
