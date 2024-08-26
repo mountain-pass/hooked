@@ -61,7 +61,7 @@ interface ExecOutput { error: ExecException | null, stdout: string, stderr: stri
  * @param customOpts
  * @returns
  */
-export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
   logger.debug(`Creating process - ${cmd}`)
   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
   // const stdout = buffer !== null ? buffer.toString() : ''
@@ -77,6 +77,15 @@ export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOp
   if (!customOpts.captureStdout && customOpts.printStdio) {
     logger.info(stdout)
   }
+  return customOpts.captureStdout ? stdout : ''
+}
+
+export const createProcessSync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+  logger.debug(`Creating process - ${cmd}`)
+  const buffer = child_process.execSync(cmd, { ...opts, stdio: undefined })
+  // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
+  const stdout = buffer !== null ? buffer.toString() : ''
+  if (!customOpts.captureStdout && customOpts.printStdio) logger.info(stdout)
   return customOpts.captureStdout ? stdout : ''
 }
 
@@ -125,6 +134,8 @@ export const executeCmd = async (
   // keep track of files that need to be cleaned up post run.
   const cleanupFiles = []
 
+  const asyncMode = options.server
+
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
     const rand = randomString()
@@ -161,7 +172,11 @@ export const executeCmd = async (
       // write a script to run the docker (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      if (asyncMode) {
+        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      } else {
+        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      }
       // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
@@ -180,12 +195,20 @@ export const executeCmd = async (
       // write a script to execute the shell script on the remote machine... (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      if (asyncMode) {
+        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      } else {
+        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      }
       // end
     } else {
       // otherwise fallback to running a script on the local machine
       writeScript(filepath, script.$cmd, env)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      if (asyncMode) {
+        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      } else {
+        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
+      }
       // end
     }
   } catch (err: any) {
