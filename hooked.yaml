@@ -1,7 +1,7 @@
 # imports:
 #   - ./hooked-*.yml
 
-plugins:
+plugin:
   icons: true
   abi: true
   makefile: true
