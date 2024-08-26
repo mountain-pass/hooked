@@ -14,7 +14,7 @@ import { type RawEnvironment } from '../utils/Environment.js'
 import logger from '../utils/logger.js'
 import { findFileInAncestors } from '../utils/packageJson.js'
 import jwt from './auth/jwt.js'
-import router from './router.js'
+import router, { HttpError } from './router.js'
 
 const corsOptions = {
   credentials: true,
@@ -96,7 +96,7 @@ const startServer = async (
       }
     })
 
-  app.get('/api/status', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+  app.get('/api/status', (req, res) => res.json({ status: 'ok' }))
 
   // auth by apikey or jwt
   app.use('/api', (req, res, next) => {
@@ -124,7 +124,11 @@ const startServer = async (
 
   app.use((err: Error, req: Request, res: Response, next: any): void => {
     console.error(err.stack)
-    res.status(500).json({ message: err.message }).end()
+    if (err instanceof HttpError) {
+      res.status(err.statusCode).json({ message: err.message }).end()
+    } else {
+      res.status(500).json({ message: err.message }).end()
+    }
   })
 
   // ssl setup

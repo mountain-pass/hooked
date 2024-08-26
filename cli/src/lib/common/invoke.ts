@@ -2,6 +2,7 @@
 import { fetchGlobalEnvVars, findScript } from '../config.js'
 import { type ProgramOptions } from '../program.js'
 import { executeScriptsSequentially, resolveScripts, verifyScriptsAreExecutable } from '../scriptExecutors/ScriptExecutor.js'
+import { HttpError } from '../server/router.js'
 import { type AuthorisedUser } from '../server/server.js'
 import {
   isJobsSerialScript,
@@ -65,7 +66,7 @@ const invoke = async (
     const scriptAccessRoles: string[] = (script as any).accessRoles ?? ['admin']
     const canInvoke = scriptAccessRoles.some(role => user.accessRoles.includes(role))
     if (!canInvoke) {
-      throw new Error(`User '${user.username}' does not have required role '${scriptAccessRoles.join(',')}' #1`)
+      throw new HttpError(403, `User '${user.username}' does not have required role '${scriptAccessRoles.join(',')}' #1`)
     }
   }
 

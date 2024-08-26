@@ -87,13 +87,34 @@ Then('I can login with username {word} and password {word}', async function (use
     this.currentJwt = jwt
 })
 
-Then('the endpoint {word} should respond', async function (apiEndpoint: string, expectedResponse: string) {
-    expect(this.currentJwt).to.not.be.undefined
-    expect(this.currentJwt).to.not.be.null
+Then('the endpoint {word} should respond {int} with body {string}', async function (
+    apiEndpoint: string, 
+    expectedStatus: number, 
+    expectedResponse: string
+) {
     const result = await fetch(`http://localhost:4000${apiEndpoint}`, { method: 'GET', headers: { 'Cookie': this.currentJwt } })
-    expect(result.status).to.eql(200)
-    const actual = await result.json()
-    expect(actual).to.eql(JSON.parse(expectedResponse))
+    expect(result.status, `${apiEndpoint} - status did not match ${expectedStatus}`).to.eql(expectedStatus)
+    if (expectedResponse !== '') {
+        let actual = await result.text();
+        actual = actual.replace(/"finishedAt":\d{13}/g, '"finishedAt":<TIMESTAMP_MS>')
+        expect(actual, `${apiEndpoint} - body did not match`).to.eql(expectedResponse)
+    }
+});
+
+
+Then('the endpoints should all respond within {int} seconds', async function (expectedTimeSecs: number, dataTable: DataTable) {
+    const start = performance.now()
+    const promises = dataTable.raw().map(async ([apiEndpoint]) => {
+        return await fetch(`http://localhost:4000${apiEndpoint}`, { method: 'GET', headers: { 'Cookie': this.currentJwt } })
+    })
+    const results = await Promise.all(promises)
+    const totalDuration = performance.now() - start
+    expect(totalDuration, `duration was not gt ${expectedTimeSecs} seconds`).to.be.greaterThan(expectedTimeSecs * 1000 - 500)
+    expect(totalDuration, `duration was not lt ${expectedTimeSecs} seconds`).to.be.lessThan(expectedTimeSecs * 1000 + 500)
+    for (const result of results) {
+        expect(result.status).to.eql(200)
+    }
+
 });
 
 // When('I shutdown the server', function () {
@@ -105,3 +126,14 @@ Then('the output should be', function (output: string) {
     var actual = this.spylog.getCall(0).args[0]
     expect(actual.trim()).to.eql(output.trim())
 });
+
+
+Then('the endpoints should respond', async function (dataTable: DataTable) {
+    expect(this.currentJwt).to.not.be.undefined
+    expect(this.currentJwt).to.not.be.null
+    for (const [apiEndpoint, expectedStatus, expectedBody] of dataTable.raw()) {
+        const result = await fetch(`http://localhost:4000${apiEndpoint}`, { method: 'GET', headers: { 'Cookie': this.currentJwt } })
+        expect(result.status, `${apiEndpoint} - status did not match ${expectedStatus}`).to.eql(parseInt(expectedStatus))
+        expect(await result.text(), `${apiEndpoint} - body did not match expected`).to.eql(expectedBody)
+    }
+  });

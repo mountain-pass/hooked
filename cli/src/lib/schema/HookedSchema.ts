@@ -241,7 +241,7 @@ export const HookedSchema = z.object({
 
   server: Server.optional(),
 
-  plugin: z
+  plugins: z
     .object({
       icons: z.boolean().describe('Makes pretty icons to differentiate executable scripts vs groups.').optional(),
       abi: z.boolean().describe('Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)').optional(),

@@ -1,6 +1,7 @@
 import { type Request, type Response } from 'express'
 import { isDefinedAny, isFunction } from '../types.js'
 import { type AuthorisedUser } from './server.js'
+import { HttpError } from './router.js'
 
 export type AuthorisedRequest = Request & { user: AuthorisedUser }
 
@@ -9,9 +10,11 @@ export type AsyncRequestHandler = (req: AuthorisedRequest, res: Response, next?:
 
 const handleError = (err: Error, res: Response): void => {
   console.error(`Caught: ${err.message} - stack=${err.stack ?? ''}`)
-  res.status(500)
-  res.json({ message: `A server error occurred. ${err.message}${err.message.endsWith('.') ? '' : '.'}` })
-  res.end()
+  if (err instanceof HttpError) {
+    res.status(err.statusCode).json({ message: err.message }).end()
+  } else {
+    res.status(500).json({ message: `A server error occurred. ${err.message}${err.message.endsWith('.') ? '' : '.'}` }).end()
+  }
 }
 
 export const hasRole = (role: string) => (req: Request, res: Response, next: any) => {

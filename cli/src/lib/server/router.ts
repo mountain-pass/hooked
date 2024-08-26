@@ -23,6 +23,15 @@ const getLastModifiedTimeMs = async (filepath: string): Promise<number> => {
   return (await fsPromise.stat(filepath)).mtimeMs
 }
 
+export class HttpError extends Error {
+  statusCode: number
+  constructor (statusCode: number, message: string) {
+    super(message)
+    this.name = 'AuthError'
+    this.statusCode = statusCode
+  }
+}
+
 interface JobContext {
   /** The name of the job. */
   name: string
@@ -177,7 +186,7 @@ const router = async (
     if (isDefined(dashboard)) {
       res.json(dashboard)
     } else {
-      res.sendStatus(403)
+      res.status(403).json({"message": "Dashboard not found or user does not have access."}).end()
     }
   }))
 

@@ -39,6 +39,7 @@
     "!dist/lib/schema/writeSchema.script.js"
   ],
   "scripts": {
+    "password": "tsx src/index.ts -pw obi1kenobi",
     "writeSchema": "tsx src/lib/schema/writeSchema.script.ts",
     "start": "LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts'",
     "start:server": "TZ=Australia/Sydney LOG_LEVEL=debug SKIP_VERSION_CHECK=1 nodemon --exec 'tsx src/index.ts -s --config $(pwd)/hooked-server.yaml'",
