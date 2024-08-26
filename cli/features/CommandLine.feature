@@ -12,7 +12,7 @@ Feature: CommandLine
         hello_world:
           $cmd: echo Hello world!
       """
-    When I run the command "node index.ts hello"
+    When I run the command "node index.ts hello_world"
     Then the output should be
       """
       Hello world!
@@ -31,3 +31,6 @@ Feature: CommandLine
       """
       $2a$10$nF17SWCfCMdHwLruCnbyKuSX7tp2GEpwP.p2T8lwYV34cd5U97zli
       """
+#
+# NOTE: cannot test script interactivity, if node app is blocking!
+#

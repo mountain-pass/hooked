@@ -51,10 +51,11 @@ When('I run the command {string}', async function (command: string) {
     this.result = await this.program.parseAsync(command.split(' '))
 });
 
-When('I run the command {string} async', async function (command: string) {
-    this.program = newProgram(this.systemEnvironmentVariables, this.shutdownServerController.signal)
-    this.result = this.program.parseAsync(command.split(' '))
-});
+// NOT POSSIBLE - if synchronous (i.e. !server, then even if async, the command will block the app)
+// When('I run the command {string} non-blocking', async function (command: string) {
+//     this.program = newProgram(this.systemEnvironmentVariables, this.shutdownServerController.signal)
+//     this.program.parseAsync(command.split(' ')).then((res: string) => { this.result = res })
+// });
 
 When('I wait until the server is ready', async function () {
     for (let i = 0; i < 10; i++) {
@@ -136,4 +137,15 @@ Then('the endpoints should respond', async function (dataTable: DataTable) {
         expect(result.status, `${apiEndpoint} - status did not match ${expectedStatus}`).to.eql(parseInt(expectedStatus))
         expect(await result.text(), `${apiEndpoint} - body did not match expected`).to.eql(expectedBody)
     }
-  });
+});
+
+// Then('the user waits {int} milliseconds', async function (milliseconds: number) {
+//     await sleep(milliseconds)
+// })
+
+// Then('the logged output should be', async function(expectedOutput: string) {
+//     const expectedLines = expectedOutput.split('\n');
+//     for (let i = 0; i < expectedLines.length; i++) {
+//         expect(this.spylog.getCall(i).args[0], `expected logged output line ${i} to match`).to.eql(expectedOutput)
+//     }
+// })
