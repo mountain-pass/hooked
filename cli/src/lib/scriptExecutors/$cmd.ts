@@ -62,7 +62,7 @@ interface ExecOutput { error: ExecException | null, stdout: string, stderr: stri
  * @returns
  */
 export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process - ${cmd}`)
+  logger.info(`Creating process async - ${cmd}`)
   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
   // const stdout = buffer !== null ? buffer.toString() : ''
   const { stdout } = await new Promise<ExecOutput>((resolve, reject) => {
@@ -81,7 +81,7 @@ export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, cus
 }
 
 export const createProcessSync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process - ${cmd}`)
+  logger.info(`Creating process sync - ${cmd}`)
   const buffer = child_process.execSync(cmd, { ...opts, stdio: undefined })
   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
   const stdout = buffer !== null ? buffer.toString() : ''
