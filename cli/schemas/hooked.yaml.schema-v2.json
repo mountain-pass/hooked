@@ -13,7 +13,7 @@
       "$ref": "#/$defs/Server",
       "description": "The server configuration."
     },
-    "plugin": {
+    "plugins": {
       "type": "object",
       "properties": {
         "icons": {
