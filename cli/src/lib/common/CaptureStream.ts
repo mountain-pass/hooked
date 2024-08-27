@@ -20,6 +20,10 @@ export class CaptureStream extends Writable {
         });
     }
 
+    whenUpdated(captured: string) {
+        // NOOP used for testing
+    }
+
     whenFinished(captured: string) {
         // NOOP used for testing
     }
@@ -34,6 +38,8 @@ export class CaptureStream extends Writable {
 
         // Capture the chunk
         this.captureBuffer += chunkStr;
+
+        this.whenUpdated(this.captureBuffer);
 
         // Pass the chunk through to the original stream
         if (this.originalStream) {

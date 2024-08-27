@@ -20,6 +20,7 @@ import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
+import { CaptureStream } from './common/CaptureStream.js'
 
 const isDefined = (o: any): o is object => typeof o !== 'undefined' && o !== null
 
@@ -119,6 +120,7 @@ export const findScript = async (
       choices = Object.keys(script)
     }
     // ask user for the next script
+    // const stdout = new CaptureStream(process.stdout)
     await inquirer
       .prompt([
         {
@@ -128,7 +130,8 @@ export const findScript = async (
           pageSize: defaults.getDefaults().PAGE_SIZE,
           default: choices[0],
           choices,
-          loop: true
+          loop: true,
+          // output: stdout
         }
       ])
       .then((answers) => {

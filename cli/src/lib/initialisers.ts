@@ -7,6 +7,7 @@ import { executeCmd } from './scriptExecutors/$cmd.js'
 import logger from './utils/logger.js'
 import { Environment } from './utils/Environment.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
+import { CaptureStream } from './common/CaptureStream.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -123,6 +124,7 @@ export const init = async (options: ProgramOptions): Promise<void> => {
   }
 
   // ask user which hooked.yaml template to use (NOTE: even if only one option, still ask user the chance to escape without creating a file!)
+  // const stdout = new CaptureStream(process.stdout)
   await inquirer.prompt([
     {
       type: 'list',
@@ -134,7 +136,8 @@ export const init = async (options: ProgramOptions): Promise<void> => {
         { name: 'Create SSL certificates (requires "openssl").', value: 'ssl' },
         { name: 'Create docker compose file and run (requires "docker").', value: 'docker' }
       ],
-      loop: true
+      loop: true,
+      // output: stdout
     }
   ]).then(async (answers) => {
     switch (answers.init) {

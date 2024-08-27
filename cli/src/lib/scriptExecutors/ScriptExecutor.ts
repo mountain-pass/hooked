@@ -38,6 +38,7 @@ import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
 import { StdinChoicesResolver } from './resolvers/StdinChoicesResolver.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
+import { CaptureStream } from '../common/CaptureStream.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
@@ -234,13 +235,13 @@ export const resolveWritePathScript = async (
 
 ${isString(content) && isString(parentDir) && parentDir.length > 0 ? `mkdir -p ${parentDir}` : ''}
 ${isString(content)
-  ? `echo Writing file: ${script.$path}`
-  : `echo Creating dir: ${script.$path}`
-}
+        ? `echo Writing file: ${script.$path}`
+        : `echo Creating dir: ${script.$path}`
+      }
 ${isString(content)
-  ? `cat > ${script.$path} << EOL\n${content}\nEOL`
-  : `mkdir -p ${script.$path}`
-}
+        ? `cat > ${script.$path} << EOL\n${content}\nEOL`
+        : `mkdir -p ${script.$path}`
+      }
 ${isString(script.$permissions) ? `chmod ${script.$permissions} ${script.$path}` : ''}
 ${isString(script.$owner) ? `chown ${script.$owner} ${script.$path}` : ''}
 `
@@ -281,7 +282,7 @@ export const resolveScripts = async (
   options: ProgramOptions
 ): Promise<ScriptAndPaths[]> => {
   return await Promise.all(script.$jobs_serial.map(async (refOrJob, idx) => {
-  // resolve job by reference
+    // resolve job by reference
     if (isString(refOrJob) || isNumber(refOrJob) || isBoolean(refOrJob)) {
       return await findScript(config, String(refOrJob).split(' '), options)
     } else {
@@ -373,7 +374,7 @@ export const resolveJobsSerialScript = async (
 }
 
 export class InvalidConfigError extends Error {
-  constructor (m: string) {
+  constructor(m: string) {
     super(m)
 
     // Set the prototype explicitly.
@@ -511,6 +512,7 @@ export const resolveStdinScript = async (
       ? resolveResolveScript('', { $resolve: script.$default }, env, false)
       : script.$default
     // otherwise prompt user for an answer to the $ask question
+    // const stdout = new CaptureStream(process.stdout)
     await inquirer
       .prompt([
         {
@@ -520,7 +522,8 @@ export const resolveStdinScript = async (
           pageSize: defaults.getDefaults().PAGE_SIZE,
           default: newDefault,
           choices,
-          loop: true
+          loop: true,
+          // output: stdout,
         }
       ])
       .then((answers) => {

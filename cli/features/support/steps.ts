@@ -26,6 +26,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type WorldType = {
     spyLoggerInfo: SinonSpy
+    spyCaptureStreamWhenUpdated: SinonSpy
     spyCaptureStreamWhenFinished: SinonSpy
     result: any
     systemEnvironmentVariables: Record<string, string>
@@ -39,6 +40,7 @@ Before(function (this: WorldType) {
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
     this.spyLoggerInfo = sinon.spy(logger, 'info')
+    this.spyCaptureStreamWhenUpdated = sinon.spy(CaptureStream.prototype, 'whenUpdated')
     this.spyCaptureStreamWhenFinished = sinon.spy(CaptureStream.prototype, 'whenFinished')
     this.systemEnvironmentVariables = {}
     this.shutdownServerController = new AbortController()
@@ -66,10 +68,10 @@ When('I run the command {string}', async function (this: WorldType, command: str
 });
 
 // NOT POSSIBLE - if synchronous (i.e. !server, then even if async, the command will block the app)
-// When('I run the command {string} non-blocking', async function (command: string) {
-//     this.program = newProgram(this.systemEnvironmentVariables, this.shutdownServerController.signal)
-//     this.program.parseAsync(command.split(' ')).then((res: string) => { this.result = res })
-// });
+When('I run the command {string} non-blocking', async function (command: string) {
+    this.program = newProgram(this.systemEnvironmentVariables, this.shutdownServerController.signal)
+    this.program.parseAsync(command.split(' ')).then((res: string) => { this.result = res })
+});
 
 When('I wait until the server is ready', async function (this: WorldType) {
     for (let i = 0; i < 10; i++) {
@@ -186,8 +188,12 @@ Then('the logger.info should be', function (this: WorldType, output: string) {
 });
 
 Then('the command output should be', function (this: WorldType, output: string) {
-    const calls = fetchLastCall(this.spyCaptureStreamWhenFinished);
+    const calls = fetchLastCall(this.spyCaptureStreamWhenUpdated);
     expect(calls.last, `last command output did not match (all):\n${calls.all.join('\n')}`).to.eql(output.trim())
+});
+
+Then('the user enters {string}', function (this: WorldType, output: string) {
+    process.stdin.emit('data', output + "\n")
 });
 
 Then('the endpoints should respond', async function (this: WorldType, dataTable: DataTable) {
@@ -200,9 +206,9 @@ Then('the endpoints should respond', async function (this: WorldType, dataTable:
     }
 });
 
-// Then('the user waits {int} milliseconds', async function (milliseconds: number) {
-//     await sleep(milliseconds)
-// })
+Then('the user waits {int} milliseconds', async function (this: WorldType, milliseconds: number) {
+    await sleep(milliseconds)
+})
 
 // Then('the logged output should be', async function(expectedOutput: string) {
 //     const expectedLines = expectedOutput.split('\n');
