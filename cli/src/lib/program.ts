@@ -87,6 +87,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, serverShutdownSign
     .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level.')
       .default('info').env('LOG_LEVEL'))
 
+    .addOption(new Option('--debug', 'Sets the log level to "debug".')
+      .implies({ logLevel: 'debug' }))
+
     .addOption(new Option('-sc, --skipCleanup', "If 'true', doesn't cleanup old *.sh files. Useful for debugging.")
       .default(false).env('SKIP_CLEANUP'))
 
