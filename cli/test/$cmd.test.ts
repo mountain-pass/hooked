@@ -6,34 +6,38 @@ import sinon from 'sinon'
 import { executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
 import { Environment } from '../src/lib/utils/Environment.js'
 import logger from '../src/lib/utils/logger.js'
+import { CaptureStream } from '../src/lib/common/CaptureStream.js'
+import { fetchLastCall } from './utils/SinonUtils.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('$cmd', () => {
 
+  let spyCaptureStreamWhenFinished: sinon.SinonSpy
   let spyLoggerInfo: sinon.SinonSpy
   let spyLoggerError: sinon.SinonSpy
   let spyStdout: any
   let spyStderr: any
-  
+
   beforeEach(() => {
     sinon.restore()
+    spyCaptureStreamWhenFinished = sinon.spy(CaptureStream.prototype, 'whenFinished')
     spyLoggerInfo = sinon.spy(logger, 'info')
     spyLoggerError = sinon.spy(logger, 'error')
     spyStdout = sinon.spy(process.stdout, 'write')
     spyStderr = sinon.spy(process.stderr, 'write')
   })
-  
+
   afterEach(() => {
     sinon.restore()
   })
 
   describe('injectEnvironmentInScript', () => {
 
-    it('injectEnvironmentInScript should append a new line if missing', async () => {
+    it('injectEnvironmentInScript should append a hashbang and new line if missing', async () => {
       const env = new Environment().putAllGlobal({ FOO: 'bar' })
-      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`echo "hello"\n`)
-      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`echo "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n`, env)).to.eql(`#!/bin/sh\necho "hello"\n`)
     })
@@ -41,14 +45,14 @@ describe('$cmd', () => {
     it('injectEnvironmentInScript injects "resolved" environment variables only', async () => {
       const env = new Environment().putAllResolved({ FOO: 'bar' })
       // should inject in header
-      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n`)
-      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
       // ... but after hash bang
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n`)
       // ... and not accidently pickup comments
-      expect(injectEnvironmentInScript(`echo "hello"\n# comment`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
-      expect(injectEnvironmentInScript(`echo "hello"\n# comment\n`, env)).to.eql(`\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n# comment`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
+      expect(injectEnvironmentInScript(`echo "hello"\n# comment\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n# comment\n`)
       // ... and not accidently pickup other hash bangs
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n#!/comment`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n#!/comment\n`)
       expect(injectEnvironmentInScript(`#!/bin/sh\necho "hello"\n#!/comment\n`, env)).to.eql(`#!/bin/sh\n\nexport FOO="bar"\n\necho "hello"\n#!/comment\n`)
@@ -67,9 +71,8 @@ describe('$cmd', () => {
     it('captureStdout=false, printStdio=true - should NOT return output, and print output', async () => {
       const result2 = await executeCmd('-', { $cmd: 'echo "Hello"' }, {} as any, {}, new Environment(), { captureStdout: false, printStdio: true })
       expect(result2).to.eql('')
-      sinon.assert.callCount(spyLoggerInfo, 1)
-      sinon.assert.callCount(spyLoggerError, 0)
-      expect(spyLoggerInfo.getCall(0).args[0].toString()).to.eql('Hello\n')
+      const calls = fetchLastCall(spyCaptureStreamWhenFinished)
+      expect(calls.last).to.eql('Hello')
     })
 
     it('captureStdout=true, printStdio=false - should return output, and NOT print output', async () => {

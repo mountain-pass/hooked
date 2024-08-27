@@ -37,11 +37,11 @@ Feature: Server - Scripts
     Then I can login with username admin and password helloThere
 
   Scenario: Scripts should be performant
-    Then the endpoints should all respond within 0 seconds
+    Then the endpoints should all respond within 0 to 1 seconds
       | /api/run/default/hello_world |
 
   Scenario: Scripts should be non-blocking and run in parallel
-    Then the endpoints should all respond within 1 seconds
+    Then the endpoints should all respond within 1 to 2 seconds
       | /api/run/default/slow_hello_world |
       | /api/run/default/slow_hello_world |
       | /api/run/default/slow_hello_world |

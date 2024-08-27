@@ -43,7 +43,7 @@ describe('scripts', () => {
     it('$internal - base', async () => {
       const result = await resolveInternalScript('-', {
         $internal: async () => 'Hello'
-    }, {}, new Environment(), CONFIG, OPTIONS, envVars)
+      }, {}, new Environment(), CONFIG, OPTIONS, envVars)
       expect(result).to.eql('Hello')
     })
 
@@ -53,7 +53,7 @@ describe('scripts', () => {
           USER: 'bob'
         },
         $internal: async ({ key, stdin, env }) => `Hello ${env.resolveByKey('USER')}`
-    }, {}, new Environment(), CONFIG, OPTIONS, envVars)
+      }, {}, new Environment(), CONFIG, OPTIONS, envVars)
       expect(result).to.eql('Hello bob')
     })
 
@@ -64,14 +64,14 @@ describe('scripts', () => {
     it('$cmd - simple example #1', async () => {
       const result = await resolveCmdScript('-', {
         $cmd: 'echo "Hello"'
-    }, {}, new Environment(), CONFIG, OPTIONS)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       expect(result).to.eql('Hello')
     })
 
     it('$cmd - simple example with error', async () => {
       const promise = resolveCmdScript('-', {
         $cmd: 'exit 1'
-    }, {}, new Environment(), CONFIG, OPTIONS)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(promise).to.eventually.be.rejected
     })
 
@@ -81,7 +81,7 @@ describe('scripts', () => {
       const promise = resolveCmdScript('-', {
         $cmd: 'exit 1',
         $errorMessage: errorMessage
-    }, {}, new Environment(), CONFIG, OPTIONS)
+      }, {}, new Environment(), CONFIG, OPTIONS)
       await expect(promise).to.eventually.be.rejected
       sinon.assert.calledWith(loggerSpy, errorMessage)
     })
@@ -104,9 +104,9 @@ describe('scripts', () => {
         $envNames: ['secretxxx'],
         $cmd: 'echo "Hello ${USER}"'
       }, {}, new Environment(), CONFIG, OPTIONS))
-      .to
-      .be
-      .rejectedWith('Environment not found: secretxxx\nDid you mean?\n\t- default\n\t- secret')
+        .to
+        .be
+        .rejectedWith('Environment not found: secretxxx\nDid you mean?\n\t- default\n\t- secret')
     })
 
     // skipped: I'm not sure what we're testing here - Nick
@@ -118,7 +118,7 @@ describe('scripts', () => {
         $envNames: ['secr'],
         $cmd: 'echo "Hello ${USER}"'
       }, {}, env, CONFIG, OPTIONS)
-      // then the output should be "Hello bob"...
+      // then the logger.info should be "Hello bob"...
       expect(result).to.eql('Hello bob')
       // and the global environment should have the env "USER" (defined in the "secret" environment)
       expect(env.global).to.eql({})
@@ -179,7 +179,7 @@ describe('scripts', () => {
         $cmd: 'echo "${GREETING} ${USER}"' // <-- !!! USER IS A SECRET, ONLY SHOULD ONLY BE USED TEMPORARILY !!!
       }, {}, env, CONFIG, OPTIONS, {}, IS_FINAL_SCRIPT)
 
-      // then the output should be "Hola bob"...
+      // then the logger.info should be "Hola bob"...
       expect(result).to.eql('Hola bob')
 
       console.log('env', env)

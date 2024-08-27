@@ -9,10 +9,13 @@ import sinon from 'sinon'
 import tmp from 'tmp'
 import program from '../src/lib/program.js'
 import logger from '../src/lib/utils/logger.js'
+import { CaptureStream } from '../src/lib/common/CaptureStream.js'
+import { fetchLastCall } from './utils/SinonUtils.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('$cmd', () => {
+  let spyCaptureStreamWhenFinished: sinon.SinonSpy
   let spyLoggerInfo: sinon.SinonSpy
   let spyLoggerError: sinon.SinonSpy
   // let spyStdout: sinon.SinonSpy
@@ -21,6 +24,7 @@ describe('$cmd', () => {
 
   beforeEach(() => {
     sinon.restore()
+    spyCaptureStreamWhenFinished = sinon.spy(CaptureStream.prototype, 'whenFinished')
     spyLoggerInfo = sinon.spy(logger, 'info')
     spyLoggerError = sinon.spy(logger, 'error')
     // spyStdout = sinon.spy(process.stdout, 'write')
@@ -33,7 +37,7 @@ describe('$cmd', () => {
   })
 
   it('when $stdin is provided, then suggest a fix', async () => {
-    const config = tmp.fileSync({ tmpdir: '/tmp', postfix: '.yml'})
+    const config = tmp.fileSync({ tmpdir: '/tmp', postfix: '.yml' })
     fs.writeFileSync(config.name, `
 scripts:
   map:
@@ -42,15 +46,15 @@ scripts:
         $stdin: Please choose a level
     $cmd: echo "Hello $MAPNAME"
 `)
-      try {
-        await program(`node index.js --config ${config.name} map`.split(' '))
-        fail('Should have thrown an error')
-      } catch (e: any) {
-        expect(e.message).to.eql(`
+    try {
+      await program(`node index.js --config ${config.name} map`.split(' '))
+      fail('Should have thrown an error')
+    } catch (e: any) {
+      expect(e.message).to.eql(`
 Could not resolve 1 environment variables:
 - Old script format detected. Please use $ask instead of $stdin.`.trim())
-      }
-      config.removeCallback()
+    }
+    config.removeCallback()
   })
 
   it('when $choices has a $cmd, it should be able to resolve the output as choices', async () => {
@@ -65,12 +69,11 @@ scripts:
           $cmd: printf "FOO\\nBAR"
     $cmd: echo "Hello $MAPNAME"
 `)
-      inqStub.resolves({ MAPNAME: 'FOO' })
-      await program(`node index.js --config ${config.name} map`.split(' '))
-      sinon.assert.callCount(spyLoggerInfo, 1)
-      sinon.assert.callCount(spyLoggerError, 0)
-      expect(spyLoggerInfo.getCall(0).args[0]).to.eql('Hello FOO\n')
-      config.removeCallback()
+    inqStub.resolves({ MAPNAME: 'FOO' })
+    await program(`node index.js --config ${config.name} map`.split(' '))
+    const calls = fetchLastCall(spyCaptureStreamWhenFinished)
+    expect(calls.last).to.eql('Hello FOO')
+    config.removeCallback()
   })
 
 

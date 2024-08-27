@@ -11,6 +11,8 @@ import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
 import { type ProgramOptions } from '../program.js'
 import fsPromises from 'fs/promises'
+import { CaptureStream } from '../common/CaptureStream.js'
+import { PassThrough } from 'stream'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -24,7 +26,8 @@ export const injectEnvironmentInScript = (content: string, env?: Environment): s
     if (match != null) {
       content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
     } else {
-      content = envexports + content
+      // NOTE: hashbang required, otherwise -> Underlying error: "spawn Unknown system error -8"
+      content = "#!/bin/sh\n" + envexports + content
     }
   }
   return content.endsWith('\n') ? content : (content + '\n')
@@ -63,6 +66,8 @@ interface ExecOutput { error: ExecException | null, stdout: string, stderr: stri
  */
 export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
   logger.debug(`Creating process async - ${cmd}`)
+  // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
+  // const stdout = buffer !== null ? buffer.toString() : ''
   const { stdout } = await new Promise<ExecOutput>((resolve, reject) => {
     child_process.exec(cmd, { ...opts }, (error, stdout, stderr) => {
       if (error != null) {
@@ -78,39 +83,24 @@ export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, cus
   return customOpts.captureStdout ? stdout : ''
 }
 
-export const createProcessSync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
   logger.debug(`Creating process sync - ${cmd}`)
-  // NOTE: stdio required for streaming output!
-  const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
-  const stdout = buffer !== null ? buffer.toString() : ''
-  if (!customOpts.captureStdout && customOpts.printStdio) logger.info(stdout)
-  return customOpts.captureStdout ? stdout : ''
+  const stdout = new CaptureStream(customOpts.printStdio ? process.stdout : undefined)
+  const stderr = new CaptureStream(customOpts.printStdio ? process.stderr : undefined)
+  const child = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
+  child.stdout?.pipe(stdout)
+  child.stderr?.pipe(stderr)
+  const exitCode = await new Promise(resolve => child.on('close', resolve))
+  // stdout.end()
+  // stderr.end()
+  if (exitCode !== 0) {
+    const error: any = new Error(`Command failed: ${cmd}`)
+    error.status = exitCode
+    throw error
+  }
+  // logger.debug(stdout.getCaptured())
+  return customOpts.captureStdout ? stdout.getCaptured() : ''
 }
-
-// export const spawnProcess = async (cmd: string, opts: SpawnOptionsWithoutStdio, customOpts: CustomOptions): Promise<string> => {
-//   logger.debug(`Spawning process - ${cmd} with opts=${JSON.stringify(opts)} , customOpts=${JSON.stringify(customOpts)}`)
-//   const child: ChildProcess = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
-//   childProcesses.push(child)
-//   // type StdioNull = 'inherit' | 'ignore' | Stream;
-//   // type StdioPipeNamed = 'pipe' | 'overlapped';
-//   // const [, stdout, stderr] = opts.stdio as StdioPipe[]
-
-//   // print / capture stdout only [stdin, stdout, stderr]
-//   let stdout = ''
-//   child.stdout?.on('data', (data: string | Buffer) => {
-//     if (customOpts.printStdio) logger.writeInfo(data.toString())
-//     if (customOpts.captureStdout) stdout += data.toString()
-//   })
-//   if (customOpts.printStdio) child.stderr?.on('data', (data: string | Buffer) => { logger.writeDebug(data.toString()) })
-//   // wait for process to finish
-//   const exitCode = await new Promise(resolve => child.on('close', resolve))
-//   if (exitCode !== 0) {
-//     const error: any = new Error(`Command failed: ${cmd}`)
-//     error.status = exitCode
-//     throw error
-//   }
-//   return stdout
-// }
 
 /**
  * Executes the provided multiline command, and returns the stdout as a string.
@@ -131,8 +121,6 @@ export const executeCmd = async (
 ): Promise<string> => {
   // keep track of files that need to be cleaned up post run.
   const cleanupFiles = []
-
-  const asyncMode = options.server
 
   try {
     // N.B. use randomString to stop script clashes (e.g. when calling another hooked command, from this command!)
@@ -170,11 +158,7 @@ export const executeCmd = async (
       // write a script to run the docker (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      if (asyncMode) {
-        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      } else {
-        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      }
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
@@ -193,20 +177,12 @@ export const executeCmd = async (
       // write a script to execute the shell script on the remote machine... (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      if (asyncMode) {
-        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      } else {
-        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      }
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else {
       // otherwise fallback to running a script on the local machine
       writeScript(filepath, script.$cmd, env)
-      if (asyncMode) {
-        return await createProcessAsync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      } else {
-        return await createProcessSync(filepath, { ...additionalOpts, ...opts }, customOpts)
-      }
+      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
       // end
     }
   } catch (err: any) {
