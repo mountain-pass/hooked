@@ -13,6 +13,14 @@ Feature: Server - Scripts
           $cmd: |
             sleep 1
             echo Hello world!
+        show_user:
+          $env:
+            YOURNAME:
+              $ask: What is your name?
+              $default: Jill
+              $choices:
+                $cmd: printf "Bob\nJill\nFred"
+          $cmd: echo Hello ${YOURNAME}
       
       server:
         auth:
@@ -39,3 +47,34 @@ Feature: Server - Scripts
       | /api/run/default/slow_hello_world |
       | /api/run/default/slow_hello_world |
       | /api/run/default/slow_hello_world |
+
+  Scenario Outline: Should fail on unknown env variables
+    Then the endpoint <apiEndpoint> should respond 500 with body containing "<error>"
+
+    Examples:
+      | apiEndpoint                                               | error                                                        |
+      | /api/resolveEnvValue/default/script/show_user/env/MISSING | Cannot read properties of undefined (reading '$ask').        |
+      | /api/resolveEnvValue/default/script/MISSING/env/YOURNAME  | Script not found - 'MISSING' (interactive prompts disabled). |
+
+  Scenario: Should be able to resolve env variables
+    Then the endpoint /api/resolveEnvValue/default/script/show_user/env/YOURNAME should respond 200 with json
+      """
+      {
+          "$ask": "What is your name?",
+          "$choices": [
+            {
+              "name": "Bob",
+              "value": "Bob"
+            },
+            {
+              "name": "Jill",
+              "value": "Jill"
+            },
+            {
+              "name": "Fred",
+              "value": "Fred"
+            }
+          ],
+          "$default": "Jill"
+        }
+      """

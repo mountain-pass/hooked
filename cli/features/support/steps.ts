@@ -1,4 +1,4 @@
-import { After, Before, DataTable, Given, Then, When } from '@cucumber/cucumber';
+import { After, Before, DataTable, Given, Then, When, World } from '@cucumber/cucumber';
 import { expect } from 'chai';
 import fs from 'fs/promises';
 import sinon from 'sinon';
@@ -88,20 +88,63 @@ Then('I can login with username {word} and password {word}', async function (use
     this.currentJwt = jwt
 })
 
-Then('the endpoint {word} should respond {int} with body {string}', async function (
+Then('the endpoint {word} should respond {int} with body {string}', verifyBodyEndpoint)
+Then('the endpoint {word} should respond {int} with body', verifyBodyEndpoint)
+Then('the endpoint {word} should respond {int} with body containing {string}', verifyBodyContainingEndpoint)
+Then('the endpoint {word} should respond {int} with body containing', verifyBodyContainingEndpoint)
+Then('the endpoint {word} should respond {int} with json {string}', verifyJsonEndpoint)
+Then('the endpoint {word} should respond {int} with json', verifyJsonEndpoint)
+
+async function verifyJsonEndpoint(
+    this: any,
     apiEndpoint: string, 
     expectedStatus: number, 
     expectedResponse: string
-) {
+): Promise<void> {
+    await verifyEndpoint.call(this, apiEndpoint, expectedStatus, expectedResponse, true, false)
+}
+async function verifyBodyEndpoint(
+    this: any,
+    apiEndpoint: string, 
+    expectedStatus: number, 
+    expectedResponse: string
+): Promise<void> {
+    await verifyEndpoint.call(this, apiEndpoint, expectedStatus, expectedResponse, false, false)
+}
+async function verifyBodyContainingEndpoint(
+    this: any,
+    apiEndpoint: string, 
+    expectedStatus: number, 
+    expectedResponse: string
+): Promise<void> {
+    await verifyEndpoint.call(this, apiEndpoint, expectedStatus, expectedResponse, false, true)
+}
+
+// (this: WorldType, ...args: any[]) => any
+async function verifyEndpoint(
+    this: any,
+    apiEndpoint: string, 
+    expectedStatus: number, 
+    expectedResponse: string,
+    asJson: boolean,
+    containingString: boolean
+): Promise<void> {
     const result = await fetch(`http://localhost:4000${apiEndpoint}`, { method: 'GET', headers: { 'Cookie': this.currentJwt } })
     expect(result.status, `${apiEndpoint} - status did not match ${expectedStatus}`).to.eql(expectedStatus)
     if (expectedResponse !== '') {
         let actual = await result.text();
         actual = actual.replace(/"finishedAt":\d{13}/g, '"finishedAt":<TIMESTAMP_MS>')
-        expect(actual, `${apiEndpoint} - body did not match`).to.eql(expectedResponse)
+        if (asJson) {
+            expect(JSON.parse(actual), `${apiEndpoint} - body did not match`).to.eql(JSON.parse(expectedResponse))
+        } else {
+            if (containingString) {
+                expect(actual, `${apiEndpoint} - body did not contain ${expectedResponse}`).to.contain(expectedResponse)
+            } else {
+                expect(actual, `${apiEndpoint} - body did not match`).to.eql(expectedResponse)
+            }
+        }
     }
-});
-
+}
 
 Then('the endpoints should all respond within {int} seconds', async function (expectedTimeSecs: number, dataTable: DataTable) {
     const start = performance.now()
