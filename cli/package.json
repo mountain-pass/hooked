@@ -53,6 +53,7 @@
     "initialPublish": "npm publish --access public",
     "test": "LOG_LEVEL=debug ts-mocha",
     "test:bdd": "NODE_OPTIONS='--loader ts-node/esm' cucumber-js",
+    "test:bdd:wip": "NODE_OPTIONS='--loader ts-node/esm' cucumber-js --tags @wip",
     "test:bdd:watch": "nodemon --exec 'npm run test:bdd'",
     "test:debug": "LOG_LEVEL=debug DEBUG=mocha:* ts-mocha",
     "test:watch": "nodemon",
@@ -123,5 +124,5 @@
     "typescript-eslint": "7.17.0",
     "zod-to-json-schema": "3.23.2"
   },
-  "gitHead": "b366a36a7fcc81f09f790ac8a66480944d01dafa"
+  "gitHead": "a4bb587f432b4d03474eb7167a3e2da7658e0fa6"
 }

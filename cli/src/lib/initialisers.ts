@@ -7,7 +7,7 @@ import { executeCmd } from './scriptExecutors/$cmd.js'
 import logger from './utils/logger.js'
 import { Environment } from './utils/Environment.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
-import { CaptureStream } from './common/CaptureStream.js'
+import { CaptureWritableStream } from './common/CaptureWritableStream.js'
 
 const packageJson = loadRootPackageJsonSync()
 

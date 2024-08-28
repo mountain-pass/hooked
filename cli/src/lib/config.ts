@@ -20,7 +20,7 @@ import { Environment } from './utils/Environment.js'
 import fileUtils from './utils/fileUtils.js'
 import { fetchImports } from './utils/imports.js'
 import logger from './utils/logger.js'
-import { CaptureStream } from './common/CaptureStream.js'
+import { CaptureWritableStream } from './common/CaptureWritableStream.js'
 
 const isDefined = (o: any): o is object => typeof o !== 'undefined' && o !== null
 

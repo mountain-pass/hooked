@@ -1,17 +1,15 @@
 import internal, { Writable } from "stream";
 
 // A class that captures output while also passing it through to the original stream
-export class CaptureStream extends Writable {
+export class CaptureWritableStream extends Writable {
     originalStream?: Writable;
     /** To store captured output. */
-    captureBuffer: string;
-    finished: boolean;
+    captureBuffer: string = '';
+    finished: boolean = false;
 
     constructor(originalStream?: Writable, options?: internal.WritableOptions) {
         super(options)
         this.originalStream = originalStream
-        this.captureBuffer = ''
-        this.finished = false;
 
         // Listen for the finish event
         this.on('finish', () => {

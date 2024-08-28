@@ -38,7 +38,7 @@ import logger from '../utils/logger.js'
 import { executeCmd } from './$cmd.js'
 import { StdinChoicesResolver } from './resolvers/StdinChoicesResolver.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
-import { CaptureStream } from '../common/CaptureStream.js'
+import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']

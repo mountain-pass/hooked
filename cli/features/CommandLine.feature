@@ -22,6 +22,12 @@ Feature: CommandLine
               $ask: What is your name?
           $cmd: echo Hello ${YOURNAME}
       
+        coloured_output:
+          $env:
+            RED: "\\033[0;31m"
+            NC: "\\033[0m"
+          $cmd: printf "I ${RED}love${NC} coding\n"
+      
       server:
         auth:
           type: bcrypt
@@ -65,3 +71,9 @@ Feature: CommandLine
       """
       Hello Jill
       """
+
+  @wip
+  Scenario: Should be able to print coloured output
+    Given I run the command "node index.ts coloured_output"
+    # Then the command output should contain "001b"
+    And the command output should contain "love"

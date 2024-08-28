@@ -11,7 +11,7 @@ import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
 import { type ProgramOptions } from '../program.js'
 import fsPromises from 'fs/promises'
-import { CaptureStream } from '../common/CaptureStream.js'
+import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
 import { PassThrough } from 'stream'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
@@ -24,10 +24,10 @@ export const injectEnvironmentInScript = (content: string, env?: Environment): s
     // inject environment variables at the head of the file...
     const match = REGEX_HAS_HASHBANG_LEADINGLINE.exec(content)
     if (match != null) {
-      content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
+      content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + "export FORCE_COLOR=1\n" + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
     } else {
       // NOTE: hashbang required, otherwise -> Underlying error: "spawn Unknown system error -8"
-      content = "#!/bin/sh\n" + envexports + content
+      content = "#!/bin/sh\n" + envexports + "export FORCE_COLOR=1\n" + content
     }
   }
   return content.endsWith('\n') ? content : (content + '\n')
@@ -57,38 +57,38 @@ export interface CustomOptions {
 type ExecCallback = (error: ExecException | null, stdout: string, stderr: string) => void
 interface ExecOutput { error: ExecException | null, stdout: string, stderr: string }
 
-/**
- * Internal function for running a process.
- * @param cmd
- * @param opts
- * @param customOpts
- * @returns
- */
-export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process async - ${cmd}`)
-  // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
-  // const stdout = buffer !== null ? buffer.toString() : ''
-  const { stdout } = await new Promise<ExecOutput>((resolve, reject) => {
-    child_process.exec(cmd, { ...opts }, (error, stdout, stderr) => {
-      if (error != null) {
-        reject(error)
-      } else {
-        resolve({ error, stdout, stderr })
-      }
-    })
-  })
-  if (!customOpts.captureStdout && customOpts.printStdio) {
-    logger.info(stdout)
-  }
-  return customOpts.captureStdout ? stdout : ''
-}
+// /**
+//  * Internal function for running a process.
+//  * @param cmd
+//  * @param opts
+//  * @param customOpts
+//  * @returns
+//  */
+// export const createProcessAsync = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+//   logger.debug(`Creating process async - ${cmd}`)
+//   // const buffer = child_process.execSync(cmd, { ...opts, stdio: customOpts.captureStdout ? undefined : customOpts.printStdio ? 'inherit' : 'ignore' })
+//   // const stdout = buffer !== null ? buffer.toString() : ''
+//   const { stdout } = await new Promise<ExecOutput>((resolve, reject) => {
+//     child_process.exec(cmd, { ...opts }, (error, stdout, stderr) => {
+//       if (error != null) {
+//         reject(error)
+//       } else {
+//         resolve({ error, stdout, stderr })
+//       }
+//     })
+//   })
+//   if (!customOpts.captureStdout && customOpts.printStdio) {
+//     logger.info(stdout)
+//   }
+//   return customOpts.captureStdout ? stdout : ''
+// }
 
 export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
   logger.debug(`Creating process sync - ${cmd}`)
-  const stdout = new CaptureStream(customOpts.printStdio ? process.stdout : undefined)
-  const stderr = new CaptureStream(customOpts.printStdio ? process.stderr : undefined)
-  const child = child_process.spawn(cmd, { ...opts, stdio: 'inherit' })
-  // const child = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
+  const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
+  const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
+  // const child = child_process.spawn(cmd, { ...opts, stdio: 'inherit' })
+  const child = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
   child.stdout?.pipe(stdout)
   child.stderr?.pipe(stderr)
   const exitCode = await new Promise(resolve => child.on('close', resolve))

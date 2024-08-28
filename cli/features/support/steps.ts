@@ -182,15 +182,44 @@ Then('the endpoints should all respond within {int} to {int} seconds', async fun
 //     this.shutdownServerController.abort("shutdown requested by steps.ts")
 // })
 
-Then('the logger.info should be', function (this: WorldType, output: string) {
-    const calls = fetchLastCall(this.spyLoggerInfo);
-    expect(calls.last, `last logger.info did not match (all):\n${calls.all.join('\n')}`).to.eql(output.trim())
-});
+Then('the logger.info should be', verifySpyLoggerOutputMatches);
+Then('the logger.info should contain', verifySpyLoggerOutputContains);
+Then('the logger.info should be {string}', verifySpyLoggerOutputMatches);
+Then('the logger.info should contain {string}', verifySpyLoggerOutputContains);
 
-Then('the command output should be', function (this: WorldType, output: string) {
+Then('the command output should be', verifySpyCommandOutputMatches);
+Then('the command output should contain', verifySpyCommandOutputContains);
+Then('the command output should be {string}', verifySpyCommandOutputMatches);
+Then('the command output should contain {string}', verifySpyCommandOutputContains);
+
+Then('the command output should be', function (output: string) {
     const calls = fetchLastCall(this.spyCaptureStreamWhenUpdated);
     expect(calls.last, `last command output did not match (all):\n${calls.all.join('\n')}`).to.eql(output.trim())
 });
+
+function verifySpyLoggerOutputContains(this: WorldType, expectedOutput: string) {
+    return verifySpyOutput.call(this, this.spyLoggerInfo, expectedOutput, true)
+}
+
+function verifySpyLoggerOutputMatches(this: WorldType, expectedOutput: string) {
+    return verifySpyOutput.call(this, this.spyLoggerInfo, expectedOutput, false)
+}
+function verifySpyCommandOutputContains(this: WorldType, expectedOutput: string) {
+    return verifySpyOutput.call(this, this.spyCaptureStreamWhenUpdated, expectedOutput, true)
+}
+
+function verifySpyCommandOutputMatches(this: WorldType, expectedOutput: string) {
+    return verifySpyOutput.call(this, this.spyCaptureStreamWhenUpdated, expectedOutput, false)
+}
+
+function verifySpyOutput(this: WorldType, spy: SinonSpy, expectedOutput: string, containingString: boolean) {
+    const calls = fetchLastCall(spy);
+    if (containingString) {
+        expect(calls.last, `last output did not contain (all):\n${calls.all.join('\n')}`).to.contain(expectedOutput.trim())
+    } else {
+        expect(calls.last, `last output did not match (all):\n${calls.all.join('\n')}`).to.eql(expectedOutput.trim())
+    }
+}
 
 Then('the user enters {string}', function (this: WorldType, output: string) {
     process.stdin.emit('data', output + "\n")
