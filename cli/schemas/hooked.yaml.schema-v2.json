@@ -18,18 +18,22 @@
       "properties": {
         "icons": {
           "type": "boolean",
+          "default": true,
           "description": "Makes pretty icons to differentiate executable scripts vs groups."
         },
         "abi": {
           "type": "boolean",
+          "default": false,
           "description": "Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)"
         },
         "makefile": {
           "type": "boolean",
+          "default": true,
           "description": "Scans for a `Makefile` file, and imports the named tasks as scripts."
         },
         "npm": {
           "type": "boolean",
+          "default": true,
           "description": "Scans for a `package.json` file, and imports the named scripts as scripts."
         }
       },

@@ -1,12 +1,6 @@
 # imports:
 #   - ./hooked-*.yml
 
-plugins:
-  icons: true
-  abi: true
-  makefile: true
-  npm: true
-
 env:
   default:
     SKIP_VERSION_CHECK: true

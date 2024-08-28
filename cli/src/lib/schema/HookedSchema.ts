@@ -135,7 +135,7 @@ export const StdinFieldsMappingValue = z
 
 export const StdinScript = z
   .object({
-  // required
+    // required
     $ask: z.string().describe('The prompt provided to the user.'),
     // optional
     $default: z.string().describe('The default value provided to the user.').optional(),
@@ -165,7 +165,7 @@ export const EnvironmentGroup = z
 
 export const CmdScript: z.ZodObject<any> = z
   .object({
-  // required
+    // required
     $cmd: z.string().describe('The command to run. Supports multiline.'),
     // optional
     $env: EnvironmentGroup.describe('Additional environment variables to resolve (added to global environment). Resolved before $envNames').optional(),
@@ -243,10 +243,10 @@ export const HookedSchema = z.object({
 
   plugins: z
     .object({
-      icons: z.boolean().describe('Makes pretty icons to differentiate executable scripts vs groups.').optional(),
-      abi: z.boolean().describe('Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)').optional(),
-      makefile: z.boolean().describe('Scans for a `Makefile` file, and imports the named tasks as scripts.').optional(),
-      npm: z.boolean().describe('Scans for a `package.json` file, and imports the named scripts as scripts.').optional()
+      icons: z.boolean().default(true).describe('Makes pretty icons to differentiate executable scripts vs groups.').optional(),
+      abi: z.boolean().default(false).describe('Scans for `*.json` files, and imports the contract methods as scripts.\nRequired environment variables:\n- PROVIDER_URL\n- PRIVATE_KEY (?)\n- BLOCK_NUMBER (?)').optional(),
+      makefile: z.boolean().default(true).describe('Scans for a `Makefile` file, and imports the named tasks as scripts.').optional(),
+      npm: z.boolean().default(true).describe('Scans for a `package.json` file, and imports the named scripts as scripts.').optional()
     })
     .describe('Provides the ability to use built-in plugins.')
     .optional(),
