@@ -140,9 +140,9 @@ scripts:
   # THIS WILL BUILD AND RELEASE EVERYTHING
   publish_all:
     $jobs_serial:
-      # - cli test_build_and_bump
-      # - ui build
-      # - $cmd: rm -rf cli/public || true && mv ui/out cli/public
+      - cli test_build_and_bump
+      - ui build
+      - $cmd: rm -rf cli/public || true && mv ui/out cli/public
       - cli publish
       # - $cmd: sleep 5
       # - docker publish
