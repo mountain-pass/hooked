@@ -24,10 +24,10 @@ export const injectEnvironmentInScript = (content: string, env?: Environment): s
     // inject environment variables at the head of the file...
     const match = REGEX_HAS_HASHBANG_LEADINGLINE.exec(content)
     if (match != null) {
-      content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + "export FORCE_COLOR=1\n" + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
+      content = content.substring(0, REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex) + envexports + content.substring(REGEX_HAS_HASHBANG_LEADINGLINE.lastIndex)
     } else {
       // NOTE: hashbang required, otherwise -> Underlying error: "spawn Unknown system error -8"
-      content = "#!/bin/sh\n" + envexports + "export FORCE_COLOR=1\n" + content
+      content = "#!/bin/sh\n" + envexports + content
     }
   }
   return content.endsWith('\n') ? content : (content + '\n')

@@ -6,7 +6,7 @@ import sinon from 'sinon'
 import { executeCmd, injectEnvironmentInScript } from '../src/lib/scriptExecutors/$cmd.js'
 import { Environment } from '../src/lib/utils/Environment.js'
 import logger from '../src/lib/utils/logger.js'
-import { CaptureStream } from '../src/lib/common/CaptureStream.js'
+import { CaptureWritableStream } from '../src/lib/common/CaptureWritableStream.js'
 import { fetchLastCall } from './utils/SinonUtils.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -21,7 +21,7 @@ describe('$cmd', () => {
 
   beforeEach(() => {
     sinon.restore()
-    spyCaptureStreamWhenFinished = sinon.spy(CaptureStream.prototype, 'whenFinished')
+    spyCaptureStreamWhenFinished = sinon.spy(CaptureWritableStream.prototype, 'whenFinished')
     spyLoggerInfo = sinon.spy(logger, 'info')
     spyLoggerError = sinon.spy(logger, 'error')
     spyStdout = sinon.spy(process.stdout, 'write')
