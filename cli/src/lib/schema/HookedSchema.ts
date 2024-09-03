@@ -153,11 +153,11 @@ export const EnvironmentValue = z.union([
   z.lazy(() => CmdScript),
   OldStdinScript,
   StdinScript,
-  z.string().describe('Resolves to a plain text string.\nResolves any environment variables within the string.\nThrows an error if an environment variable is missing. Can be used to enforce presence of variables.'),
-  z.number().describe('Resolves to a plain text string.'),
-  z.boolean().describe('Resolves to a plain text string.')
+  z.string().describe('Resolves to a plain text string.\nResolves any environment variables within the string.\nThrows an error if an environment variable is missing. Can be used to enforce presence of variables.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)'),
+  z.number().describe('Resolves to a plain text string.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)'),
+  z.boolean().describe('Resolves to a plain text string.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)')
 ])
-  .describe('An environment variable key / value pair.\nReserved environment variables:\n- SKIP_VERSION_CHECK (?)\n- DOCKER_SCRIPT (?)\n- SSH_SCRIPT (?)\n- NPM_SCRIPT (?)\n- MAKE_FILE (?)\n- MAKE_SCRIPT (?)').optional()
+  .optional()
 
 export const EnvironmentGroup = z
   .record(z.string(), EnvironmentValue)

@@ -1,17 +1,17 @@
 # required environment group names (secrets)
-requiredEnvNames:
-  DO_SECRETS: |
-      Please create (or import) an environment group named `DO_SECRETS`, with the following values:
+# requiredEnvNames:
+#   DO_SECRETS: |
+#       Please create (or import) an environment group named `DO_SECRETS`, with the following values:
 
-      ```
-      env:
-        DO_SECRETS:
-          DIGITALOCEAN_ACCESS_TOKEN: dop_v1_<your_do_token>
-      ```
+#       ```
+#       env:
+#         DO_SECRETS:
+#           DIGITALOCEAN_ACCESS_TOKEN: dop_v1_<your_do_token>
+#       ```
 
-      This is for security, and will only be imported when required.
+#       This is for security, and will only be imported when required.
 
-      A token can be generated from the following link: https://cloud.digitalocean.com/account/api/tokens
+#       A token can be generated from the following link: https://cloud.digitalocean.com/account/api/tokens
 
 env:
   default:

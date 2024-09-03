@@ -1,20 +1,20 @@
 
 
-requiredEnvNames:
-  DO_SECRETS: |
-      Please create (or import) an environment group named `CLOUDFLARE_SECRETS`, with the following values:
+# requiredEnvNames:
+#   DO_SECRETS: |
+#       Please create (or import) an environment group named `CLOUDFLARE_SECRETS`, with the following values:
 
-      ```
-      env:
-        CLOUDFLARE_SECRETS:
-          CLOUDFLARE_BEARER_TOKEN: <your_bearer_token>
-      ```
+#       ```
+#       env:
+#         CLOUDFLARE_SECRETS:
+#           CLOUDFLARE_BEARER_TOKEN: <your_bearer_token>
+#       ```
 
-      This is for security, and will only be imported when required.
+#       This is for security, and will only be imported when required.
 
-      A token can be generated from the following link: https://dash.cloudflare.com/profile/api-tokens
+#       A token can be generated from the following link: https://dash.cloudflare.com/profile/api-tokens
 
-      API Documentation can be found here: https://developers.cloudflare.com/api/
+#       API Documentation can be found here: https://developers.cloudflare.com/api/
 
 env:
   default:

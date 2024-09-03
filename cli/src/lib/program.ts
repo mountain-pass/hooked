@@ -10,6 +10,7 @@ import { init, initialiseConfig, initialiseDocker, initialiseSsl } from './initi
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import server from './server/server.js'
 import {
+  isDefined,
   isNumber,
   isString,
   isUndefined
@@ -220,15 +221,15 @@ Provided Environment Variables:
         logger.debug(`Using config file: ${defaultInstance.HOOKED_FILE}`)
       }
 
+      // load configuration (after init, in case the config file was just created!)
+      const config = await loaders.loadConfiguration(systemProcessEnvs, options)
+
       // check for newer versions
-      if (options.skipVersionCheck !== true) {
+      if (options.skipVersionCheck !== true || isUndefined(config.env?.default?.SKIP_VERSION_CHECK)) {
         await verifyLocalRequiredTools.verifyLatestVersion()
       } else {
         logger.debug('Skipping version check...')
       }
-
-      // load configuration (after init, in case the config file was just created!)
-      const config = await loaders.loadConfiguration(systemProcessEnvs, options)
 
       // hash the provided password and exit
       if (isString(options.hashPassword)) {
