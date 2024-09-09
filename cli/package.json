@@ -124,5 +124,5 @@
     "typescript-eslint": "7.17.0",
     "zod-to-json-schema": "3.23.2"
   },
-  "gitHead": "0846fc744214c6a686d1e7852d8984f470bac507"
+  "gitHead": "09d8365d93a7c34ae0900100dced49608ddd087c"
 }

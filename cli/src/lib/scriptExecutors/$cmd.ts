@@ -85,7 +85,7 @@ export interface CustomOptions {
 // }
 
 export const createProcess = async (cmdFilePath: string, stdoutFilePath: string, stderrFilePath: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process sync - ${cmdFilePath}`)
+  logger.debug(`Creating process sync - ${cmdFilePath} - appMode=${ApplicationMode.getApplicationMode()} captureStdout=${customOpts.captureStdout ? 'Y' : 'N'} printStdio=${customOpts.printStdio ? 'Y' : 'N'}`)
   // const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
   // const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
   const fd1 = fs.openSync(stdoutFilePath, 'a')
