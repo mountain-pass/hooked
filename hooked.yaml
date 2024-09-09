@@ -5,6 +5,8 @@ env:
   default:
     SKIP_VERSION_CHECK: 1
     FORCE_COLOR: 1
+    QUICK_CHECK:
+      $cmd: echo YOU SHOULD NOT BE SEEING THIS MESSAGE IN THE CONSOLE!
     # username: ${USER}
     # GIT_COMMIT:
     #   $cmd: git rev-parse --short HEAD || echo "NOT_AVAILABLE"

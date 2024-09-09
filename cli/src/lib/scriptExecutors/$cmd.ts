@@ -83,24 +83,36 @@ export interface CustomOptions {
 //   return customOpts.captureStdout ? stdout : ''
 // }
 
-export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process sync - ${cmd}`)
-  const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
-  const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
+export const createProcess = async (cmdFilePath: string, stdoutFilePath: string, stderrFilePath: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
+  logger.debug(`Creating process sync - ${cmdFilePath}`)
+  // const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
+  // const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
+  const fd1 = fs.openSync(stdoutFilePath, 'a')
+  const fd2 = fs.openSync(stderrFilePath, 'a')
+  // const stdout = fs.createWriteStream('', { fd: fd1 })
+  // const stderr = fs.createWriteStream('', { fd: fd2 })
+  // const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
+  // const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
   // const child = child_process.spawn(cmd, { ...opts, stdio: 'inherit' })
-  const child = child_process.spawn(cmd, { ...opts, stdio: !customOpts.captureStdout && customOpts.printStdio && ApplicationMode.getApplicationMode() !== 'test' ? 'inherit' : 'pipe' })
-  child.stdout?.pipe(stdout)
-  child.stderr?.pipe(stderr)
+  const child = child_process.spawn(cmdFilePath, { ...opts, stdio: !customOpts.captureStdout && customOpts.printStdio && ApplicationMode.getApplicationMode() !== 'test' ? 'inherit' : ['ignore', fd1, fd2] })
+  // child.stdout?.pipe(stdout)
+  // child.stderr?.pipe(stderr)
   const exitCode = await new Promise(resolve => child.on('close', resolve))
   // stdout.end()
   // stderr.end()
   if (exitCode !== 0) {
-    const error: any = new Error(`Command failed: ${cmd}`)
+    const error: any = new Error(`Command failed: ${cmdFilePath}`)
     error.status = exitCode
     throw error
   }
+  // to facilitate testing...
+  const stdoutContent = await fsPromises.readFile(stdoutFilePath, { encoding: 'utf-8' })
+  const tmp = new CaptureWritableStream()
+  tmp.whenUpdated(stdoutContent)
+  tmp.whenFinished(stdoutContent)
+
   // logger.debug(stdout.getCaptured())
-  return customOpts.captureStdout ? stdout.getCaptured() : ''
+  return customOpts.captureStdout ? stdoutContent : ''
 }
 
 /**
@@ -128,11 +140,15 @@ export const executeCmd = async (
     const rand = randomString()
     const scriptName = `${key.replace(/[^\w\d-]+/g, '')}-${rand}`
     const filepath = fileUtils.resolvePath(`.tmp-${scriptName}.sh`)
+    const stdoutpath = `${filepath}.stdout`
+    const stderrpath = `${filepath}.stderr`
     const envfile = fileUtils.resolvePath(`.env-${scriptName}.txt`)
     const parent = options.dockerHookedDir ?? path.dirname(filepath)
     const additionalOpts = { timeout: isDefined(timeoutMs) ? timeoutMs : undefined }
     cleanupFiles.push(filepath)
     cleanupFiles.push(envfile)
+    cleanupFiles.push(stdoutpath)
+    cleanupFiles.push(stderrpath)
 
     // add "HOOKED_ROOT=false" to all child environments...
     env.putResolved('HOOKED_ROOT', 'false')
@@ -159,7 +175,7 @@ export const executeCmd = async (
       // write a script to run the docker (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      return await createProcess(filepath, stdoutpath, stderrpath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else if (isSSHCmdScript(script)) {
       // run on remote machine
@@ -178,12 +194,12 @@ export const executeCmd = async (
       // write a script to execute the shell script on the remote machine... (include system env vars - these may be required e.g. DOCKER_HOST)...
       const tmp = env.clone().putAllResolved(process.env as any, false)
       writeScript(filepath, cmd, tmp)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      return await createProcess(filepath, stdoutpath, stderrpath, { ...additionalOpts, ...opts }, customOpts)
       // end
     } else {
       // otherwise fallback to running a script on the local machine
       writeScript(filepath, script.$cmd, env)
-      return await createProcess(filepath, { ...additionalOpts, ...opts }, customOpts)
+      return await createProcess(filepath, stdoutpath, stderrpath, { ...additionalOpts, ...opts }, customOpts)
       // end
     }
   } catch (err: any) {

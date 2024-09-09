@@ -1,3 +1,5 @@
+*.stdout
+*.stderr
 buildkit.toml
 docker-compose.yml
 .DS_Store
