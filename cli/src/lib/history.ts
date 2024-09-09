@@ -74,7 +74,7 @@ export const displaySuccessfulScript = (
     script.envNames,
     script.stdin as EnvironmentVariables,
     undefined,
-    Date.now(),
+    script.ts,
     showTimestamp,
     tzoffsetMinutes
   )
@@ -90,7 +90,7 @@ export const displayInvocationResult = (
     script.envNames,
     script.envVars,
     undefined,
-    Date.now(),
+    script.finishedAt,
     showTimestamp,
     tzoffsetMinutes
   )

@@ -12,6 +12,13 @@
             "cwd": "${workspaceFolder}/cli"
         },
         {
+            "command": "npm run test:bdd:wip",
+            "name": "Run npm test:bdd:wip",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/cli"
+        },
+        {
             "command": "npm run start:server",
             "name": "Run start:server",
             "request": "launch",

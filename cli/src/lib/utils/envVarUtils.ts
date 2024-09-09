@@ -1,4 +1,4 @@
-import { isStdinScript, isString, type EnvironmentVariables } from '../types.js'
+import { isStdinScript, isString, isUndefined, type EnvironmentVariables } from '../types.js'
 import logger from './logger.js'
 
 /**
@@ -11,8 +11,8 @@ export const mergeEnvVars = (baseEnvVars1: EnvironmentVariables, addEnvVars2: En
     // NOTE don't overwrite a resolved string value, with a stdin script.
     // We want to be about to input environment variable "answers" to stdin scripts,
     // to facilitate server/batch mode.
-    if (isString(baseEnvVars1[key]) && isStdinScript(value)) {
-      // don't overwrite key... continue...
+    if (isString(baseEnvVars1[key]) && isStdinScript(value) && isUndefined(value.$choices)) {
+      // don't overwrite key, continue...
       logger.debug(`Not overwriting ${key} value=${baseEnvVars1[key]} with stdin script ${JSON.stringify(value)}`)
       continue
     } else {

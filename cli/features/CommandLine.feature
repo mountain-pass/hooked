@@ -78,7 +78,6 @@ Feature: CommandLine
       Hello Jill
       """
 
-  @wip
   Scenario: Should be able to print coloured output
     Given I run the command "node index.ts coloured_output"
     # Then the command output should contain "001b"

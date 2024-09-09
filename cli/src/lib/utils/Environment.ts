@@ -20,7 +20,7 @@ export const getEnvVarRefs = (str: string): string[] => {
   }, {}))
 }
 
-export function toJsonString (env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
+export function toJsonString(env: RawEnvironment | EnvironmentVariables, pretty: boolean = false): string {
   const sorted = Object.fromEntries(Object.entries(env)
     .sort((a, b) => sortCaseInsensitive(a[0], b[0])))
   return pretty ? JSON.stringify(sorted, null, 2) : JSON.stringify(sorted)
@@ -41,7 +41,7 @@ export class Environment {
   /** All keys defined here, should be excluded from resolution. */
   doNotResolveList: string[] = []
 
-  purgeSecrets (): void {
+  purgeSecrets(): void {
     this.secrets = {}
   }
 
@@ -49,27 +49,27 @@ export class Environment {
    * Returns all environment variables, excluding secret variables.
    * @returns
    */
-  getAll (): RawEnvironment {
+  getAll(): RawEnvironment {
     // N.B. order is important, because resolved variables should override global variables
     return { ...this.global, ...this.resolved }
     // N.B. secrets go in... but secrets should not come out!
   }
 
-  setDoNotResolve (keys: string[]): void {
+  setDoNotResolve(keys: string[]): void {
     this.doNotResolveList = [...keys]
   }
 
-  hasSecret (key: string): boolean {
+  hasSecret(key: string): boolean {
     return typeof this.secrets[key] === 'string'
   }
 
-  isSecret (key: string): boolean {
+  isSecret(key: string): boolean {
     return /^.*secret.*$/i.test(key)
   }
 
   // put
 
-  putGlobal (key: string, value: string): Environment {
+  putGlobal(key: string, value: string): Environment {
     // reject invalid values
     if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
       logger.debug(`Received invalid global value '${value}' for key '${key}', ignoring...`)
@@ -82,7 +82,7 @@ export class Environment {
     return this
   }
 
-  putResolved (key: string, value: string): Environment {
+  putResolved(key: string, value: string): Environment {
     // reject invalid values
     if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
       logger.debug(`Received invalid resolved value '${value}' for key '${key}', ignoring...`)
@@ -95,7 +95,7 @@ export class Environment {
     return this
   }
 
-  putSecret (key: string, value: string): Environment {
+  putSecret(key: string, value: string): Environment {
     // reject invalid values
     if ((isString(value) && value.trim() === '') || !isDefined(value) || value === null) {
       logger.debug(`Received invalid secret value '${value}' for key '${key}', ignoring...`)
@@ -106,7 +106,7 @@ export class Environment {
 
   // putAll
 
-  putAllGlobal (env: RawEnvironment): Environment {
+  putAllGlobal(env: RawEnvironment): Environment {
     Object.entries(env).forEach(([key, value]) => {
       this.putGlobal(key, value)
     })
@@ -119,7 +119,7 @@ export class Environment {
    * @param overwrite if true, then overwrite existing values. if false, then keep existing values. (default = true)
    * @returns
    */
-  putAllResolved (env: RawEnvironment, overwrite: boolean = true): Environment {
+  putAllResolved(env: RawEnvironment, overwrite: boolean = true): Environment {
     Object.entries(env).forEach(([key, value]) => {
       if (isDefined(this.resolved[key]) && !overwrite) {
         // do nothing... keep existing value
@@ -130,18 +130,34 @@ export class Environment {
     return this
   }
 
-  putAllSecrets (env: RawEnvironment): Environment {
+  putAllSecrets(env: RawEnvironment): Environment {
     Object.entries(env).forEach(([key, value]) => {
       this.putSecret(key, value)
     })
     return this
   }
 
-  willNotBeResolved (key: string): boolean {
+  putOverwrite(key: string, value: string): Environment {
+    const g = this.global[key]
+    if (isString(g) && g.trim().length > 0) {
+      this.putGlobal(key, value)
+    }
+    const r = this.resolved[key]
+    if (isString(r) && r.trim().length > 0) {
+      this.putResolved(key, value)
+    }
+    const s = this.secrets[key]
+    if (isString(s) && s.trim().length > 0) {
+      this.putSecret(key, value)
+    }
+    return this
+  }
+
+  willNotBeResolved(key: string): boolean {
     return this.doNotResolveList.includes(key)
   }
 
-  getMissingRequiredKeys (resolveMe: string): string[] {
+  getMissingRequiredKeys(resolveMe: string): string[] {
     if (typeof resolveMe !== 'string') throw new Error(`resolveMe must be a string, but was ${typeof resolveMe}`)
     const requiredKeys = getEnvVarRefs(resolveMe)
     const all = { ...this.global, ...this.resolved, ...this.secrets }
@@ -155,14 +171,14 @@ export class Environment {
 
   // RESOLVING VARIABLES
 
-  isResolvableByKey (key: string): boolean {
+  isResolvableByKey(key: string): boolean {
     const value = { ...this.global, ...this.resolved, ...this.secrets }[key]
     const isResolvable = isString(value) && value.trim().length > 0
     // logger.debug(`isResolvableByKey('${key}') = ${String(isResolvable)}`)
     return isResolvable
   }
 
-  resolveByKey (key: string): string {
+  resolveByKey(key: string): string {
     // OLD return this.getAll()[key] - we want to resolve JUST IN TIME now... not before!
     if (this.isResolvableByKey(key)) {
       const value = { ...this.global, ...this.resolved, ...this.secrets }[key]
@@ -178,7 +194,7 @@ export class Environment {
    * @param key
    * @returns
    */
-  resolve (resolveMe: string, key: string = 'NOT_DEFINED'): string {
+  resolve(resolveMe: string, key: string = 'NOT_DEFINED'): string {
     if (typeof resolveMe !== 'string') throw new Error(`resolveMe must be a string, but was ${typeof resolveMe}`)
 
     // EXEMPT_ENVIRONMENT_KEYWORDS are special exemptions - that are internally resolved!
@@ -207,7 +223,7 @@ export class Environment {
    * @param resolveMe
    * @returns
    */
-  resolveAndPutResolved (key: string, resolveMe: string): string {
+  resolveAndPutResolved(key: string, resolveMe: string): string {
     const value = this.resolve(resolveMe, key)
     this.putResolved(key, value)
     return value
@@ -217,7 +233,7 @@ export class Environment {
    * Clones this object to a new instance. Includes secrets.
    * @returns
    */
-  clone (): Environment {
+  clone(): Environment {
     const env = new Environment()
     env.global = { ...this.global }
     env.resolved = { ...this.resolved }
@@ -230,7 +246,7 @@ export class Environment {
    * Replaces the provided environment variables with this instance. Excludes secrets.
    * @param env
    */
-  replace (env: Environment): void {
+  replace(env: Environment): void {
     this.global = { ...env.global }
     this.resolved = { ...env.resolved }
     // this.secrets = { ...env.secrets }
@@ -241,7 +257,7 @@ export class Environment {
    * Converts the resolved environment variables to a docker .env file string.
    * @returns
    */
-  envToDockerEnvfile (): string {
+  envToDockerEnvfile(): string {
     return Object.entries(this.resolved).map(([k, v]) => `${k}=${v}\n`)
       .sort(sortCaseInsensitive)
       .join('')
@@ -251,7 +267,7 @@ export class Environment {
    * Converts the resolved environment variables to a shell exports string.
    * @returns
    */
-  envToShellExports (): string {
+  envToShellExports(): string {
     const entries = Object.entries(this.resolved)
     if (entries.length === 0) return ''
     return '\n' + entries.map(([k, v]) => `export ${k}="${v.replace(/"/g, '\\"')}"\n`)
@@ -259,11 +275,11 @@ export class Environment {
       .join('') + '\n'
   }
 
-  toJsonStringResolved (pretty: boolean = false): string {
+  toJsonStringResolved(pretty: boolean = false): string {
     return toJsonString(this.resolved, pretty)
   }
 
-  toString (): string {
+  toString(): string {
     return JSON.stringify(this.getAll())
   }
 }

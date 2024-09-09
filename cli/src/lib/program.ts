@@ -259,7 +259,11 @@ Provided Environment Variables:
       } else {
         // script mode
         const providedEnvNames = options.env.split(',')
-        const stdin: RawEnvironment = HJSON.parse(options.stdin)
+        const tmp = options.stdin.replace(/(^['"])|(['"]$)/g, '')
+        const stdin: RawEnvironment = HJSON.parse(tmp)
+        if (isString(stdin)) {
+          throw new Error(`Invalid stdin provided. Must be a JSON object. Found="${tmp}"`)
+        }
         await common.invoke(null, systemProcessEnvs, options, config, providedEnvNames, options.scriptPath, stdin, true, false)
         // try {
 
