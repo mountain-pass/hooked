@@ -10,6 +10,7 @@ import { fail } from 'assert';
 import { Command } from 'commander';
 import { CaptureWritableStream } from '../../src/lib/common/CaptureWritableStream.js';
 import { fetchLastCall } from '../../test/utils/SinonUtils.js';
+import ApplicationMode from '../../src/lib/utils/ApplicationMode.js';
 
 // let cleanupFiles: string[] = []
 
@@ -44,6 +45,7 @@ Before(function (this: WorldType) {
     this.spyCaptureWritableStreamWhenFinished = sinon.spy(CaptureWritableStream.prototype, 'whenFinished')
     this.systemEnvironmentVariables = {}
     this.shutdownServerController = new AbortController()
+    sinon.stub(ApplicationMode, 'getApplicationMode').returns('test')
 })
 
 After(function (this: WorldType) {

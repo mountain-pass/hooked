@@ -1,18 +1,18 @@
 /* eslint-disable no-template-curly-in-string */
 /* eslint-disable max-len */
-import child_process, { type ExecException, type ChildProcess, type ExecSyncOptions, type SpawnOptionsWithoutStdio } from 'child_process'
+import child_process, { type ChildProcess, type ExecSyncOptions } from 'child_process'
 import crypto from 'crypto'
 import fs from 'fs'
+import fsPromises from 'fs/promises'
 import path from 'path'
-import { type DockerCmdScript, type SSHCmdScript, isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript } from '../types.js'
-import logger from '../utils/logger.js'
-import { resolveResolveScript } from './ScriptExecutor.js'
+import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
+import { type ProgramOptions } from '../program.js'
+import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type DockerCmdScript, type SSHCmdScript } from '../types.js'
 import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
-import { type ProgramOptions } from '../program.js'
-import fsPromises from 'fs/promises'
-import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
-import { PassThrough } from 'stream'
+import logger from '../utils/logger.js'
+import { resolveResolveScript } from './ScriptExecutor.js'
+import ApplicationMode from '../utils/ApplicationMode.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -54,8 +54,8 @@ export interface CustomOptions {
   printStdio: boolean
 }
 
-type ExecCallback = (error: ExecException | null, stdout: string, stderr: string) => void
-interface ExecOutput { error: ExecException | null, stdout: string, stderr: string }
+// type ExecCallback = (error: ExecException | null, stdout: string, stderr: string) => void
+// interface ExecOutput { error: ExecException | null, stdout: string, stderr: string }
 
 // /**
 //  * Internal function for running a process.
@@ -88,7 +88,7 @@ export const createProcess = async (cmd: string, opts: ExecSyncOptions, customOp
   const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
   const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
   // const child = child_process.spawn(cmd, { ...opts, stdio: 'inherit' })
-  const child = child_process.spawn(cmd, { ...opts, stdio: ['inherit', 'pipe', 'pipe'] })
+  const child = child_process.spawn(cmd, { ...opts, stdio: !customOpts.captureStdout && customOpts.printStdio && ApplicationMode.getApplicationMode() !== 'test' ? 'inherit' : 'pipe' })
   child.stdout?.pipe(stdout)
   child.stderr?.pipe(stderr)
   const exitCode = await new Promise(resolve => child.on('close', resolve))

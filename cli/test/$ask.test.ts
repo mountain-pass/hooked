@@ -11,6 +11,7 @@ import program from '../src/lib/program.js'
 import logger from '../src/lib/utils/logger.js'
 import { CaptureWritableStream } from '../src/lib/common/CaptureWritableStream.js'
 import { fetchLastCall } from './utils/SinonUtils.js'
+import ApplicationMode from '../src/lib/utils/ApplicationMode.js'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -30,6 +31,7 @@ describe('$cmd', () => {
     // spyStdout = sinon.spy(process.stdout, 'write')
     // spyStderr = sinon.spy(process.stderr, 'write')
     inqStub = sinon.stub(inquirer, 'prompt')
+    sinon.stub(ApplicationMode, 'getApplicationMode').returns('test')
   })
 
   afterEach(() => {

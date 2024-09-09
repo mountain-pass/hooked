@@ -173,9 +173,9 @@ scripts:
   publish_all:
     $jobs_serial:
       # - git_verify_clean
-      # - cli test
-      # - cli build
-      - cli build_and_bump
+      - cli test
+      - cli build
+      # - cli build_and_bump
       - ui build
       - $cmd: rm -rf cli/public || true && mv ui/out cli/public
       - cli publish
