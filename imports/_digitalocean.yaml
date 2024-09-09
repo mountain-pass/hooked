@@ -225,7 +225,6 @@ scripts:
             $fieldsMapping:
               name: slug
               value: slug
-              short: description
           REGION:
             $ask: Please choose a region
             $choices:

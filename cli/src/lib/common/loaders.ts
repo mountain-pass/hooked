@@ -15,7 +15,7 @@ import { Environment, type RawEnvironment } from '../utils/Environment.js'
  */
 const loadConfiguration = async (systemProcessEnvs: RawEnvironment, options: ProgramOptions): Promise<YamlConfig> => {
   // load imports...
-  const config = await loadConfig(defaults.getDefaults().HOOKED_FILE, options.pull)
+  const config = await loadConfig(defaults.getDefaults().HOOKED_FILE, options.pull, options.validate)
 
   // setup default plugins...
   config.plugins = { ...{ abi: false, icons: true, npm: true, makefile: true }, ...(config.plugins ?? {}) }

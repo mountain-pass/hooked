@@ -8,7 +8,7 @@ import verifyLocalRequiredTools from '../../src/lib/scriptExecutors/verifyLocalR
 import logger from '../../src/lib/utils/logger.js';
 import { fail } from 'assert';
 import { Command } from 'commander';
-import { CaptureStream } from '../../src/lib/common/CaptureStream.js';
+import { CaptureWritableStream } from '../../src/lib/common/CaptureWritableStream.js';
 import { fetchLastCall } from '../../test/utils/SinonUtils.js';
 
 // let cleanupFiles: string[] = []
@@ -26,8 +26,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type WorldType = {
     spyLoggerInfo: SinonSpy
-    spyCaptureStreamWhenUpdated: SinonSpy
-    spyCaptureStreamWhenFinished: SinonSpy
+    spyCaptureWritableStreamWhenUpdated: SinonSpy
+    spyCaptureWritableStreamWhenFinished: SinonSpy
     result: any
     systemEnvironmentVariables: Record<string, string>
     shutdownServerController: AbortController
@@ -40,8 +40,8 @@ Before(function (this: WorldType) {
     sinon.stub(exitHandler, 'onExit').returns()
     sinon.stub(verifyLocalRequiredTools, 'verifyLatestVersion').resolves()
     this.spyLoggerInfo = sinon.spy(logger, 'info')
-    this.spyCaptureStreamWhenUpdated = sinon.spy(CaptureStream.prototype, 'whenUpdated')
-    this.spyCaptureStreamWhenFinished = sinon.spy(CaptureStream.prototype, 'whenFinished')
+    this.spyCaptureWritableStreamWhenUpdated = sinon.spy(CaptureWritableStream.prototype, 'whenUpdated')
+    this.spyCaptureWritableStreamWhenFinished = sinon.spy(CaptureWritableStream.prototype, 'whenFinished')
     this.systemEnvironmentVariables = {}
     this.shutdownServerController = new AbortController()
 })
@@ -192,10 +192,7 @@ Then('the command output should contain', verifySpyCommandOutputContains);
 Then('the command output should be {string}', verifySpyCommandOutputMatches);
 Then('the command output should contain {string}', verifySpyCommandOutputContains);
 
-Then('the command output should be', function (output: string) {
-    const calls = fetchLastCall(this.spyCaptureStreamWhenUpdated);
-    expect(calls.last, `last command output did not match (all):\n${calls.all.join('\n')}`).to.eql(output.trim())
-});
+// mappers
 
 function verifySpyLoggerOutputContains(this: WorldType, expectedOutput: string) {
     return verifySpyOutput.call(this, this.spyLoggerInfo, expectedOutput, true)
@@ -205,12 +202,14 @@ function verifySpyLoggerOutputMatches(this: WorldType, expectedOutput: string) {
     return verifySpyOutput.call(this, this.spyLoggerInfo, expectedOutput, false)
 }
 function verifySpyCommandOutputContains(this: WorldType, expectedOutput: string) {
-    return verifySpyOutput.call(this, this.spyCaptureStreamWhenUpdated, expectedOutput, true)
+    return verifySpyOutput.call(this, this.spyCaptureWritableStreamWhenUpdated, expectedOutput, true)
 }
 
 function verifySpyCommandOutputMatches(this: WorldType, expectedOutput: string) {
-    return verifySpyOutput.call(this, this.spyCaptureStreamWhenUpdated, expectedOutput, false)
+    return verifySpyOutput.call(this, this.spyCaptureWritableStreamWhenUpdated, expectedOutput, false)
 }
+
+// verify
 
 function verifySpyOutput(this: WorldType, spy: SinonSpy, expectedOutput: string, containingString: boolean) {
     const calls = fetchLastCall(spy);

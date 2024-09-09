@@ -71,8 +71,8 @@ scripts:
           PROXIED:
             $ask: Please choose a Proxy type
             $choices:
-              - true
-              - false
+              - 'true'
+              - 'false'
           TYPE:
             $ask: Please choose a DNS Type
             $choices:
@@ -111,7 +111,7 @@ scripts:
                   -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}" \
                   -X GET ${BASEURL}/zones/${zone_id}/dns_records \
                   | jq -M "[.result[] | { name: \"[\(.type)] \(.name) = \(.content)\", value: .id }]"
-              $sort: alpha
+            $sort: alpha
           AREYOUSURE:
             $ask: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
         $cmd: |
@@ -138,3 +138,4 @@ scripts:
 
       update / patch:
         $cmd: echo Not yet implemented. More here -> https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
+        

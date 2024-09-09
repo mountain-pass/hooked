@@ -8,6 +8,7 @@ import { type ProgramOptions } from './program.js'
 
 const onExit = (options: ProgramOptions): void => {
   nodeCleanup((exitCode, signal) => {
+    logger.debug(`Received exit code [${exitCode}] and signal [${signal}]`)
     const newExitCode = exitCode !== null ? exitCode : typeof signal === 'string' ? 1 : 0
     // delete tmp files...
     if (options.skipCleanup !== true) {

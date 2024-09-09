@@ -4,7 +4,7 @@ import inquirer from 'inquirer'
 import YAML from 'yaml'
 import defaults from './defaults.js'
 import { displaySuccessfulScript, fetchHistory } from './history.js'
-import { type ProgramOptions } from './program.js'
+import program, { type ProgramOptions } from './program.js'
 import { schemaValidator } from './schema/HookedSchema.js'
 import { resolveScript } from './scriptExecutors/ScriptExecutor.js'
 import {
@@ -328,7 +328,7 @@ export const populateScriptPath = (scripts: TopLevelScripts, parentPaths: string
   }
 }
 
-export const loadConfig = async (configFile: string, pullLatestFlag = false): Promise<YamlConfig> => {
+export const loadConfig = async (configFile: string, pullLatestFlag = false, validate = false): Promise<YamlConfig> => {
   const fileExists = fs.existsSync(configFile)
   // file exists
   if (fileExists) {
@@ -339,17 +339,21 @@ export const loadConfig = async (configFile: string, pullLatestFlag = false): Pr
     }
 
     // validate this configuration file (called recursively for imports)
-    if (schemaValidator(configFile, config)) {
-      // add _scriptPath fields to all scripts
-      populateScriptPath(config.scripts ?? {})
-
-      // merge imports with current configuration
-      await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
-
-      return config
-    } else {
-      throw new Error(`Invalid configuration file: ${configFile}`)
+    if (!schemaValidator(configFile, config)) {
+      if (validate) {
+        throw new Error(`Invalid configuration file: ${configFile}`)
+      } else {
+        logger.warn("Attempting to continue with invalid configuration file...")
+      }
     }
+
+    // add _scriptPath fields to all scripts
+    populateScriptPath(config.scripts ?? {})
+
+    // merge imports with current configuration
+    await _resolveAndMergeConfigurationWithImports(config, pullLatestFlag)
+
+    return config
   } else {
     throw new Error(`No ${configFile} file found.`)
   }

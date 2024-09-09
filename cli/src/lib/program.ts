@@ -10,6 +10,7 @@ import { init, initialiseConfig, initialiseDocker, initialiseSsl } from './initi
 import verifyLocalRequiredTools from './scriptExecutors/verifyLocalRequiredTools.js'
 import server from './server/server.js'
 import {
+  isBoolean,
   isDefined,
   isNumber,
   isString,
@@ -20,6 +21,7 @@ import logger from './utils/logger.js'
 import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { HookedServerSchemaType } from './schema/HookedSchema.js'
 import bcrypt from './server/bcrypt.js'
+import { sleep } from './utils/sleep.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -34,6 +36,7 @@ export interface ProgramOptions {
   timezone?: string
   hashPassword?: string
   init?: boolean
+  validate?: boolean
   initConfig?: boolean
   initSsl?: boolean
   initDocker?: boolean
@@ -62,6 +65,9 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, serverShutdownSign
       .env('HASH_PASSWORD'))
 
     .addOption(new Option('-i, --init', 'Runs the initialisation wizard, and exits.')
+      .env('INIT'))
+
+    .addOption(new Option('-va, --validate', 'Validates the config, and exits.')
       .env('INIT'))
 
     .addOption(new Option('-ic, --initConfig', 'Creates a basic configuration file (hooked.yaml) in the current directory.')
@@ -222,10 +228,13 @@ Provided Environment Variables:
       }
 
       // load configuration (after init, in case the config file was just created!)
-      const config = await loaders.loadConfiguration(systemProcessEnvs, options)
+      let config = await loaders.loadConfiguration(systemProcessEnvs, options)
+      if (options.validate) {
+        return
+      }
 
       // check for newer versions
-      if (options.skipVersionCheck !== true || isUndefined(config.env?.default?.SKIP_VERSION_CHECK)) {
+      if (options.skipVersionCheck !== true && isUndefined(config.env?.default?.SKIP_VERSION_CHECK)) {
         await verifyLocalRequiredTools.verifyLatestVersion()
       } else {
         logger.debug('Skipping version check...')
@@ -277,8 +286,8 @@ Provided Environment Variables:
   return program
 }
 
-export default async (argv: string[] = process.argv): Promise<Command> => {
+export default async (argv: string[] = process.argv): Promise<Command | undefined> => {
   const serverShutdownController = new AbortController()
-  const program = newProgram(process.env as RawEnvironment, serverShutdownController.signal)
+  let program = newProgram(process.env as RawEnvironment, serverShutdownController.signal)
   return await program.parseAsync(argv)
 }

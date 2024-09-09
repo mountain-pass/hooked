@@ -266,12 +266,16 @@ export type HookedSchemaType = z.infer<typeof HookedSchema>
 export type HookedServerSchemaType = z.infer<typeof Server>
 export type HookedServerDashboardSchemaType = z.infer<typeof ServerDashboard>
 
+/**
+ * Returns true if schema is valid.
+ */
 export const schemaValidator = (configFilePath: string, data: any): data is YamlConfig => {
   const result = HookedSchema.safeParse(data)
   if (result.success) {
     logger.debug(`Configuration file ${configFilePath} is valid.`)
+    return true
   } else {
-    throw new Error(`Invalid configuration file: ${configFilePath}. ${isString(result.error) ? result.error : JSON.stringify(result.error.format(), null, 2)}`)
+    logger.warn(`Invalid configuration file: ${configFilePath}. ${isString(result.error) ? result.error : JSON.stringify(result.error.format(), null, 2)}`)
+    return false
   }
-  return result.success
 }

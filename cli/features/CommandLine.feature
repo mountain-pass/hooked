@@ -28,6 +28,12 @@ Feature: CommandLine
             NC: "\\033[0m"
           $cmd: printf "I ${RED}love${NC} coding\n"
       
+        stdin_passthrough:
+          $cmd: |
+            echo "Please enter some input: "
+            read input_variable
+            echo "You entered: $input_variable"
+      
       server:
         auth:
           type: bcrypt
@@ -76,4 +82,4 @@ Feature: CommandLine
   Scenario: Should be able to print coloured output
     Given I run the command "node index.ts coloured_output"
     # Then the command output should contain "001b"
-    And the command output should contain "love"
+    And the command output should contain "31mlove"

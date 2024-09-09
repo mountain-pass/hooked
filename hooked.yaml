@@ -3,7 +3,7 @@
 
 env:
   default:
-    SKIP_VERSION_CHECK: true
+    SKIP_VERSION_CHECK: 1
     FORCE_COLOR: 1
     # username: ${USER}
     # GIT_COMMIT:
@@ -70,9 +70,32 @@ scripts:
     install:
       $cmd: npx lerna exec --scope @mountainpass/* npm install
     test:
-      $cmd: npx lerna run --scope @mountainpass/* test
+      $cmd: |
+        #!/bin/sh
+        set -e
+        npx lerna run --scope @mountainpass/* test
+        npx lerna run --scope @mountainpass/* test:bdd
     build:
-      $cmd: npx lerna run --scope @mountainpass/* build
+      $cmd: |
+        #!/bin/sh
+        set -e
+
+        echo Building cli...
+        npx lerna run --scope @mountainpass/* build
+
+        echo Updating schema...
+        npx lerna run --scope @mountainpass/* writeSchema
+
+        for x in imports/*.yaml; do 
+          echo Validating import file $x...
+          node cli/dist/index.js --validate --config $x
+        done
+    validate:
+      $cmd: |
+        for x in imports/*.yaml; do 
+          echo Validating import file $x...
+          node cli/dist/index.js --validate --config $x
+        done
     bump:
       $cmd: npx lerna version patch --yes --force-publish --message '%s [skip ci]'
     build_and_bump:
@@ -150,11 +173,11 @@ scripts:
   publish_all:
     $jobs_serial:
       # - git_verify_clean
+      # - cli test
       # - cli build
-      # - cli build_and_bump
-      # - ui build
-      # - $cmd: rm -rf cli/public || true && mv ui/out cli/public
-      - $cmd: cat ~/.npmrc
+      - cli build_and_bump
+      - ui build
+      - $cmd: rm -rf cli/public || true && mv ui/out cli/public
       - cli publish
       # - $cmd: npx lerna publish from-package --yes
       # - $cmd: lerna publish from-package --yes
