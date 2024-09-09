@@ -13,6 +13,7 @@ import fileUtils from '../utils/fileUtils.js'
 import logger from '../utils/logger.js'
 import { resolveResolveScript } from './ScriptExecutor.js'
 import ApplicationMode from '../utils/ApplicationMode.js'
+import { displayInvocationResult, displayReRunnableScript } from '../history.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -130,7 +131,7 @@ export const executeCmd = async (
   opts: any = undefined,
   env: Environment,
   customOpts: CustomOptions,
-  timeoutMs?: number // TODO implement?
+  timeoutMs?: number,
 ): Promise<string> => {
   // keep track of files that need to be cleaned up post run.
   const cleanupFiles = []

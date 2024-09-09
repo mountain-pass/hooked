@@ -104,6 +104,7 @@ scripts:
       $cmd: |
         npx lerna exec --scope @mountainpass/* npm install
         npx lerna run --scope @mountainpass/* test
+        npx lerna run --scope @mountainpass/* test:bdd
         rm cli/.tmp-*.sh || true
         npx lerna run --scope @mountainpass/* build
         npx lerna version patch --yes --force-publish --message '%s [skip ci]'
@@ -175,7 +176,6 @@ scripts:
   publish_all:
     $jobs_serial:
       - git_verify_clean
-      - cli test
       # - cli build
       - cli build_and_bump
       - ui build
@@ -183,5 +183,5 @@ scripts:
       - cli publish
       # - $cmd: npx lerna publish from-package --yes
       # - $cmd: lerna publish from-package --yes
-      - $cmd: sleep 5
-      - docker publish
+      # - $cmd: sleep 5
+      # - docker publish

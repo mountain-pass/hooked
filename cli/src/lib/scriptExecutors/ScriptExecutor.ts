@@ -39,6 +39,7 @@ import { executeCmd } from './$cmd.js'
 import { StdinChoicesResolver } from './resolvers/StdinChoicesResolver.js'
 import verifyLocalRequiredTools from './verifyLocalRequiredTools.js'
 import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
+import { displayReRunnableScript } from '../history.js'
 
 // Environment variable names that are exempt from being resolved
 const EXEMPT_ENVIRONMENT_KEYWORDS = ['DOCKER_SCRIPT', 'NPM_SCRIPT', 'MAKE_SCRIPT']
@@ -160,6 +161,10 @@ export const resolveCmdScript = async (
     const runInDocker = isDockerCmdScript(script)
     if (runInDocker) {
       await verifyLocalRequiredTools.verifyDockerExists(env)
+    }
+
+    if (isFinalScript) {
+      logger.debug(`Rerun: ${displayReRunnableScript(options.scriptPath!, options.env?.split(','), stdin, options.config)}`)
     }
 
     // !!! run the actual command !!!

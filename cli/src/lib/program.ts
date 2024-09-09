@@ -2,7 +2,7 @@ import { Argument, Command, Option } from 'commander'
 import fs from 'fs'
 import HJSON from 'hjson'
 import { cyan, yellow } from './colour.js'
-import common from './common/invoke.js'
+import common, { InvocationResult } from './common/invoke.js'
 import loaders from './common/loaders.js'
 import defaults from './defaults.js'
 import exitHandler from './exitHandler.js'
@@ -22,6 +22,7 @@ import { loadRootPackageJsonSync } from './utils/packageJson.js'
 import { HookedServerSchemaType } from './schema/HookedSchema.js'
 import bcrypt from './server/bcrypt.js'
 import { sleep } from './utils/sleep.js'
+import { addHistory, displayInvocationResult, displaySuccessfulScript } from './history.js'
 
 const packageJson = loadRootPackageJsonSync()
 
@@ -94,7 +95,7 @@ export const newProgram = (systemProcessEnvs: RawEnvironment, serverShutdownSign
     .addOption(new Option('-ll, --logLevel <logLevel>', '<info|debug|warn|error> Specifies the log level.')
       .default('info').env('LOG_LEVEL'))
 
-    .addOption(new Option('--debug', 'Sets the log level to "debug".')
+    .addOption(new Option('-d, --debug', 'Sets the log level to "debug".')
       .implies({ logLevel: 'debug' }))
 
     .addOption(new Option('-sc, --skipCleanup', "If 'true', doesn't cleanup old *.sh files. Useful for debugging.")
@@ -260,6 +261,19 @@ Provided Environment Variables:
         const providedEnvNames = options.env.split(',')
         const stdin: RawEnvironment = HJSON.parse(options.stdin)
         await common.invoke(null, systemProcessEnvs, options, config, providedEnvNames, options.scriptPath, stdin, true, false)
+        // try {
+
+        // } finally {
+        //   // store and log "Rerun" command in history (if successful and not the _logs_ option!)
+        //   // const isRoot = result.envVars.HOOKED_ROOT === 'true'
+        //   const notRequestingLogs = invocationResult!.paths.join(' ') !== defaults.getDefaults().LOGS_MENU_OPTION
+        //   // if (isRoot && notRequestingLogs) {
+        //   if (notRequestingLogs) {
+        //     logger.debug(`Rerun: ${displayInvocationResult(invocationResult!)}`)
+        //     addHistory(invocationResult!)
+        //   }
+        //   // }
+        // }
       }
 
       // generate rerun command (do before running script - reason: if errors, won't know how to re-run?)

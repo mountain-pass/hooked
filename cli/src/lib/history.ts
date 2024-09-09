@@ -2,8 +2,9 @@
 import fs from 'fs'
 import { stripEmojis } from './config.js'
 import defaults from './defaults.js'
-import { type SuccessfulScript } from './types.js'
+import { EnvironmentVariables, type SuccessfulScript } from './types.js'
 import logger from './utils/logger.js'
+import { InvocationResult } from './common/invoke.js'
 
 /**
  * Retrieves the history log of previous commands.
@@ -50,10 +51,10 @@ export const printHistory = (max: number = 20): void => {
 export const formatLocalISOString = (ts: number, tzoffsetMinutes = new Date().getTimezoneOffset()): string => {
   const tzoffsetMs = tzoffsetMinutes * 60000 // offset in milliseconds
   const localISOTime = (new Date(ts - tzoffsetMs)).toISOString().slice(0, -5) +
-  (tzoffsetMinutes > 0 ? '-' : '+') +
-  (`0${Math.abs(tzoffsetMinutes / 60)}`).slice(-2) +
-  ':' +
-  (`0${Math.abs(tzoffsetMinutes % 60)}`).slice(-2)
+    (tzoffsetMinutes > 0 ? '-' : '+') +
+    (`0${Math.abs(tzoffsetMinutes / 60)}`).slice(-2) +
+    ':' +
+    (`0${Math.abs(tzoffsetMinutes % 60)}`).slice(-2)
   return localISOTime
 }
 
@@ -68,23 +69,64 @@ export const displaySuccessfulScript = (
   showTimestamp = false,
   tzoffsetMinutes = new Date().getTimezoneOffset()
 ): string => {
-  const { ts, scriptPath, envNames, stdin } = script
+  return displayReRunnableScript(
+    script.scriptPath,
+    script.envNames,
+    script.stdin as EnvironmentVariables,
+    undefined,
+    Date.now(),
+    showTimestamp,
+    tzoffsetMinutes
+  )
+}
+
+export const displayInvocationResult = (
+  script: InvocationResult,
+  showTimestamp = false,
+  tzoffsetMinutes = new Date().getTimezoneOffset()
+): string => {
+  return displayReRunnableScript(
+    script.paths,
+    script.envNames,
+    script.envVars,
+    undefined,
+    Date.now(),
+    showTimestamp,
+    tzoffsetMinutes
+  )
+}
+
+export const displayReRunnableScript = (
+  scriptPath: string[],
+  envNames: string[],
+  stdin: Object,
+  configFilePath: string | undefined,
+  ts: number = Date.now(),
+  showTimestamp = false,
+  tzoffsetMinutes = new Date().getTimezoneOffset()
+): string => {
   const timestamp = formatLocalISOString(ts, tzoffsetMinutes)
   const scriptstr = scriptPath.map(s => {
     const script = stripEmojis(s)
     // if has whitespace, add quotes
     return (/[^\w]/).test(script) ? `"${script}"` : script
   }).join(' ')
-  const envstr = envNames.length > 1 ? `--env ${envNames.join(',')}` : ''
+  const envstr = envNames.length > 0 ? `--env ${envNames.join(',')}` : ''
   const stdinstr = Object.keys(stdin).length > 0 ? `--stdin '${JSON.stringify(stdin)}'` : ''
-  return `${showTimestamp ? `${timestamp}: ` : ''}j ${scriptstr} ${envstr} ${stdinstr}`
+  const config = configFilePath ? `--config ${configFilePath}` : ''
+  return `${showTimestamp ? `${timestamp}: ` : ''}j ${[
+    scriptstr,
+    envstr,
+    stdinstr,
+    config
+  ].filter(f => f).join(' ')}`
 }
 
 /**
  * Append a line onto the end of a file.
  * @param script
  */
-export const addHistory = (script: SuccessfulScript): void => {
+export const addHistory = (script: SuccessfulScript | InvocationResult): void => {
   const filepath = defaults.getDefaults().HISTORY_PATH
   fs.writeFileSync(
     filepath,
