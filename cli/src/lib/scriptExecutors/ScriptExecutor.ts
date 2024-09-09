@@ -434,14 +434,25 @@ export const resolveStdinScript = async (
   const stdinMapped = findMappedChoice(stdin[key], choices)
   const envMapped = findMappedChoice(env.isResolvableByKey(key) ? env.resolveByKey(key) : undefined, choices)
 
+  // logger.info(`Got here stdinMapped=${stdinMapped}, envMapped=${envMapped}, choices=${JSON.stringify(choices)}`)
+
   if (isDefined(stdinMapped)) {
     // if we already have a response, use that
     env.putResolved(key, stdinMapped)
+    return
   } else if (isDefined(envMapped)) {
     // else if we already have a value in the environment, use the mapped value
-    env.putOverwrite(key, envMapped)
+    env.putResolved(key, envMapped)
     stdin[key] = envMapped
+    return
   } else {
+
+    // // check if already resolved in environment variables...
+    // if (env.isResolvableByKey(key)) {
+    //   // nothing more to do
+    //   logger.debug(`Key '${key}' is already resolvable - value=${env.resolveByKey(key)}`)
+    //   return
+    // }
 
     if (options.batch === true) {
       throw new Error(`Could not retrieve stdin for key (interactive prompts disabled). key='${key}'.`)
