@@ -8,12 +8,11 @@ import path from 'path'
 import { CaptureWritableStream } from '../common/CaptureWritableStream.js'
 import { type ProgramOptions } from '../program.js'
 import { isDefined, isDockerCmdScript, isSSHCmdScript, type CmdScript, type DockerCmdScript, type SSHCmdScript } from '../types.js'
+import ApplicationMode from '../utils/ApplicationMode.js'
 import { Environment } from '../utils/Environment.js'
 import fileUtils from '../utils/fileUtils.js'
 import logger from '../utils/logger.js'
 import { resolveResolveScript } from './ScriptExecutor.js'
-import ApplicationMode from '../utils/ApplicationMode.js'
-import { displayInvocationResult, displayReRunnableScript } from '../history.js'
 
 export const randomString = (): string => crypto.randomBytes(20).toString('hex')
 
@@ -84,23 +83,21 @@ export interface CustomOptions {
 //   return customOpts.captureStdout ? stdout : ''
 // }
 
-export const createProcess = async (cmdFilePath: string, stdoutFilePath: string, stderrFilePath: string, opts: ExecSyncOptions, customOpts: CustomOptions): Promise<string> => {
-  logger.debug(`Creating process sync - ${cmdFilePath} - appMode=${ApplicationMode.getApplicationMode()} captureStdout=${customOpts.captureStdout ? 'Y' : 'N'} printStdio=${customOpts.printStdio ? 'Y' : 'N'}`)
-  // const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
-  // const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
-  const fd1 = fs.openSync(stdoutFilePath, 'a')
-  const fd2 = fs.openSync(stderrFilePath, 'a')
-  // const stdout = fs.createWriteStream('', { fd: fd1 })
-  // const stderr = fs.createWriteStream('', { fd: fd2 })
-  // const stdout = new CaptureWritableStream(customOpts.printStdio ? process.stdout : undefined)
-  // const stderr = new CaptureWritableStream(customOpts.printStdio ? process.stderr : undefined)
-  // const child = child_process.spawn(cmd, { ...opts, stdio: 'inherit' })
-  const child = child_process.spawn(cmdFilePath, { ...opts, stdio: !customOpts.captureStdout && customOpts.printStdio && ApplicationMode.getApplicationMode() !== 'test' ? 'inherit' : ['ignore', fd1, fd2] })
-  // child.stdout?.pipe(stdout)
-  // child.stderr?.pipe(stderr)
+export const createProcess = async (
+  cmdFilePath: string,
+  stdoutFilePath: string,
+  stderrFilePath: string,
+  opts: ExecSyncOptions,
+  customOpts: CustomOptions
+): Promise<string> => {
+  const inherit = !customOpts.captureStdout && customOpts.printStdio && ApplicationMode.getApplicationMode() !== 'test'
+  logger.debug(`Creating process sync - ${cmdFilePath} - inherit=${inherit ? 'Y' : 'N'}`)
+  const stdoutFD = fs.openSync(stdoutFilePath, 'a')
+  const stderrFD = fs.openSync(stderrFilePath, 'a')
+  const sysout = fs.createWriteStream('', { fd: stdoutFD })
+  const syserr = fs.createWriteStream('', { fd: stderrFD })
+  const child = child_process.spawn(cmdFilePath, { ...opts, stdio: inherit ? 'inherit' : ['ignore', sysout, syserr] })
   const exitCode = await new Promise(resolve => child.on('close', resolve))
-  // stdout.end()
-  // stderr.end()
   if (exitCode !== 0) {
     const error: any = new Error(`Command failed: ${cmdFilePath}`)
     error.status = exitCode

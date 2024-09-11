@@ -28,6 +28,18 @@ env:
         value: id
       $sort: alpha
     OUTPUT: text
+  ask-DO_VOLUMEID:
+    DO_VOLUMEID:
+      $ask: Choose a volume
+      $choices:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute volume list --output json
+      $fieldsMapping:
+        name: name
+        value: id
+      $sort: alpha
+    OUTPUT: text
   ask-DO_MACHINEIP:
     DO_MACHINEIP:
       $ask: Choose a server
@@ -64,6 +76,7 @@ env:
   ask-AREYOUSURE:
     AREYOUSURE:
       $ask: Are you sure? Cancel now (CTRL+C) if you don't want to continue!
+      $default: Yes
 
 scripts:
   digitalocean (cloud servers):
@@ -156,18 +169,48 @@ scripts:
           $image: digitalocean/doctl
           $cmd: /app/doctl compute tag list -o ${OUTPUT}
 
+    volumes:
+      list:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute volume list --output json
+      listActions:
+        $envNames: [DO_SECRETS, ask-DO_VOLUMEID]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute volume-action list ${DO_VOLUMEID}
+      attach:
+        $envNames: [DO_SECRETS, ask-DO_VOLUMEID, ask-DO_MACHINE]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute volume-action attach ${DO_VOLUMEID} ${DO_MACHINE}
+      detach:
+        $envNames: [DO_SECRETS, ask-DO_VOLUMEID, ask-DO_MACHINE]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute volume-action detach ${DO_VOLUMEID} ${DO_MACHINE}
+      # mount:
+      #   $envNames: [DO_SECRETS, ask-DO_MACHINE, ask-DO_MACHINEIP]
+      #   $image: digitalocean/doctl
+      #   $cmd: |
+      #     ssh -oStrictHostKeyChecking=no root@${DO_MACHINEIP} 'pwd'
+      #     /app/doctl compute ssh --verbose --ssh-command 'ls /dev/disk/by-id/' ${DO_MACHINE}
+      #     mkdir -p /mnt/my_volume_b1;
+      #     mount -o discard,defaults /dev/disk/by-id/scsi-0DO_Volume_my-volume-b1 /mnt/my_volume_b1;
+      #     echo /dev/disk/by-id/scsi-0DO_Volume_my-volume-b1 /mnt/my_volume_b1 ext4 defaults,nofail,discard 0 0 | sudo tee -a /etc/fstab
 
     servers (droplets):
-
       ssh:
         # runs on host machine
         $envNames: [DO_SECRETS, ask-DO_MACHINEIP]
         $cmd: ssh root@${DO_MACHINEIP}
-        
+
       list:
         $envNames: [DO_SECRETS]
         $image: digitalocean/doctl
-        $cmd: /app/doctl compute droplet list -o ${OUTPUT} --format "Name,PublicIPv4,Memory,VCPUs,Disk,Region,Features"
+        $cmd: /app/doctl compute droplet list -o ${OUTPUT}
+
+      listDetails:
+        $envNames: [DO_SECRETS]
+        $image: digitalocean/doctl
+        $cmd: /app/doctl compute droplet list
 
       delete:
         $envNames: [DO_SECRETS, ask-DO_MACHINE, ask-AREYOUSURE]

@@ -1,3 +1,4 @@
+.tmp-*
 docker-compose.yaml
 package/
 does*.yaml

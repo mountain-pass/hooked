@@ -53,7 +53,9 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
       request.setTimeout(timeoutMs, function () {
         request.destroy()
       })
-      fs.unlinkSync(destination)
+      if (fs.existsSync(destination)) {
+        fs.unlinkSync(destination)
+      }
       const fileStream = fs.createWriteStream(destination)
       res.pipe(fileStream)
 
@@ -67,7 +69,7 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
         })
       })
     }).on('error', (err) => {
-      fs.unlink(destination, () => {})
+      fs.unlink(destination, () => { })
       reject(err)
     })
   })
@@ -78,7 +80,7 @@ export const downloadFile = async (url: string, destination: string, timeoutMs: 
  */
 export const cleanupOldTmpFiles = (): void => {
   fs.readdirSync('./').forEach((file) => {
-    if (/^\.env-.*\.txt/.test(file) || /^\.tmp-.*\.sh/.test(file)) {
+    if (/^\.env-.*\.txt/.test(file) || /^\.tmp-.*/.test(file)) {
       fs.unlinkSync(file)
     }
   })
